@@ -163,7 +163,7 @@ button{font:inherit;color:inherit;text-transform:inherit;background:none;border:
     <div class="hero-copy">
       <h1 class="title" id="t">302</h1>
       <p class="sub">the whole nervous system of a worm, from the real wiring map</p>
-      <p class="hint">point at a neuron to name it · tap or click to fire it · drag to turn</p>
+      <p class="hint">point at a neuron to name it · click to fire it · scroll or pinch to zoom · shift-drag to move · space holds the worm still</p>
     </div>
     <aside class="panel" aria-label="the worm">
       <div>
@@ -186,6 +186,9 @@ button{font:inherit;color:inherit;text-transform:inherit;background:none;border:
       <div class="tools">
         <button class="tool" id="tChem" type="button" aria-pressed="true">synapses</button>
         <button class="tool" id="tGap" type="button" aria-pressed="true">gap junctions</button>
+        <button class="tool" id="tStill" type="button" aria-pressed="false">hold still</button>
+        <button class="tool" id="tOut" type="button" aria-label="zoom out">−</button>
+        <button class="tool" id="tIn" type="button" aria-label="zoom in">+</button>
         <button class="tool" id="tSpin" type="button" aria-pressed="false">spin</button>
         <button class="tool" id="tReset" type="button">reset view</button>
       </div>
@@ -353,7 +356,7 @@ function stepModel(dt) {
   loco.fwd = Math.max(f, loco.fwd * Math.pow(K.hold, dt)); loco.back = Math.max(b, loco.back * Math.pow(K.hold, dt));
   const target = clamp(0.35 + K.read * (loco.fwd - loco.back), -1.6, 1.6);
   loco.speed = lerp(loco.speed, target, 1 - Math.pow(0.25, dt));
-  loco.phase += loco.speed * dt * Math.PI * 1.6;
+  if (!view.still) loco.phase += loco.speed * dt * Math.PI * 1.6;
 }
 function fire(list, amt = 4) { list.forEach(n => { const i = typeof n === 'number' ? n : byName[n]; if (i !== undefined) stim[i] = Math.max(stim[i], amt); }); }
 
@@ -416,7 +419,7 @@ renderer.setClearColor(0x000000, 1);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
 const LEN = 9, RAD = 30 / 800 * LEN * 1.25;      // body length and radius in scene units
-const U = { uPhase: { value: 0 }, uAmp: { value: 0.5 }, uTime: { value: 0 }, uPx: { value: 1 } };
+const U = { uPhase: { value: 0 }, uAmp: { value: 0.5 }, uTime: { value: 0 }, uPx: { value: 1 }, uDot: { value: 1 } };
 const WAVE_GLSL = `
 uniform float uPhase, uAmp;
 vec3 bend(vec3 p, float u){
@@ -529,9 +532,9 @@ const pts = (() => {
   g.setAttribute('aHi', new THREE.BufferAttribute(hi, 1));
   const m = new THREE.ShaderMaterial({
     uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    vertexShader: `attribute float aU; attribute vec3 aCol; attribute float aAct; attribute float aHi; uniform float uPx; varying vec3 vC; varying float vA; varying float vH; ${WAVE_GLSL}
+    vertexShader: `attribute float aU; attribute vec3 aCol; attribute float aAct; attribute float aHi; uniform float uPx, uDot; varying vec3 vC; varying float vA; varying float vH; ${WAVE_GLSL}
       void main(){ vC = aCol; vA = aAct; vH = aHi; vec4 mv = modelViewMatrix * vec4(bend(position, aU), 1.0);
-        gl_PointSize = uPx * (0.085 + 0.06 * aAct + 0.07 * aHi) / -mv.z; gl_Position = projectionMatrix * mv; }`,
+        gl_PointSize = uPx * uDot * (0.085 + 0.06 * aAct + 0.07 * aHi) / -mv.z; gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `varying vec3 vC; varying float vA; varying float vH;
       void main(){ float d = length(gl_PointCoord - 0.5); float core = smoothstep(0.22, 0.12, d), halo = smoothstep(0.5, 0.0, d);
         vec3 c = mix(vC, vec3(1.0), vA * 0.7);
@@ -552,7 +555,8 @@ const pts = (() => {
 }
 
 /* camera */
-const view = { th: 0, ph: 0.6, tTh: 0, tPh: 0.6, spin: false };
+const view = { th: 0, ph: 0.6, tTh: 0, tPh: 0.6, spin: false, still: false, zoom: 1, tZoom: 1, tgt: new THREE.Vector3(), tTgt: new THREE.Vector3() };
+const ZMAX = 10;
 let W = 1, H = 1, narrow = false, dpr = 1;
 function resize() {
   const r = canvas.getBoundingClientRect();
@@ -599,15 +603,77 @@ function setHover(i) {
   pts.hAttr.needsUpdate = true;
 }
 let drag = null, moved = false;
-canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, th: view.tTh, ph: view.tPh, id: e.pointerId }; moved = false; canvas.classList.add('dragging'); });
+const touches = new Map();
+let pinch = null;
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
+const baseRad = () => narrow ? 12.5 / Math.min(1, (W / H) * 0.62) : 22;
+function clampTarget(t) { t.x = clamp(t.x, -5, 5); t.y = 0; t.z = clamp(t.z, -3, 3); return t; }
+// zoom so the point under (cx, cy) stays under the pointer
+function zoomAt(cx, cy, factor) {
+  const nz = clamp(view.tZoom * factor, 1, ZMAX);
+  if (nz === view.tZoom) return;
+  const r = canvas.getBoundingClientRect();
+  ndc.set((cx - r.left) / r.width * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  if (ray.ray.intersectPlane(ground, hit)) view.tTgt.sub(hit).multiplyScalar(view.tZoom / nz).add(hit);
+  view.tZoom = nz;
+  if (nz === 1) view.tTgt.set(0, 0, 0);
+  clampTarget(view.tTgt);
+}
+// move the view across the ground plane by a screen drag
+function panBy(dx, dy) {
+  const rad = baseRad() / view.zoom, scale = 2 * rad * Math.tan(camera.fov * Math.PI / 360) / H;
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0); right.y = 0; right.normalize();
+  const fwd = new THREE.Vector3(-right.z, 0, right.x);
+  view.tTgt.addScaledVector(right, -dx * scale).addScaledVector(fwd, -dy * scale);
+  clampTarget(view.tTgt);
+}
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+// is the pointer over the worm? (so a scroll elsewhere on the hero still scrolls the page)
+function nearWorm(cx, cy) {
+  const r = canvas.getBoundingClientRect();
+  for (let i = 0; i < N; i += 2) {
+    bentPos(i, tmp).project(camera);
+    const sx = (tmp.x * 0.5 + 0.5) * r.width + r.left, sy = (-tmp.y * 0.5 + 0.5) * r.height + r.top;
+    if ((sx - cx) ** 2 + (sy - cy) ** 2 < 90 * 90) return true;
+  }
+  return false;
+}
+canvas.addEventListener('wheel', e => {
+  if (!e.ctrlKey && view.tZoom <= 1.001 && !nearWorm(e.clientX, e.clientY)) return;
+  e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0015));
+}, { passive: false });
+canvas.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'touch') {
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      const [a, b] = [...touches.values()];
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
+      drag = null; moved = true; return;
+    }
+  }
+  const pan = e.shiftKey || e.button === 2 || e.button === 1;
+  drag = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, th: view.tTh, ph: view.tPh, id: e.pointerId, pan };
+  moved = false; canvas.classList.add('dragging');
+});
 addEventListener('pointermove', e => {
+  if (pinch && touches.has(e.pointerId)) {
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const [a, b] = [...touches.values()], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    zoomAt(mx, my, d / pinch.d);
+    panBy(mx - pinch.mx, my - pinch.my);
+    pinch = { d, mx, my };
+    return;
+  }
   if (drag && e.pointerId === drag.id) {
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
     if (Math.hypot(dx, dy) > 5) moved = true;
-    if (moved && (e.pointerType !== 'touch' || Math.abs(dx) > Math.abs(dy))) {
+    if (moved && drag.pan) panBy(e.clientX - drag.lx, e.clientY - drag.ly);
+    else if (moved && (e.pointerType !== 'touch' || Math.abs(dx) > Math.abs(dy))) {
       view.tTh = drag.th - dx * 0.006;
       if (e.pointerType !== 'touch') view.tPh = clamp(drag.ph - dy * 0.004, 0.12, 1.35);
     }
+    drag.lx = e.clientX; drag.ly = e.clientY;
     return;
   }
   if (e.pointerType === 'mouse') { const i = pickAt(e.clientX, e.clientY); if (i !== hover) setHover(i); }
@@ -620,14 +686,29 @@ addEventListener('pointerup', e => {
   }
   drag = null; canvas.classList.remove('dragging');
 });
-addEventListener('pointercancel', () => { drag = null; canvas.classList.remove('dragging'); });
+addEventListener('pointercancel', e => { touches.delete(e.pointerId); if (touches.size < 2) pinch = null; drag = null; canvas.classList.remove('dragging'); });
+['pointerup', 'pointercancel'].forEach(ev => addEventListener(ev, e => { touches.delete(e.pointerId); if (touches.size < 2) pinch = null; }));
 canvas.addEventListener('pointerleave', () => { if (hover >= 0) setHover(-1); });
 
 const tChem = $('#tChem'), tGap = $('#tGap'), tSpin = $('#tSpin');
 tChem.addEventListener('click', () => { chemE.lines.visible = !chemE.lines.visible; tChem.setAttribute('aria-pressed', String(chemE.lines.visible)); });
 tGap.addEventListener('click', () => { gapE.lines.visible = !gapE.lines.visible; tGap.setAttribute('aria-pressed', String(gapE.lines.visible)); });
 tSpin.addEventListener('click', () => { view.spin = !view.spin; tSpin.setAttribute('aria-pressed', String(view.spin)); });
-$('#tReset').addEventListener('click', () => { view.tTh = 0; view.tPh = 0.6; });
+$('#tReset').addEventListener('click', () => { view.tTh = 0; view.tPh = 0.6; view.tZoom = 1; view.tTgt.set(0, 0, 0); });
+const tStill = $('#tStill');
+function setStill(v) {
+  view.still = v; tStill.setAttribute('aria-pressed', String(v)); tStill.textContent = v ? 'let it move' : 'hold still';
+  if (v && view.spin) { view.spin = false; tSpin.setAttribute('aria-pressed', 'false'); }
+}
+tStill.addEventListener('click', () => setStill(!view.still));
+addEventListener('keydown', e => {
+  if (e.code !== 'Space' || (e.target.closest && e.target.closest('input,textarea,button,a'))) return;
+  const r = canvas.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;    // only while the worm is on screen
+  e.preventDefault(); setStill(!view.still);
+});
+const zoomCentre = f => { const r = canvas.getBoundingClientRect(), p = new THREE.Vector3().copy(view.tgt).project(camera); zoomAt(r.left + (p.x * 0.5 + 0.5) * r.width, r.top + (-p.y * 0.5 + 0.5) * r.height, f); };
+$('#tIn').addEventListener('click', () => zoomCentre(1.6));
+$('#tOut').addEventListener('click', () => zoomCentre(1 / 1.6));
 
 /* readouts */
 const rHead = $('#rHead'), rSpeed = $('#rSpeed'), rFire = $('#rFire');
@@ -662,18 +743,23 @@ function draw(now) {
   U.uTime.value += dt;
   stepModel(dt / 2); stepModel(dt / 2);
   U.uPhase.value = loco.phase;
-  U.uAmp.value = lerp(U.uAmp.value, reduced ? 0.12 : 0.18 + 0.32 * Math.min(1, Math.abs(loco.speed) / 0.5), 1 - Math.pow(0.2, dt));
+  const ampTarget = view.still ? 0 : reduced ? 0.12 : 0.18 + 0.32 * Math.min(1, Math.abs(loco.speed) / 0.5);
+  U.uAmp.value = lerp(U.uAmp.value, ampTarget, 1 - Math.pow(view.still ? 0.004 : 0.2, dt));
   for (let i = 0; i < N; i++) pts.a[i] = act[i];
   pts.aAttr.needsUpdate = true;
   if (chemE.lines.visible) updateGlow(chemE);
   if (gapE.lines.visible) updateGlow(gapE);
   readouts(dt);
-  if (view.spin && !drag) view.tTh += dt * 0.12;
+  if (view.spin && !drag && !view.still) view.tTh += dt * 0.12;
   const k = 1 - Math.pow(0.002, dt);
   view.th = lerp(view.th, view.tTh, k); view.ph = lerp(view.ph, view.tPh, k);
-  const rad = narrow ? 12.5 / Math.min(1, (W / H) * 0.62) : 22;
-  camera.position.set(Math.sin(view.th) * Math.sin(view.ph) * rad, Math.cos(view.ph) * rad, Math.cos(view.th) * Math.sin(view.ph) * rad);
-  camera.lookAt(0, 0, 0);
+  view.zoom = lerp(view.zoom, view.tZoom, 1 - Math.pow(0.0005, dt));
+  view.tgt.lerp(view.tTgt, 1 - Math.pow(0.0005, dt));
+  U.uDot.value = Math.pow(view.zoom, -0.55);
+  const rad = baseRad() / view.zoom;
+  camera.position.set(view.tgt.x + Math.sin(view.th) * Math.sin(view.ph) * rad, view.tgt.y + Math.cos(view.ph) * rad, view.tgt.z + Math.cos(view.th) * Math.sin(view.ph) * rad);
+  camera.lookAt(view.tgt);
+  camera.updateMatrixWorld();
   const show = hover >= 0 ? hover : pinned;
   if (show >= 0) {
     bentPos(show, tmp).project(camera);
