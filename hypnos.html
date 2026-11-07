@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>hypnos</title>
+<meta name="description" content="hypnos — the sleeping brain: stages, brainwaves, narcolepsy, binaural beats and meditation. an interactive study by mattia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --panel:#08080a;
+  --fg:#e9e7e2;
+  --mute:#8b8d94;
+  --dim:#55575e;
+  --line:rgba(233,231,226,.13);
+  --delta:#6f9bff;
+  --theta:#39c9b6;
+  --alpha:#d9c56b;
+  --beta:#df8a4b;
+  --gamma:#e9e7e2;
+  --rem:#d97eb5;
+  --lab:linear-gradient(100deg,#e9e7e2 0%,#6f9bff 18%,#39c9b6 34%,#d9c56b 50%,#df8a4b 62%,#6f9bff 80%,#e9e7e2 100%);
+  --f-display:"Syne","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Fragment Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px);
+  --gut-l:max(var(--gut),env(safe-area-inset-left,0px));
+  --gut-r:max(var(--gut),env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:400 13px/1.65 var(--f-mono);text-transform:lowercase;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+::selection{background:var(--fg);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--fg);outline-offset:4px}
+.wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.ln{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s cubic-bezier(.2,.8,.2,1)}
+.ln:hover,.ln:focus-visible{background-size:100% 1px}
+.grain{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:var(--grain)}
+@keyframes sheen{to{background-position:-320% 0}}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) var(--gut-r) 20px var(--gut-l);mix-blend-mode:difference;color:#fff}
+.mark{font:500 15px/1 var(--f-display);letter-spacing:-.02em}
+.nav{display:flex;gap:clamp(12px,2.2vw,28px)}
+@media (max-width:760px){.nav .opt{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;height:100vh;height:100svh;min-height:740px;overflow:hidden}
+#psg{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y}
+.hero-copy{position:absolute;left:0;bottom:0;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:12px;pointer-events:none;max-width:58%}
+.title{margin:0 0 0 -.04em;font:500 clamp(72px,10.5vw,190px)/.8 var(--f-display);letter-spacing:-.065em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .8s;pointer-events:auto}
+.title:hover{color:transparent;animation:sheen 7s linear infinite}
+.sub{margin:0;font:400 clamp(17px,1.6vw,23px)/1.25 var(--f-display);letter-spacing:-.01em}
+.hint{margin:0;color:var(--mute)}
+
+.panel{position:absolute;z-index:3;right:var(--gut-r);top:calc(72px + env(safe-area-inset-top,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:min(380px,35vw);display:flex;flex-direction:column;gap:14px;overflow:auto;scrollbar-width:thin}
+.group-h{color:var(--dim);margin:0 0 6px}
+.scen{display:flex;flex-wrap:wrap;gap:5px}
+.sc{min-height:34px;padding:4px 10px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--mute);transition:color .2s,border-color .2s}
+.sc:hover{color:var(--fg)}
+.sc[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.card{border:1px solid var(--line);background:rgba(0,0,0,.62);padding:16px;display:grid;gap:9px}
+.card .eyebrow{display:flex;justify-content:space-between;gap:12px;color:var(--dim)}
+.card h2{margin:0;font:500 clamp(28px,2.6vw,40px)/1 var(--f-display);letter-spacing:-.03em}
+.card .subt{color:var(--fg)}
+.card p{margin:0;color:var(--mute)}
+.card ul{margin:0;padding:0;list-style:none;display:grid;gap:3px;color:var(--mute)}
+.card li::before{content:"· ";color:var(--dim)}
+.bands{display:grid;gap:6px}
+.band{display:grid;grid-template-columns:5.5ch minmax(0,1fr) 4ch;gap:10px;align-items:center;font-size:11.5px;color:var(--mute)}
+.band .m{height:6px;border:1px solid var(--line);position:relative;overflow:hidden}
+.band .m b{position:absolute;inset:0 auto 0 0;width:0;transition:width .3s}
+.band output{text-align:right;color:var(--fg);font-variant-numeric:tabular-nums}
+.ctl{display:grid;gap:2px}
+.ctl-head{display:flex;justify-content:space-between;gap:10px;color:var(--mute)}
+.ctl-head output{color:var(--fg);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--mute)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--fg);border:0}
+input[type=range]::-moz-range-track{height:1px;background:var(--mute)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--fg);border:0}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tool{min-height:32px;padding:0 11px;border:1px solid var(--line);color:var(--mute);background:rgba(0,0,0,.45);transition:color .2s,border-color .2s}
+.tool:hover{color:var(--fg)}
+.tool[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+
+@media (max-width:900px){
+  .hero{height:auto;min-height:0;overflow:visible;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  #psg{position:relative;height:66vh;height:66svh;min-height:420px;margin-left:calc(-1 * var(--gut-l));width:calc(100% + var(--gut-l) + var(--gut-r))}
+  .hero-copy{position:relative;max-width:none;padding-top:8px}
+  .panel{position:relative;right:auto;top:auto;bottom:auto;width:auto;overflow:visible;margin-top:28px}
+}
+
+/* ---------- sections ---------- */
+.sec{position:relative;padding-block:clamp(100px,13vw,190px) 0}
+.label{display:flex;justify-content:space-between;gap:16px;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--line)}
+.label h2{font:inherit;margin:0}
+.lede{margin:clamp(36px,5vw,64px) 0 0;max-width:24ch;font:400 clamp(28px,3.6vw,54px)/1.1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.lede em{font-style:normal;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 14s linear infinite}
+@media (prefers-reduced-motion:reduce){.lede em,.title:hover{animation:none}}
+.prose{max-width:62ch;font-size:14px}
+.prose p{margin:0 0 1em}
+.two{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:start}
+.waves{margin-top:clamp(40px,6vw,80px);border-top:1px solid var(--line)}
+.wave{display:grid;grid-template-columns:minmax(0,16ch) minmax(0,1.3fr) minmax(0,1fr);gap:clamp(14px,3vw,36px);padding:20px 0;border-bottom:1px solid var(--line);align-items:center}
+.wave h3{margin:0;font:500 clamp(24px,2.3vw,34px)/1 var(--f-display);letter-spacing:-.03em}
+.wave .hz{display:block;margin-top:6px;font-variant-numeric:tabular-nums}
+.wave canvas{display:block;width:100%;height:64px;max-width:100%}
+.wave p{margin:0;color:var(--mute)}
+.wave p b{font-weight:400;color:var(--fg)}
+@media (max-width:860px){.wave{grid-template-columns:minmax(0,1fr)}}
+.plot{display:grid;gap:10px;min-width:0}
+.plot-head{display:flex;justify-content:space-between;gap:12px;color:var(--mute)}
+.plot-head b{font-weight:400;color:var(--fg);font-variant-numeric:tabular-nums}
+.plot canvas{display:block;box-sizing:border-box;width:100%;max-width:100%;border:1px solid var(--line);background:var(--panel)}
+#sync{aspect-ratio:16/9}
+#beat{aspect-ratio:16/8}
+.range{display:grid;grid-template-columns:auto minmax(0,1fr) 9ch;gap:14px;align-items:center}
+.range output{text-align:right;font-variant-numeric:tabular-nums}
+.stages{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.stage{padding:clamp(18px,2.2vw,28px);border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;gap:8px;align-content:start;min-width:0}
+.stage .top-row{display:flex;justify-content:space-between;gap:10px;color:var(--dim)}
+.stage h3{margin:0;font:500 clamp(30px,3vw,46px)/1 var(--f-display);letter-spacing:-.03em}
+.stage .what{color:var(--fg)}
+.stage p{margin:0;color:var(--mute)}
+@media (max-width:1000px){.stages{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.stages{grid-template-columns:minmax(0,1fr)}}
+.btn{min-height:38px;padding:0 16px;border:1px solid var(--line);color:var(--mute)}
+.btn:hover{color:var(--fg);border-color:var(--fg)}
+.btn[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:32px;padding:0 11px;border:1px solid var(--line);color:var(--mute)}
+.chip:hover,.chip[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.ideas{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.idea{padding:clamp(24px,3vw,40px) 0;border-bottom:1px solid var(--line);display:grid;gap:12px;align-content:start}
+.idea:nth-child(odd){padding-right:clamp(20px,3vw,48px);border-right:1px solid var(--line)}
+.idea:nth-child(even){padding-left:clamp(20px,3vw,48px)}
+.idea h3{margin:0;font:500 clamp(26px,2.6vw,38px)/1 var(--f-display);letter-spacing:-.03em}
+.idea p{margin:0;color:var(--mute);max-width:54ch}
+.idea .k{color:var(--dim)}
+.idea .btn{justify-self:start}
+.note{margin-top:20px;color:var(--dim);max-width:70ch}
+.foot{margin-top:clamp(110px,14vw,200px);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;color:var(--dim);border-top:1px solid var(--line)}
+.foot span:last-child{max-width:64ch}
+@media (max-width:860px){
+  .two,.ideas{grid-template-columns:minmax(0,1fr)}
+  .idea:nth-child(odd){padding-right:0;border-right:0}
+  .idea:nth-child(even){padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="mark" href="#top">hypnos</a>
+  <nav class="nav" aria-label="sections">
+    <a class="ln opt" href="#waves">waves</a>
+    <a class="ln opt" href="#stages">stages</a>
+    <a class="ln opt" href="#wrong">disorders</a>
+    <a class="ln opt" href="#beats">beats</a>
+    <a class="ln opt" href="#awake">awake</a>
+    <a class="ln" href="index.html">← mattia</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="t">
+    <canvas id="psg" role="img" aria-label="a live sleep recording: brainwaves, eye movements and chin muscle tone scroll across the screen, above a hypnogram of the whole night. drag along the hypnogram to move through the night."></canvas>
+    <div class="hero-copy">
+      <h1 class="title" id="t">hypnos</h1>
+      <p class="sub">the sleeping brain, one night, live</p>
+      <p class="hint">drag across the traces to stretch them · drag along the night to jump · the traces run in real time, the night runs faster</p>
+    </div>
+    <aside class="panel" aria-label="the recording">
+      <div>
+        <p class="group-h">whose recording</p>
+        <div class="scen" id="scen" role="group" aria-label="whose recording"></div>
+      </div>
+      <article class="card" aria-live="polite">
+        <div class="eyebrow"><span id="cWhen">23:00</span><span id="cShare">5% of the night</span></div>
+        <h2 id="cName">n1</h2>
+        <p class="subt" id="cSub">drifting off</p>
+        <p id="cText"></p>
+        <ul id="cList"></ul>
+      </article>
+      <div class="bands" id="bands" aria-label="the mix of waves being drawn"></div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="speed">night speed</label><output id="speedO" for="speed">2 minutes a second</output></div>
+        <input type="range" id="speed" min="-0.6" max="1.3" step="0.01" value="0.3">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="twin">time on screen</label><output id="twinO" for="twin">8 s</output></div>
+        <input type="range" id="twin" min="2" max="30" step="0.5" value="8">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="gain">wave height</label><output id="gainO" for="gain">×1.0</output></div>
+        <input type="range" id="gain" min="-2" max="2" step="0.01" value="0">
+      </div>
+      <div class="tools">
+        <button class="tool" id="tPause" type="button" aria-pressed="false">pause</button>
+        <button class="tool" id="tRestart" type="button">from the start</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="sec wrap" id="waves" aria-labelledby="w-h">
+    <div class="label"><h2 id="w-h" class="scr">( 01 · five kinds of wave )</h2><span>01 / 05</span></div>
+    <p class="lede">a brainwave is millions of neurons <em>pulsing together</em>.</p>
+    <div class="waves" id="waveRows"></div>
+    <div class="two">
+      <div class="prose">
+        <p>an electrode on the scalp can't hear single neurons. what it picks up is the summed electrical current of millions of pyramidal cells in the cortex, all lined up the same way. when they work independently, their currents mostly cancel and the signal is small and fast. when they fall into step, they add up into big, slow waves.</p>
+        <p>much of the timing comes from loops between the thalamus and the cortex. the thalamus acts as a pacemaker: its neurons can fire in rhythmic bursts that drive spindles and slow waves in sleep, and alpha when you rest with your eyes closed. faster rhythms like gamma come from local circuits of fast inhibitory neurons inside the cortex.</p>
+        <p>hans berger recorded the first human eeg in 1924 and published it in 1929. the first rhythm he named was alpha, the one that appears when you close your eyes.</p>
+      </div>
+      <div class="plot">
+        <div class="plot-head"><span>300 model neurons, each ticking near 10 hz</span><span>in step <b id="syncO">0%</b></span></div>
+        <canvas id="sync" role="img" aria-label="left: dots on a circle, one per neuron, showing where each is in its cycle. right: the summed signal an electrode would record. as coupling rises the dots bunch together and the summed wave grows."></canvas>
+        <div class="range"><label for="couple">coupling</label><input type="range" id="couple" min="0" max="2.5" step="0.01" value="0.4"><output id="coupleO" for="couple">0.40</output></div>
+        <p class="note" style="margin-top:0">raise the coupling and the neurons pull each other into step: the same cells, the same activity, but a much bigger wave. this is why the slow waves of deep sleep are the largest signals the brain makes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="stages" aria-labelledby="s-h">
+    <div class="label"><h2 id="s-h" class="scr">( 02 · the stages of a night )</h2><span>02 / 05</span></div>
+    <p class="lede">every night you go down and back up about <em>five times</em>.</p>
+    <div class="stages">
+      <article class="stage"><div class="top-row"><span>non-rem</span><span>~5%</span></div><h3>n1</h3><p class="what">drifting off, theta</p><p>alpha fades into slower theta, the eyes roll slowly, and muscles relax, sometimes with a sudden hypnic jerk. it lasts minutes and is easy to wake from; people woken here often say they weren't asleep.</p></article>
+      <article class="stage"><div class="top-row"><span>non-rem</span><span>~45–55%</span></div><h3>n2</h3><p class="what">light sleep, spindles</p><p>the signature marks are sleep spindles, half-second bursts at 11–16 hz from the thalamus, and k-complexes, single large waves often set off by a sound. spindles are linked to storing memories and to keeping noise from waking you.</p></article>
+      <article class="stage"><div class="top-row"><span>non-rem</span><span>~15–25%</span></div><h3>n3</h3><p class="what">deep, slow-wave sleep</p><p>big delta waves under 2 hz. the hardest stage to wake from, when growth hormone is released and sleepwalking and night terrors begin. it is concentrated in the first half of the night and shrinks with age.</p></article>
+      <article class="stage"><div class="top-row"><span>rem</span><span>~20–25%</span></div><h3>rem</h3><p class="what">dreaming, theta and sawtooth</p><p>the eeg looks almost awake: low, fast and mixed, with theta and sawtooth waves. the eyes dart under the lids, the body is paralysed apart from the eyes and breathing, and dreams are most vivid. rem periods get longer toward morning.</p></article>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <p>a cycle runs from n1 down to n3 and back up into rem, and takes around 90 minutes. early cycles are heavy on deep n3; later ones are mostly n2 and long rem. that is why cutting a night short costs you dreams more than deep sleep.</p>
+        <p>the stage names come from the american academy of sleep medicine, which in 2007 merged the old stages 3 and 4 into one n3. sleep labs score a recording in 30-second pages, each given one stage, which is how a hypnogram like the one in the hero is drawn.</p>
+      </div>
+      <div class="prose">
+        <p>the three lines in the recording above are what a sleep lab actually measures. <b style="font-weight:400;color:var(--fg)">eeg</b> for the brain, <b style="font-weight:400;color:var(--fg)">eog</b> for the eyes, and <b style="font-weight:400;color:var(--fg)">emg</b> for muscle tone at the chin. you need all three to spot rem: the brain looks awake and the eyes are busy, but the chin goes almost silent because the body is switched off.</p>
+        <p>in deep sleep, in mice, the space between brain cells widens and waste is washed out faster, one of several reasons slow-wave sleep seems to matter for the brain's upkeep.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="wrong" aria-labelledby="x-h">
+    <div class="label"><h2 id="x-h" class="scr">( 03 · when the stages misbehave )</h2><span>03 / 05</span></div>
+    <p class="lede">sometimes rem arrives <em>too early</em>, or deep sleep never fully lets go of waking.</p>
+    <div class="ideas">
+      <article class="idea"><span class="k">soremp</span><h3>sleep-onset rem</h3><p>normally the first rem period comes about 90 minutes after you fall asleep. a sleep-onset rem period, or soremp, is rem within 15 minutes of falling asleep. one now and then can follow sleep deprivation; repeated ones are a key sign of narcolepsy.</p><button class="btn" type="button" data-show="narco">show a narcolepsy night above</button></article>
+      <article class="idea"><span class="k">narcolepsy</span><h3>rem leaking into the day</h3><p>affecting about 1 in 2,000 people, narcolepsy brings overwhelming daytime sleepiness. in type 1, most of the few tens of thousands of orexin neurons in the hypothalamus are lost, and pieces of rem break into waking: cataplexy (sudden muscle weakness set off by laughing or surprise), sleep paralysis and vivid hallucinations at the edges of sleep. it is diagnosed with a nap test: falling asleep in 8 minutes or less on average, with at least two soremps.</p></article>
+      <article class="idea"><span class="k">alpha-delta sleep</span><h3>awake inside deep sleep</h3><p>first described in 1973: waking alpha rhythm riding on top of the slow delta waves of deep sleep. people with it often wake unrefreshed, and it has been linked with chronic pain conditions such as fibromyalgia, though it also turns up in healthy sleepers.</p><button class="btn" type="button" data-show="alphadelta">show alpha-delta sleep above</button></article>
+      <article class="idea"><span class="k">other</span><h3>stages that mix</h3><p>sleepwalking and night terrors come out of partial waking from n3. in rem sleep behaviour disorder, the paralysis of rem fails and people act out their dreams. sleep paralysis is the opposite: waking up while rem's paralysis is still on.</p></article>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="beats" aria-labelledby="b-h">
+    <div class="label"><h2 id="b-h" class="scr">( 04 · binaural beats )</h2><span>04 / 05</span></div>
+    <p class="lede">two tones, one in each ear, and a third beat that exists only <em>in your head</em>.</p>
+    <div class="two">
+      <div class="plot">
+        <div class="plot-head"><span>left · right · what the brainstem makes of them</span><span>beat <b id="beatO">10 hz</b></span></div>
+        <canvas id="beat" role="img" aria-label="three lanes: the tone in the left ear, the slightly different tone in the right ear, and the slow beat between them that the brain hears"></canvas>
+        <div class="chips" id="beatChips" role="group" aria-label="beat presets"></div>
+        <div class="range"><label for="carrier">tone</label><input type="range" id="carrier" min="100" max="500" step="1" value="200"><output id="carrierO" for="carrier">200 hz</output></div>
+        <div class="range"><label for="beatHz">beat</label><input type="range" id="beatHz" min="1" max="40" step="0.5" value="10"><output id="beatHzO" for="beatHz">10 hz</output></div>
+        <div class="range"><label for="vol">volume</label><input type="range" id="vol" min="0" max="1" step="0.01" value="0.35"><output id="volO" for="vol">35%</output></div>
+        <div><button class="btn" id="beatPlay" type="button" aria-pressed="false">play · use headphones</button></div>
+      </div>
+      <div class="prose">
+        <p>play 200 hz into the left ear and 210 hz into the right. neither ear hears a beat, yet you perceive a slow 10 hz wobble. it is made in the brainstem, in the superior olive, where signals from the two ears first meet. it only works with headphones, and with tones below about 1,000 hz.</p>
+        <p>the effect was described by heinrich wilhelm dove in 1839. since the 1970s it has been sold as a way to steer brainwaves: a 10 hz beat for alpha calm, a 4 hz beat for theta, and so on.</p>
+        <p>the evidence is mixed. some studies report small effects on anxiety, mood or attention, but reviews find the eeg rarely follows the beat in a consistent way, and many studies are small. it's an interesting perceptual trick, and some people find it relaxing, but it isn't a reliable dial for brain states.</p>
+        <p class="note">keep the volume low. the beat changes nothing about how loud the sound is.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="awake" aria-labelledby="a-h">
+    <div class="label"><h2 id="a-h" class="scr">( 05 · sleep-like states, awake )</h2><span>05 / 05</span></div>
+    <p class="lede">some practices reach the <em>edge of sleep</em> without going over it.</p>
+    <div class="ideas">
+      <article class="idea"><span class="k">meditation</span><h3>more alpha, then theta</h3><p>settled, eyes-closed meditation usually raises alpha, and focused practice often adds theta over the front midline of the head. a 2004 study of long-term buddhist practitioners found unusually strong, widespread gamma during compassion meditation. none of this is sleep: awareness stays on.</p><button class="btn" type="button" data-show="meditation">show a meditation session above</button></article>
+      <article class="idea"><span class="k">yoga nidra</span><h3>"yogic sleep"</h3><p>a guided relaxation done lying down, moving attention around the body. the eeg drifts from alpha toward theta, close to the border of n1, while the person stays aware of the voice. a small 2002 brain-scan study found more dopamine released during it.</p><button class="btn" type="button" data-show="nidra">show a yoga nidra session above</button></article>
+      <article class="idea"><span class="k">hypnagogia</span><h3>the n1 doorway</h3><p>the drifting images at sleep onset belong to n1. salvador dalí and others napped holding an object that would drop and wake them there. a 2021 study found people who slipped briefly into n1 were much more likely to spot a hidden shortcut in a maths task afterwards.</p></article>
+      <article class="idea"><span class="k">lucid dreams</span><h3>awake inside rem</h3><p>in a lucid dream you know you're dreaming, sometimes well enough to signal to researchers with agreed eye movements. lucid rem shows more fast activity, around 40 hz, over the front of the brain than ordinary rem.</p></article>
+    </div>
+  </section>
+
+  <footer class="foot wrap">
+    <a class="ln" href="index.html">← back to mattia</a>
+    <span>hypnos — a study by mattia, 2026</span>
+    <span>the recording is synthesised from typical features of each stage, not a real person; real eeg is messier. stage shares are typical for healthy adults. this page isn't medical advice.</span>
+  </footer>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const css = n => getComputedStyle(root).getPropertyValue(n).trim();
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+const TAU = Math.PI * 2;
+function sizeCanvas(cv) {
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return null;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { x, w, h };
+}
+
+/* ---------- grain + heading decode ---------- */
+(() => {
+  const c = document.createElement('canvas'); c.width = c.height = 140;
+  const x = c.getContext('2d'), d = x.createImageData(140, 140);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  root.style.setProperty('--grain', `url(${c.toDataURL()})`);
+})();
+const GLYPHS = '01·/\\_<>=+*#';
+function scramble(el, dur = 650) {
+  if (reduced) return;
+  const final = el.dataset.final || (el.dataset.final = el.textContent);
+  const t0 = performance.now();
+  cancelAnimationFrame(el._scr);
+  const step = now => {
+    const p = clamp((now - t0) / dur, 0, 1);
+    let out = '';
+    for (let i = 0; i < final.length; i++) out += (final[i] === ' ' || i / final.length < p * 1.3 - 0.3) ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    el.textContent = p >= 1 ? final : out;
+    if (p < 1) el._scr = requestAnimationFrame(step);
+  };
+  el._scr = requestAnimationFrame(step);
+}
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), { threshold: 0.6 });
+  $$('.scr').forEach(el => io.observe(el));
+}
+
+/* =====================================================================
+   BANDS
+   ===================================================================== */
+const BANDS = [
+  { key: 'delta', name: 'delta', lo: 0.5, hi: 4, col: '--delta', when: 'deep sleep (n3), and in babies', does: 'the big slow waves of deep sleep. <b>linked with</b> memory storage, growth hormone release and the brain\'s overnight upkeep.', from: 'cortex and thalamus swinging together between active and silent states' },
+  { key: 'theta', name: 'theta', lo: 4, hi: 8, col: '--theta', when: 'drowsiness, n1, rem, deep meditation', does: 'the rhythm of drifting off and of dreaming. <b>linked with</b> memory and navigation, and with focused, inward attention.', from: 'in animals mainly the hippocampus; in people also the front midline of the cortex' },
+  { key: 'alpha', name: 'alpha', lo: 8, hi: 12, col: '--alpha', when: 'awake, relaxed, eyes closed', does: 'the brain idling. close your eyes and it appears at the back of the head; open them and it drops. <b>linked with</b> calm and with tuning out what you\'re not attending to.', from: 'loops between the thalamus and the visual cortex' },
+  { key: 'beta', name: 'beta', lo: 13, hi: 30, col: '--beta', when: 'awake, alert, thinking, moving', does: 'small, fast and busy. <b>linked with</b> active thinking, concentration and holding a movement steady; very high beta goes with anxiety.', from: 'widespread cortex, strongest over motor areas' },
+  { key: 'gamma', name: 'gamma', lo: 30, hi: 100, col: '--gamma', when: 'focused attention, some meditation, lucid dreams', does: 'the fastest and smallest rhythm. <b>linked with</b> binding features together, attention and working memory.', from: 'local circuits of fast-firing inhibitory neurons in the cortex' }
+];
+
+/* =====================================================================
+   STATES: what each stage or practice looks like on the three channels
+   eeg band amplitudes in microvolts, event rates per second, eog and emg levels
+   ===================================================================== */
+const ST = {
+  W:  { delta: 5, theta: 5, alpha: 7, beta: 9, gamma: 3, spindle: 0, kc: 0, vertex: 0, saw: 0, gburst: 0, tburst: 0, emg: 1, blink: 0.28, sacc: 0.6, roll: 0, rems: 0 },
+  Wc: { delta: 5, theta: 6, alpha: 34, beta: 6, gamma: 2, spindle: 0, kc: 0, vertex: 0, saw: 0, gburst: 0, tburst: 0, emg: 0.8, blink: 0.03, sacc: 0.05, roll: 0, rems: 0 },
+  N1: { delta: 10, theta: 24, alpha: 8, beta: 4, gamma: 1.5, spindle: 0, kc: 0, vertex: 0.05, saw: 0, gburst: 0, tburst: 0, emg: 0.5, blink: 0, sacc: 0, roll: 1, rems: 0 },
+  N2: { delta: 24, theta: 18, alpha: 5, beta: 3, gamma: 1, spindle: 0.08, kc: 0.03, vertex: 0, saw: 0, gburst: 0, tburst: 0, emg: 0.35, blink: 0, sacc: 0, roll: 0.1, rems: 0 },
+  N3: { delta: 85, theta: 14, alpha: 3, beta: 2, gamma: 0.8, spindle: 0.015, kc: 0, vertex: 0, saw: 0, gburst: 0, tburst: 0, emg: 0.28, blink: 0, sacc: 0, roll: 0, rems: 0 },
+  R:  { delta: 9, theta: 20, alpha: 8, beta: 8, gamma: 3, spindle: 0, kc: 0, vertex: 0, saw: 0.12, gburst: 0, tburst: 0, emg: 0.04, blink: 0, sacc: 0, roll: 0, rems: 0.35 },
+  M1: { delta: 5, theta: 14, alpha: 42, beta: 5, gamma: 2.5, spindle: 0, kc: 0, vertex: 0, saw: 0, gburst: 0, tburst: 0.05, emg: 0.6, blink: 0.02, sacc: 0.02, roll: 0, rems: 0 },
+  M2: { delta: 6, theta: 26, alpha: 34, beta: 4, gamma: 6, spindle: 0, kc: 0, vertex: 0, saw: 0, gburst: 0.25, tburst: 0.18, emg: 0.5, blink: 0.01, sacc: 0.01, roll: 0, rems: 0 },
+  Y1: { delta: 8, theta: 20, alpha: 22, beta: 4, gamma: 1.5, spindle: 0, kc: 0, vertex: 0, saw: 0, gburst: 0, tburst: 0.06, emg: 0.42, blink: 0.01, sacc: 0, roll: 0.25, rems: 0 },
+  Y2: { delta: 11, theta: 31, alpha: 9, beta: 3, gamma: 1.2, spindle: 0, kc: 0, vertex: 0.01, saw: 0, gburst: 0, tburst: 0.1, emg: 0.36, blink: 0, sacc: 0, roll: 0.45, rems: 0 }
+};
+// how each state is shown: hypnogram level (0 = awake ... 4 = n3), name, colour
+const LEVEL = { W: 0, Wc: 0, M1: 0.6, M2: 0.6, Y1: 0.6, Y2: 0.6, R: 1, N1: 2, N2: 3, N3: 4 };
+const INFO = {
+  W:  { name: 'awake', sub: 'eyes open', text: 'small, fast and busy: mostly beta. blinks and darting eyes on the eye channel, plenty of muscle tone at the chin.', list: ['beta 13–30 hz dominates', 'blinks and saccades on the eog', 'high chin tone'] },
+  Wc: { name: 'awake', sub: 'eyes closed, relaxed', text: 'close your eyes and alpha rolls in, a smooth 8–12 hz rhythm from the back of the head. it is the bridge between waking and sleep.', list: ['alpha 8–12 hz appears', 'eyes still', 'muscles still toned'] },
+  N1: { name: 'n1', sub: 'drifting off', text: 'alpha breaks up and slower theta takes over. the eyes roll slowly from side to side and the muscles let go; this is where hypnic jerks and dream-like images happen.', list: ['theta 4–8 hz', 'slow rolling eye movements', 'vertex sharp waves', 'easy to wake'] },
+  N2: { name: 'n2', sub: 'light sleep', text: 'the background slows further, broken by sleep spindles (short 11–16 hz bursts from the thalamus) and k-complexes (single large waves, often triggered by a sound you never notice).', list: ['sleep spindles', 'k-complexes', 'eyes quiet', 'about half of the night'] },
+  N3: { name: 'n3', sub: 'deep, slow-wave sleep', text: 'huge, slow delta waves, the brain\'s neurons swinging together. the hardest stage to wake from, and it fills the first cycles of the night.', list: ['delta 0.5–2 hz, 75 µv and up', 'very hard to wake', 'growth hormone released', 'shrinks with age'] },
+  R:  { name: 'rem', sub: 'dreaming', text: 'the brain looks nearly awake: low, mixed and fast, with theta and sawtooth waves. the eyes dart in bursts while the chin goes almost flat, because the body is paralysed.', list: ['theta and sawtooth waves', 'rapid eye movements', 'muscle atonia', 'vivid dreams'] },
+  M1: { name: 'meditation', sub: 'settling in', text: 'eyes closed and attention resting: alpha grows strong and steady, with some theta. fully awake.', list: ['strong alpha', 'some theta', 'awake and aware'] },
+  M2: { name: 'meditation', sub: 'deep focus', text: 'in practised meditators, bursts of theta over the front midline join the alpha, and some show unusually strong gamma. still fully awake.', list: ['frontal midline theta bursts', 'alpha stays', 'gamma bursts in some long-term practitioners'] },
+  Y1: { name: 'yoga nidra', sub: 'body scan', text: 'lying down, attention guided around the body. alpha begins to give way to theta, much like the approach to sleep.', list: ['alpha fading', 'theta rising', 'listening to the guide'] },
+  Y2: { name: 'yoga nidra', sub: 'the edge of sleep', text: 'theta now leads, close to the border of n1, but the person still follows the voice. there are no spindles, because they never cross into n2.', list: ['theta dominant', 'slow eye drift', 'aware, not asleep'] }
+};
+const STAGE_LABEL = s => ({ W: 'awake', Wc: 'awake', M1: 'meditating', M2: 'meditating', Y1: 'yoga nidra', Y2: 'yoga nidra', R: 'rem', N1: 'n1', N2: 'n2', N3: 'n3' })[s];
+
+/* =====================================================================
+   SCENARIOS: timelines in minutes
+   ===================================================================== */
+const NIGHT = [
+  ['W', 8], ['Wc', 4], ['N1', 6], ['N2', 18], ['N3', 36], ['N2', 8], ['R', 10],
+  ['N1', 2], ['N2', 24], ['N3', 28], ['N2', 10], ['R', 20],
+  ['W', 2], ['N1', 3], ['N2', 32], ['N3', 14], ['N2', 14], ['R', 26],
+  ['N2', 42], ['N3', 6], ['N2', 10], ['R', 32], ['W', 2],
+  ['N1', 3], ['N2', 36], ['R', 38], ['W', 8]
+];
+const NARCO = [
+  ['W', 6], ['Wc', 2], ['N1', 2], ['R', 14], ['N1', 3], ['N2', 18], ['W', 8], ['N1', 3], ['N2', 20], ['N3', 18], ['N2', 6], ['R', 16],
+  ['W', 12], ['N1', 6], ['N2', 26], ['R', 22], ['W', 14], ['N1', 4], ['N2', 22], ['N3', 8], ['N2', 10], ['R', 24],
+  ['W', 18], ['N1', 5], ['N2', 28], ['R', 30], ['W', 10], ['N1', 4], ['N2', 20], ['R', 26], ['W', 12]
+];
+const MEDIT = [['W', 2], ['Wc', 3], ['M1', 8], ['M2', 11], ['Wc', 2], ['W', 2]];
+const NIDRA = [['W', 2], ['Wc', 4], ['Y1', 10], ['Y2', 15], ['Y1', 3], ['Wc', 2], ['W', 2]];
+const SCEN = [
+  { key: 'night', label: 'a normal night', tl: NIGHT, start: 23, alphaDelta: false, note: '' },
+  { key: 'narco', label: 'narcolepsy', tl: NARCO, start: 23, alphaDelta: false, note: 'rem within minutes of falling asleep (a soremp), and a night broken by waking.' },
+  { key: 'alphadelta', label: 'alpha-delta sleep', tl: NIGHT, start: 23, alphaDelta: true, note: 'alpha keeps breaking into deep sleep.' },
+  { key: 'meditation', label: 'meditation', tl: MEDIT, start: null, alphaDelta: false, note: '' },
+  { key: 'nidra', label: 'yoga nidra', tl: NIDRA, start: null, alphaDelta: false, note: '' }
+];
+let scen = SCEN[0];
+const tlTotal = tl => tl.reduce((s, [, m]) => s + m, 0);
+function stateAt(tl, min) { let acc = 0; for (const [s, m] of tl) { if (min < acc + m) return s; acc += m; } return tl[tl.length - 1][0]; }
+function shareOf(tl, stage) {
+  const lab = STAGE_LABEL(stage), sleepOnly = ['n1', 'n2', 'n3', 'rem'].includes(lab);
+  let tot = 0, part = 0;
+  tl.forEach(([s, m]) => { const l = STAGE_LABEL(s); if (!sleepOnly || ['n1', 'n2', 'n3', 'rem'].includes(l)) tot += m; if (l === lab) part += m; });
+  return { pct: Math.round(part / tot * 100), of: sleepOnly ? (scen.key === 'narco' ? 'of sleep tonight' : 'of sleep tonight') : scen.start === null ? 'of the session' : 'of the night' };
+}
+
+/* =====================================================================
+   THE SYNTHETIC RECORDING
+   ===================================================================== */
+const SR = 200, NS = SR * 30;          // 30 seconds kept, any part of it can be shown
+const tv = { win: 8, gain: 1 };
+const stamp = new Float32Array(NS);     // the minute of the night each sample was drawn from
+let sMin = 0;
+const ch = { eeg: new Float32Array(NS), eog: new Float32Array(NS), emg: new Float32Array(NS) };
+let head = 0;
+const P = Object.assign({}, ST.W, { adAlpha: 0 });          // current (smoothed) parameters
+const osc = {};
+BANDS.forEach(b => { osc[b.key] = Array.from({ length: 4 }, () => ({ f: b.lo + Math.random() * (Math.min(b.hi, b.key === 'gamma' ? 45 : b.hi) - b.lo), ph: Math.random() * TAU, w: 0.6 + Math.random() * 0.8 })); });
+osc.delta.forEach(o => { o.f = 0.6 + Math.random() * 1.4; });     // keep the slow waves slow
+const events = [];
+let eogSlow = 0, eogTarget = 0, rollPh = 0, remBurst = 0, tSig = 0;
+function spawn(type, a) { events.push(Object.assign({ type, t0: tSig, done: false }, a)); }
+function sample() {
+  const dt = 1 / SR; tSig += dt;
+  let eeg = 0;
+  for (const b of BANDS) {
+    let amp = P[b.key];
+    if (b.key === 'alpha') amp += P.adAlpha;
+    if (amp < 0.05) { osc[b.key].forEach(o => { o.ph += TAU * o.f * dt; }); continue; }
+    let s = 0;
+    for (const o of osc[b.key]) { o.ph += TAU * o.f * dt; s += o.w * Math.sin(o.ph); }
+    eeg += amp * s * 0.5;
+  }
+  eeg += gauss() * 1.5;
+  // events (rates are per second)
+  if (Math.random() < P.spindle * dt) spawn('spindle', { dur: 0.6 + Math.random() * 0.9, f: 12 + Math.random() * 2, a: 30 + Math.random() * 15 });
+  if (Math.random() < P.kc * dt) spawn('kc', { dur: 0.8, a: 110 + Math.random() * 50 });
+  if (Math.random() < P.vertex * dt) spawn('vertex', { dur: 0.3, a: 55 + Math.random() * 20 });
+  if (Math.random() < P.saw * dt) spawn('saw', { dur: 1.5 + Math.random() * 2, f: 2.5 + Math.random() * 2, a: 30 + Math.random() * 12 });
+  if (Math.random() < P.gburst * dt) spawn('gamma', { dur: 0.4 + Math.random() * 0.6, f: 38 + Math.random() * 6, a: 9 + Math.random() * 5 });
+  if (Math.random() < P.tburst * dt) spawn('theta', { dur: 1 + Math.random() * 2, f: 6 + Math.random() * 1, a: 22 + Math.random() * 12 });
+  for (const e of events) {
+    const u = (tSig - e.t0) / e.dur; if (u >= 1) { e.done = true; continue; }
+    const env = Math.sin(Math.PI * u) ** 2, tt = tSig - e.t0;
+    if (e.type === 'spindle' || e.type === 'gamma' || e.type === 'theta') eeg += e.a * env * Math.sin(TAU * e.f * tt);
+    else if (e.type === 'kc') eeg += -e.a * Math.exp(-(((u - 0.22) / 0.09) ** 2)) + 0.55 * e.a * Math.exp(-(((u - 0.55) / 0.16) ** 2));
+    else if (e.type === 'vertex') eeg += -e.a * Math.exp(-(((u - 0.5) / 0.15) ** 2));
+    else if (e.type === 'saw') { const p = (tt * e.f) % 1; eeg += e.a * env * (p < 0.75 ? p / 0.75 : (1 - p) / 0.25) - e.a * env * 0.5; }
+  }
+  for (let i = events.length - 1; i >= 0; i--) if (events[i].done) events.splice(i, 1);
+  // eyes
+  let eog = 0;
+  if (Math.random() < P.blink * dt) spawn('blink', { dur: 0.3, a: 170 + Math.random() * 60 });
+  if (Math.random() < P.sacc * dt) eogTarget = (Math.random() - 0.5) * 120;
+  if (P.rems > 0.02) {
+    if (remBurst <= 0 && Math.random() < 0.25 * dt) remBurst = 1.5 + Math.random() * 3;
+    if (remBurst > 0) { remBurst -= dt; if (Math.random() < 3 * dt) eogTarget = (Math.random() - 0.5) * 220 * P.rems / 0.35; }
+    else eogTarget *= 0.995;
+  } else if (P.sacc < 0.01) eogTarget *= 0.995;
+  eogSlow = lerp(eogSlow, eogTarget, P.rems > 0.02 ? 0.12 : 0.06);
+  rollPh += TAU * 0.25 * dt;
+  eog += eogSlow + P.roll * 70 * Math.sin(rollPh) + P.delta * 0.35 * Math.sin(osc.delta[0].ph) * 0.6 + gauss() * 2;
+  for (const e of events) if (e.type === 'blink') { const u = (tSig - e.t0) / e.dur; if (u < 1) eog += e.a * Math.sin(Math.PI * u) ** 3; }
+  // chin muscle
+  let emg = gauss() * 14 * P.emg;
+  if (P.emg < 0.1 && Math.random() < 0.6 * dt) spawn('twitch', { dur: 0.12, a: 30 });
+  for (const e of events) if (e.type === 'twitch') { const u = (tSig - e.t0) / e.dur; if (u < 1) emg += gauss() * e.a * Math.sin(Math.PI * u); }
+  ch.eeg[head] = eeg; ch.eog[head] = eog; ch.emg[head] = emg; stamp[head] = sMin;
+  head = (head + 1) % NS;
+}
+
+/* night clock */
+const night = { min: 0, speed: 2, paused: false };
+let curState = 'W';
+function targetFor(s) {
+  const t = Object.assign({}, ST[s]);
+  t.adAlpha = scen.alphaDelta ? (s === 'N3' ? 26 : s === 'N2' ? 14 : 0) : 0;
+  return t;
+}
+const KS = 1 - Math.exp(-1 / SR / 0.25);     // per-sample easing between stages (about a quarter second)
+let genState = '', genT = null;
+function sampleAt(m) {
+  const st = stateAt(scen.tl, m);
+  if (st !== genState || !genT) { genState = st; genT = targetFor(st); }
+  for (const key in genT) P[key] += (genT[key] - P[key]) * KS;
+  sMin = m; sample();
+}
+// rebuild the whole recording so it ends at the playhead: the screen always shows the
+// stretch of night just before it, at the current night speed
+function regen() {
+  events.length = 0; genState = '';
+  const perSample = night.speed / SR, start = night.min - (NS - 1) * perSample;
+  Object.assign(P, targetFor(stateAt(scen.tl, Math.max(0, start))));
+  for (let k = 0; k < NS; k++) sampleAt(Math.max(0, start + k * perSample));
+}
+
+/* ---------- panel ---------- */
+const scenEl = $('#scen');
+SCEN.forEach(s => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'sc'; b.dataset.k = s.key; b.textContent = s.label;
+  b.setAttribute('aria-pressed', String(s === scen));
+  b.addEventListener('click', () => setScen(s.key));
+  scenEl.appendChild(b);
+});
+function setScen(key) {
+  scen = SCEN.find(s => s.key === key); night.min = 0;
+  $$('.sc').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === key)));
+  curState = ''; updateState(); regen();
+}
+const bandsEl = $('#bands');
+BANDS.forEach(b => {
+  const d = document.createElement('div'); d.className = 'band';
+  d.innerHTML = `<span>${b.name}</span><span class="m"><b style="background:var(${b.col})"></b></span><output>0%</output>`;
+  bandsEl.appendChild(d); b.el = d;
+});
+function clockLabel(min) {
+  if (scen.start === null) return `${Math.floor(min)} min`;
+  const h = (scen.start + min / 60) % 24, m = Math.floor((h % 1) * 60 + 1e-6);
+  return `${String(Math.floor(h)).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+function updateState() {
+  const s = stateAt(scen.tl, night.min);
+  if (s === curState) return;
+  curState = s;
+  const inf = INFO[s], sh = shareOf(scen.tl, s);
+  $('#cName').textContent = inf.name;
+  $('#cSub').textContent = inf.sub;
+  let txt = inf.text;
+  if (scen.key === 'alphadelta' && (s === 'N3' || s === 'N2')) txt += ' here, a waking alpha rhythm rides on top: alpha-delta sleep.';
+  if (scen.key === 'narco' && s === 'R' && night.min < 25) txt = 'rem only minutes after falling asleep: a sleep-onset rem period, or soremp. in a healthy sleeper the first rem comes after about 90 minutes.';
+  $('#cText').textContent = txt;
+  $('#cList').innerHTML = inf.list.map(l => `<li>${l}</li>`).join('');
+  $('#cShare').textContent = `${sh.pct}% ${sh.of}`;
+  $('#cName').dataset.final = inf.name;
+  if (!reduced) scramble($('#cName'), 380);
+}
+const speedEl = $('#speed');
+function readSpeed() { night.speed = Math.pow(10, +speedEl.value); $('#speedO').textContent = `${night.speed < 1 ? night.speed.toFixed(2) : night.speed < 10 ? night.speed.toFixed(1) : Math.round(night.speed)} minutes a second`; }
+speedEl.addEventListener('input', readSpeed); readSpeed();
+const tPause = $('#tPause');
+tPause.addEventListener('click', () => { night.paused = !night.paused; tPause.setAttribute('aria-pressed', String(night.paused)); tPause.textContent = night.paused ? 'resume' : 'pause'; });
+$('#tRestart').addEventListener('click', () => { night.min = 0; updateState(); regen(); });
+$$('[data-show]').forEach(b => b.addEventListener('click', () => { setScen(b.dataset.show); $('#top').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); }));
+
+/* ---------- the hero drawing ---------- */
+const psg = $('#psg');
+let L = null;
+function layoutHero(w, h) {
+  const narrow = innerWidth <= 900;
+  if (narrow) { const o = { x0: 16, x1: w - 16, top: 22, eegH: h * 0.3, eogH: h * 0.11, emgH: h * 0.07, hypH: h * 0.18 }; o.hypTop = o.top + o.eegH + o.eogH + o.emgH + 36 + 52; return o; }
+  const panel = $('.panel').getBoundingClientRect(), right = panel.left - psg.getBoundingClientRect().left - 36;
+  const x0 = Math.max(24, parseFloat(getComputedStyle($('.hero')).paddingLeft));
+  const o = { x0, x1: right, top: 84, eegH: h * 0.2, eogH: h * 0.07, emgH: h * 0.05, hypH: h * 0.11 };
+  o.hypTop = o.top + o.eegH + o.eogH + o.emgH + 36 + 52;
+  return o;
+}
+let gradCache = null;
+function drawPSG() {
+  const c = sizeCanvas(psg); if (!c) return;
+  const { x, w, h } = c; L = layoutHero(w, h); L.hx0 = L.x0 + 40;
+  x.clearRect(0, 0, w, h);
+  const W = L.x1 - L.x0;
+  // lanes
+  const lanes = [
+    { key: 'eeg', label: 'eeg · brain', y: L.top + L.eegH * 0.5, hh: L.eegH, scale: L.eegH * 0.42 / 100, col: null },
+    { key: 'eog', label: 'eog · eyes', y: L.top + L.eegH + 18 + L.eogH * 0.5, hh: L.eogH, scale: L.eogH * 0.45 / 150, col: 'rgba(57,201,182,.85)' },
+    { key: 'emg', label: 'emg · chin', y: L.top + L.eegH + L.eogH + 36 + L.emgH * 0.5, hh: L.emgH, scale: L.emgH * 0.45 / 30, col: 'rgba(233,231,226,.6)' }
+  ];
+  x.font = '11px "Fragment Mono", monospace'; x.textBaseline = 'alphabetic';
+  // one-second grid
+  const gs = tv.win > 16 ? 5 : tv.win > 8 ? 2 : 1;
+  for (let sec = 0; sec <= tv.win + 1e-6; sec += gs) { const gx = L.x1 - sec / tv.win * W; x.strokeStyle = 'rgba(233,231,226,.05)'; x.beginPath(); x.moveTo(gx, L.top - 8); x.lineTo(gx, lanes[2].y + lanes[2].hh / 2 + 4); x.stroke(); }
+  if (!gradCache || gradCache.w !== W) {
+    const gr = x.createLinearGradient(L.x0, 0, L.x1, 0);
+    ['#e9e7e2', '#6f9bff', '#39c9b6', '#d9c56b', '#df8a4b', '#6f9bff', '#e9e7e2'].forEach((cc, i, a) => gr.addColorStop(i / (a.length - 1), cc));
+    gradCache = { w: W, gr };
+  }
+  lanes.forEach(ln => {
+    const buf = ch[ln.key];
+    x.fillStyle = css('--dim'); x.textAlign = 'left'; x.fillText(ln.label, L.x0, ln.y - ln.hh / 2 - 4);
+    x.save(); x.beginPath(); x.rect(L.x0, ln.y - ln.hh / 2 - 2, W, ln.hh + 4); x.clip();
+    x.strokeStyle = ln.col || gradCache.gr; x.lineWidth = ln.key === 'eeg' ? 1.5 : 1.1;
+    if (ln.key === 'eeg') { x.shadowColor = 'rgba(111,155,255,.45)'; x.shadowBlur = 6; }
+    x.beginPath();
+    const count = Math.round(tv.win * SR), step = Math.max(1, Math.floor(count / (W * 1.5)));
+    for (let i = 0; i <= count; i += step) {
+      const v = buf[(head - count + i + NS * 2) % NS], px = L.x0 + i / count * W, py = ln.y - clamp(v * ln.scale * tv.gain, -ln.hh * 0.55, ln.hh * 0.55);
+      i ? x.lineTo(px, py) : x.moveTo(px, py);
+    }
+    x.stroke(); x.restore(); x.shadowBlur = 0;
+  });
+  // stage changes inside the window, so the traces read against the hypnogram
+  {
+    const count = Math.round(tv.win * SR), y0 = L.top - 2, y1 = lanes[2].y + lanes[2].hh / 2 + 2;
+    let prev = null, segStart = L.x0;
+    const label = (lab, xa, xb) => { if (xb - xa > 46) { x.fillStyle = css('--theta'); x.textAlign = 'left'; x.fillText(lab, xa + 6, L.top + 12); } };
+    x.font = '11px "Fragment Mono", monospace';
+    for (let i = 0; i <= count; i += 8) {
+      const idx = (head - count + i + NS * 2) % NS, lab = STAGE_LABEL(stateAt(scen.tl, stamp[idx])), px = L.x0 + i / count * W;
+      if (prev !== null && lab !== prev) {
+        x.strokeStyle = 'rgba(57,201,182,.55)'; x.setLineDash([3, 4]); x.beginPath(); x.moveTo(px, y0); x.lineTo(px, y1); x.stroke(); x.setLineDash([]);
+        label(prev, segStart, px); segStart = px;
+      }
+      prev = lab;
+    }
+    label(prev, segStart, L.x1 - 150);
+  }
+  // scale bar
+  const sb = L.x1 - 6, s50 = Math.min(50 * lanes[0].scale * tv.gain, lanes[0].hh * 0.9);
+  x.strokeStyle = 'rgba(233,231,226,.5)'; x.beginPath(); x.moveTo(sb, lanes[0].y - s50 / 2); x.lineTo(sb, lanes[0].y + s50 / 2); x.moveTo(sb, lanes[0].y + s50 / 2); x.lineTo(sb - W / tv.win, lanes[0].y + s50 / 2); x.stroke();
+  x.fillStyle = night.paused ? css('--theta') : css('--dim'); x.textAlign = 'right';
+  x.fillText(`${night.paused ? 'paused · ' : ''}${tv.win % 1 ? tv.win.toFixed(1) : tv.win} s on screen · 50 µv · 1 s`, L.x1, lanes[0].y - lanes[0].hh / 2 - 4);
+  // the hypnogram of the whole night
+  const tot = tlTotal(scen.tl), HX = m => L.hx0 + m / tot * (L.x1 - L.hx0), LV = lv => L.hypTop + lv / 4 * L.hypH;
+  const hasRest = scen.tl.some(([s]) => LEVEL[s] % 1 !== 0);
+  x.textAlign = 'right'; x.fillStyle = css('--dim');
+  const rows = [['wake', 0], ['rem', 1], ['n1', 2], ['n2', 3], ['n3', 4]];
+  if (hasRest) rows.splice(1, 0, ['rest', 0.6]);
+  rows.forEach(([n, lv]) => { x.strokeStyle = 'rgba(233,231,226,.06)'; x.beginPath(); x.moveTo(L.hx0, LV(lv)); x.lineTo(L.x1, LV(lv)); x.stroke(); });
+  x.fillStyle = css('--dim'); x.textAlign = 'left';
+  rows.forEach(([n, lv]) => x.fillText(n, L.x0, LV(lv) + 4));
+  // the line
+  let acc = 0, prev = null;
+  x.lineWidth = 1.5; x.strokeStyle = 'rgba(233,231,226,.75)'; x.beginPath();
+  scen.tl.forEach(([s, m]) => { const y = LV(LEVEL[s]); if (prev === null) x.moveTo(HX(acc), y); else x.lineTo(HX(acc), y); x.lineTo(HX(acc + m), y); acc += m; prev = y; });
+  x.stroke();
+  acc = 0; x.lineWidth = 4; x.strokeStyle = css('--rem');
+  scen.tl.forEach(([s, m]) => { if (s === 'R') { x.beginPath(); x.moveTo(HX(acc), LV(1)); x.lineTo(HX(acc + m), LV(1)); x.stroke(); } acc += m; });
+  x.lineWidth = 1;
+  // time labels
+  x.fillStyle = css('--dim'); x.textAlign = 'center';
+  let tickEvery = scen.start === null ? 5 : 60;
+  while ((L.x1 - L.hx0) / (tot / tickEvery) < 56) tickEvery *= 2;   // keep the time labels apart on narrow screens
+  for (let m = 0; m <= tot; m += tickEvery) { x.textAlign = m === 0 ? 'left' : 'center'; x.fillText(clockLabel(m), HX(m), L.hypTop + L.hypH + 18); }
+  // the part of the night currently on screen above
+  {
+    const count = Math.round(tv.win * SR), oldest = stamp[(head - count + NS * 2) % NS], newest = stamp[(head - 1 + NS) % NS];
+    const a = HX(clamp(Math.min(oldest, newest), 0, tot)), b = HX(clamp(newest, 0, tot));
+    x.fillStyle = 'rgba(57,201,182,.14)'; x.fillRect(a, L.hypTop - 4, Math.max(2, b - a), L.hypH + 8);
+  }
+  // playhead
+  const px = HX(night.min);
+  x.strokeStyle = 'rgba(57,201,182,.9)'; x.beginPath(); x.moveTo(px, L.hypTop - 10); x.lineTo(px, L.hypTop + L.hypH + 4); x.stroke();
+  x.fillStyle = css('--theta'); x.beginPath(); x.arc(px, L.hypTop - 10, 4, 0, TAU); x.fill();
+  x.textAlign = px > L.x1 - 80 ? 'right' : 'left'; x.fillText(`${clockLabel(night.min)} · ${STAGE_LABEL(curState)}`, px + (px > L.x1 - 80 ? -8 : 8), L.hypTop - 6);
+  x.fillStyle = css('--dim'); x.textAlign = 'left'; x.fillText('hypnogram · the whole ' + (scen.start === null ? 'session' : 'night') + ' · shaded: on screen above · drag to move', L.x0, L.hypTop - 24);
+}
+// drag along the hypnogram to move through the night
+let scrub = false;
+function scrubTo(e) {
+  if (!L) return;
+  const r = psg.getBoundingClientRect(), mx = e.clientX - r.left;
+  night.min = clamp((mx - L.hx0) / (L.x1 - L.hx0), 0, 0.9999) * tlTotal(scen.tl);
+  updateState();
+  regen();                                     // the traces jump with the playhead
+}
+const twinEl = $('#twin'), gainEl = $('#gain');
+function showStretch() {
+  twinEl.value = tv.win; gainEl.value = Math.log2(tv.gain);
+  $('#twinO').textContent = `${tv.win % 1 ? tv.win.toFixed(1) : tv.win} s`;
+  $('#gainO').textContent = `×${tv.gain.toFixed(tv.gain < 1 ? 2 : 1)}`;
+}
+twinEl.addEventListener('input', () => { tv.win = +twinEl.value; showStretch(); });
+gainEl.addEventListener('input', () => { tv.gain = Math.pow(2, +gainEl.value); showStretch(); });
+showStretch();
+const zoneOf = e => {
+  if (!L) return null;
+  const r = psg.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  if (my > L.hypTop - 30 && my < L.hypTop + L.hypH + 26) return 'hyp';
+  if (my > L.top - 20 && my < L.hypTop - 30 && mx > L.x0 - 10 && mx < L.x1 + 10) return 'trace';
+  return null;
+};
+let stretch = null;
+psg.addEventListener('pointerdown', e => {
+  const z = zoneOf(e);
+  if (z === 'hyp') { scrub = true; scrubTo(e); psg.setPointerCapture(e.pointerId); }
+  else if (z === 'trace') { stretch = { x: e.clientX, y: e.clientY, win: tv.win, gain: tv.gain, id: e.pointerId, touch: e.pointerType === 'touch' }; if (!stretch.touch) psg.setPointerCapture(e.pointerId); }
+});
+psg.addEventListener('pointermove', e => {
+  if (scrub) { scrubTo(e); return; }
+  if (stretch && e.pointerId === stretch.id) {
+    // drag right to stretch time out (fewer seconds on screen), drag up to make the waves taller
+    const dx = e.clientX - stretch.x, dy = e.clientY - stretch.y;
+    if (!stretch.touch || Math.abs(dx) > Math.abs(dy)) tv.win = Math.round(clamp(stretch.win * Math.exp(-dx / 220), 2, 30) * 2) / 2;
+    if (!stretch.touch) tv.gain = clamp(stretch.gain * Math.exp(-dy / 160), 0.25, 4);
+    showStretch(); return;
+  }
+  const z = zoneOf(e); psg.style.cursor = z === 'hyp' ? 'ew-resize' : z === 'trace' ? 'move' : 'default';
+});
+psg.addEventListener('wheel', e => {
+  if (!e.ctrlKey || zoneOf(e) !== 'trace') return;       // trackpad pinch arrives as ctrl + wheel
+  e.preventDefault();
+  tv.win = Math.round(clamp(tv.win * Math.exp(e.deltaY * 0.01), 2, 30) * 2) / 2; showStretch();
+}, { passive: false });
+const endScrub = () => { scrub = false; stretch = null; };
+psg.addEventListener('pointerup', endScrub); psg.addEventListener('pointercancel', endScrub);
+
+function drawBands() {
+  const pw = BANDS.map(b => { const a = P[b.key] + (b.key === 'alpha' ? P.adAlpha : 0); return a * a; }), tot = pw.reduce((s, v) => s + v, 0) || 1;
+  BANDS.forEach((b, i) => { const pc = pw[i] / tot * 100; b.el.querySelector('b').style.width = `${pc.toFixed(1)}%`; b.el.querySelector('output').textContent = `${Math.round(pc)}%`; });
+}
+
+/* ---------- section 01: one live row per band ---------- */
+const rowsEl = $('#waveRows');
+BANDS.forEach(b => {
+  const d = document.createElement('div'); d.className = 'wave';
+  d.innerHTML = `<div><h3 style="color:var(${b.col})">${b.name}</h3><span class="hz">${b.lo}–${b.hi} hz</span></div><canvas aria-hidden="true"></canvas><p><b>when:</b> ${b.when}. ${b.does} <b>made by:</b> ${b.from}.</p>`;
+  rowsEl.appendChild(d); b.cv = d.querySelector('canvas');
+});
+function drawWaveRows(t) {
+  BANDS.forEach(b => {
+    const c = sizeCanvas(b.cv); if (!c) return;
+    const { x, w, h } = c; x.clearRect(0, 0, w, h);
+    const fMid = b.key === 'gamma' ? 40 : (b.lo + b.hi) / 2, win = 1;     // one second across
+    x.strokeStyle = 'rgba(233,231,226,.08)'; x.beginPath(); x.moveTo(0, h / 2); x.lineTo(w, h / 2); x.stroke();
+    x.strokeStyle = css(b.col); x.lineWidth = 1.4; x.beginPath();
+    const amp = h * 0.42 * (b.key === 'delta' ? 1 : b.key === 'theta' ? 0.75 : b.key === 'alpha' ? 0.6 : b.key === 'beta' ? 0.35 : 0.22);
+    const n = Math.min(1200, Math.max(200, Math.round(w * 2)));
+    for (let i = 0; i <= n; i++) {
+      const tt = t + i / n * win, v = Math.sin(TAU * fMid * tt) * 0.8 + Math.sin(TAU * (fMid * 1.13) * tt + 1) * 0.2;
+      const px = i / n * w, py = h / 2 - v * amp; i ? x.lineTo(px, py) : x.moveTo(px, py);
+    }
+    x.stroke(); x.lineWidth = 1;
+    x.fillStyle = css('--dim'); x.font = '10px "Fragment Mono", monospace'; x.textAlign = 'right'; x.fillText('1 s', w - 2, h - 3);
+  });
+}
+
+/* ---------- synchrony demo (kuramoto oscillators) ---------- */
+const NO = 300, sync = { ph: Float64Array.from({ length: NO }, () => Math.random() * TAU), w: Float64Array.from({ length: NO }, () => TAU * (10 + gauss() * 0.8)), K: 0.4, trace: new Float32Array(360), th: 0 };
+const coupleEl = $('#couple');
+coupleEl.addEventListener('input', () => { sync.K = +coupleEl.value; $('#coupleO').textContent = sync.K.toFixed(2); });
+let syncR = 0;
+function stepSync(dt) {
+  const steps = 6, h = dt / steps;
+  for (let s = 0; s < steps; s++) {
+    let cx = 0, cy = 0; for (let i = 0; i < NO; i++) { cx += Math.cos(sync.ph[i]); cy += Math.sin(sync.ph[i]); }
+    cx /= NO; cy /= NO; const R = Math.hypot(cx, cy), psi = Math.atan2(cy, cx);
+    syncR = R;
+    for (let i = 0; i < NO; i++) sync.ph[i] += (sync.w[i] + sync.K * 25 * R * Math.sin(psi - sync.ph[i])) * h + gauss() * 0.04;
+    // one trace sample per sub-step, so the window spans about a second and the 10 hz wave stays readable
+    let sum = 0; for (let i = 0; i < NO; i++) sum += Math.sin(sync.ph[i]);
+    sync.trace.copyWithin(0, 1); sync.trace[sync.trace.length - 1] = sum / NO;
+  }
+}
+const syncCv = $('#sync');
+function drawSync() {
+  const c = sizeCanvas(syncCv); if (!c) return;
+  const { x, w, h } = c; x.clearRect(0, 0, w, h);
+  const cx = Math.min(w * 0.22, h * 0.5), cy = h / 2, R = Math.min(cx - 16, h / 2 - 22);
+  x.strokeStyle = 'rgba(233,231,226,.15)'; x.beginPath(); x.arc(cx, cy, R, 0, TAU); x.stroke();
+  x.fillStyle = 'rgba(217,197,107,.75)';
+  for (let i = 0; i < NO; i += 2) { const p = sync.ph[i]; x.fillRect(cx + Math.cos(p) * R - 1.5, cy + Math.sin(p) * R - 1.5, 3, 3); }
+  let mx = 0, my = 0; for (let i = 0; i < NO; i++) { mx += Math.cos(sync.ph[i]); my += Math.sin(sync.ph[i]); }
+  mx /= NO; my /= NO;
+  x.strokeStyle = css('--theta'); x.lineWidth = 2; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + mx * R, cy + my * R); x.stroke(); x.lineWidth = 1;
+  const x0 = cx * 2 + 10, x1 = w - 12;
+  x.strokeStyle = 'rgba(233,231,226,.08)'; x.beginPath(); x.moveTo(x0, cy); x.lineTo(x1, cy); x.stroke();
+  x.strokeStyle = css('--fg'); x.lineWidth = 1.5; x.beginPath();
+  sync.trace.forEach((v, i) => { const px = x0 + i / (sync.trace.length - 1) * (x1 - x0), py = cy - v * (h / 2 - 20); i ? x.lineTo(px, py) : x.moveTo(px, py); });
+  x.stroke(); x.lineWidth = 1;
+  x.font = '11px "Fragment Mono", monospace'; x.fillStyle = css('--dim'); x.textAlign = 'center';
+  x.fillText('each dot: one neuron\'s cycle', cx, h - 8); x.fillText('what the electrode records', (x0 + x1) / 2, h - 8);
+  $('#syncO').textContent = `${Math.round(syncR * 100)}%`;
+}
+
+/* ---------- binaural beats ---------- */
+const carrierEl = $('#carrier'), beatEl = $('#beatHz'), volEl = $('#vol'), playBtn = $('#beatPlay');
+const beat = { carrier: 200, df: 10, vol: 0.35, ctx: null, l: null, r: null, g: null, on: false };
+const PRESETS = [['delta', 2], ['theta', 6], ['alpha', 10], ['beta', 20], ['gamma', 40]];
+const chipsEl = $('#beatChips');
+PRESETS.forEach(([n, f]) => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = `${n} · ${f} hz`; b.dataset.f = f;
+  b.addEventListener('click', () => { beatEl.value = f; readBeat(); });
+  chipsEl.appendChild(b);
+});
+function readBeat() {
+  beat.carrier = +carrierEl.value; beat.df = +beatEl.value; beat.vol = +volEl.value;
+  $('#carrierO').textContent = `${beat.carrier} hz`; $('#beatHzO').textContent = `${beat.df} hz`; $('#volO').textContent = `${Math.round(beat.vol * 100)}%`;
+  $('#beatO').textContent = `${beat.df} hz`;
+  $$('.chip').forEach(c => c.setAttribute('aria-pressed', String(+c.dataset.f === beat.df)));
+  if (beat.on) {
+    const t = beat.ctx.currentTime;
+    beat.l.frequency.setTargetAtTime(beat.carrier, t, 0.05);
+    beat.r.frequency.setTargetAtTime(beat.carrier + beat.df, t, 0.05);
+    beat.g.gain.setTargetAtTime(beat.vol * 0.12, t, 0.05);
+  }
+}
+[carrierEl, beatEl, volEl].forEach(el => el.addEventListener('input', readBeat));
+readBeat();
+function stopBeat() {
+  if (!beat.on) return;
+  const t = beat.ctx.currentTime; beat.g.gain.setTargetAtTime(0, t, 0.08);
+  const l = beat.l, r = beat.r; setTimeout(() => { try { l.stop(); r.stop(); } catch (e) {} }, 400);
+  beat.on = false; playBtn.setAttribute('aria-pressed', 'false'); playBtn.textContent = 'play · use headphones';
+}
+playBtn.addEventListener('click', () => {
+  if (beat.on) { stopBeat(); return; }
+  try { beat.ctx = beat.ctx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { playBtn.textContent = 'sound is not available here'; return; }
+  const c = beat.ctx; if (c.state === 'suspended') c.resume();
+  const merger = c.createChannelMerger(2), g = c.createGain(); g.gain.value = 0;
+  const l = c.createOscillator(), r = c.createOscillator();
+  l.frequency.value = beat.carrier; r.frequency.value = beat.carrier + beat.df;
+  l.connect(merger, 0, 0); r.connect(merger, 0, 1); merger.connect(g).connect(c.destination);
+  l.start(); r.start(); g.gain.setTargetAtTime(beat.vol * 0.12, c.currentTime, 0.15);
+  Object.assign(beat, { l, r, g, on: true });
+  playBtn.setAttribute('aria-pressed', 'true'); playBtn.textContent = 'stop';
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopBeat(); });
+const beatCv = $('#beat');
+function drawBeat(t) {
+  const c = sizeCanvas(beatCv); if (!c) return;
+  const { x, w, h } = c; x.clearRect(0, 0, w, h);
+  const lane = h / 3, win = 1;     // one second across
+  // the tones themselves are far too fast to draw at real speed, so they are shown slowed down 20 times
+  const slow = 20, fl = beat.carrier / slow, fr = (beat.carrier + beat.df) / slow;
+  const draw = (fn, y0, col, label) => {
+    x.strokeStyle = col; x.lineWidth = 1.2; x.beginPath();
+    const n = Math.round(w * 1.5);
+    for (let i = 0; i <= n; i++) { const tt = t + i / n * win, v = fn(tt); const px = i / n * w, py = y0 + lane / 2 - v * lane * 0.36; i ? x.lineTo(px, py) : x.moveTo(px, py); }
+    x.stroke(); x.lineWidth = 1;
+    x.fillStyle = css('--dim'); x.font = '11px "Fragment Mono", monospace'; x.textAlign = 'left'; x.fillText(label, 8, y0 + 14);
+  };
+  draw(tt => Math.sin(TAU * fl * tt), 0, 'rgba(111,155,255,.8)', `left ear · ${beat.carrier} hz (drawn 20× slower)`);
+  draw(tt => Math.sin(TAU * fr * tt), lane, 'rgba(223,138,75,.8)', `right ear · ${beat.carrier + beat.df} hz (drawn 20× slower)`);
+  draw(tt => Math.abs(Math.cos(Math.PI * beat.df * tt)) * 2 - 1, lane * 2, css('--theta'), `the beat you hear · ${beat.df} hz (real speed)`);
+  x.strokeStyle = 'rgba(233,231,226,.08)'; [lane, lane * 2].forEach(y => { x.beginPath(); x.moveTo(0, y); x.lineTo(w, y); x.stroke(); });
+}
+
+/* =====================================================================
+   MAIN LOOP
+   ===================================================================== */
+const vis = { hero: true, waves: false, sync: false, beat: false };
+if ('IntersectionObserver' in window) {
+  const watch = (el, k) => new IntersectionObserver(es => { vis[k] = es[0].isIntersecting; }, { threshold: 0.01 }).observe(el);
+  watch($('.hero'), 'hero'); watch($('#waveRows'), 'waves'); watch($('#sync'), 'sync'); watch($('#beat'), 'beat');
+}
+setScen('night');
+let last = performance.now(), T = 0, uiT = 0, sampAcc = 0;
+function draw(now) {
+  const real = Math.min(0.25, Math.max(0, (now - last) / 1000)); last = now;
+  const dt = Math.min(0.05, real); T += dt;
+  if (!night.paused) {
+    // exactly SR samples per real second, so the traces keep real time
+    sampAcc += real * SR;
+    let n = Math.floor(sampAcc); sampAcc -= n;
+    const step = scrub ? 0 : night.speed / SR;
+    while (n-- > 0) {
+      if (!scrub) night.min += step;
+      if (night.min >= tlTotal(scen.tl)) { night.min = 0; updateState(); regen(); break; }
+      sampleAt(night.min);
+    }
+  }
+  updateState();
+  if (vis.hero) drawPSG();
+  if ((uiT -= dt) <= 0) { uiT = 0.25; drawBands(); $('#cWhen').textContent = clockLabel(night.min); }
+  if (vis.waves) drawWaveRows(T * 0.5);
+  if (vis.sync) { stepSync(dt); drawSync(); }
+  if (vis.beat) drawBeat(T * 0.25);
+}
+function frame(now) { requestAnimationFrame(frame); draw(now); }
+requestAnimationFrame(frame);
+addEventListener('resize', () => { gradCache = null; });
+})();
+</script>
+</body>
+</html>

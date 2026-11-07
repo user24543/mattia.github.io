@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>umwelt</title>
+<meta name="description" content="umwelt — one garden at dusk, through six different minds. an interactive study by mattia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --panel:#08080a;
+  --fg:#e9e7e2;
+  --mute:#8b8d94;
+  --dim:#55575e;
+  --line:rgba(233,231,226,.13);
+  --teal:#39c9b6;
+  --brass:#d9c56b;
+  --copper:#d97e42;
+  --lab:linear-gradient(100deg,#e9e7e2 0%,#6f9bff 18%,#39c9b6 34%,#d9c56b 50%,#df8a4b 62%,#6f9bff 80%,#e9e7e2 100%);
+  --heat:linear-gradient(90deg,#05030f,#59127a 25%,#d9402a 50%,#ffbf33 75%,#fffbe6);
+  --sonar:linear-gradient(90deg,#f2f4ff,#38a0c7);
+  --f-display:"Syne","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Fragment Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px);
+  --gut-l:max(var(--gut),env(safe-area-inset-left,0px));
+  --gut-r:max(var(--gut),env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:400 13px/1.65 var(--f-mono);text-transform:lowercase;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+::selection{background:var(--fg);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--fg);outline-offset:4px}
+.wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ln{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s cubic-bezier(.2,.8,.2,1)}
+.ln:hover,.ln:focus-visible{background-size:100% 1px}
+.grain{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:var(--grain)}
+@keyframes sheen{to{background-position:-320% 0}}
+
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) var(--gut-r) 20px var(--gut-l);mix-blend-mode:difference;color:#fff}
+.mark{font:500 15px/1 var(--f-display);letter-spacing:-.02em}
+.nav{display:flex;gap:clamp(12px,2.2vw,28px)}
+@media (max-width:700px){.nav .opt{display:none}}
+
+/* ---------- hero: the garden ---------- */
+.hero{position:relative;height:100vh;height:100svh;min-height:640px;overflow:hidden}
+#garden{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab}
+#garden.dragging{cursor:grabbing}
+#garden.bat{cursor:crosshair}
+.no-gl #garden{display:none}
+.no-gl .hero{background:radial-gradient(ellipse at 40% 45%,rgba(57,201,182,.12),transparent 55%)}
+.gl-msg{display:none}
+.no-gl .gl-msg{display:block;position:absolute;left:var(--gut-l);top:40%;color:var(--mute);max-width:40ch}
+.hero-copy{position:absolute;left:0;bottom:0;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;pointer-events:none;max-width:58%}
+.title{margin:0 0 0 -.04em;font:500 clamp(80px,14vw,236px)/.8 var(--f-display);letter-spacing:-.065em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .8s;pointer-events:auto}
+.title:hover{color:transparent;animation:sheen 7s linear infinite}
+.sub{margin:0;font:400 clamp(17px,1.6vw,23px)/1.25 var(--f-display);letter-spacing:-.01em}
+.hint{margin:0;color:var(--mute)}
+.hint kbd{font:inherit;color:var(--fg)}
+
+.panel{position:absolute;z-index:3;right:var(--gut-r);top:calc(72px + env(safe-area-inset-top,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:min(370px,34vw);display:flex;flex-direction:column;gap:14px;overflow:auto;scrollbar-width:thin}
+.minds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.mind{min-height:44px;padding:6px 10px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--mute);display:grid;justify-items:start;align-content:center;gap:1px;text-align:left;transition:color .2s,border-color .2s}
+.mind span{font-size:10.5px;color:var(--dim)}
+.mind:hover{color:var(--fg)}
+.mind[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.mind[aria-pressed="true"] span{color:var(--mute)}
+.card{border:1px solid var(--line);background:rgba(0,0,0,.62);padding:16px;display:grid;gap:10px}
+.card .eyebrow{display:flex;justify-content:space-between;gap:12px;color:var(--dim)}
+.card h2{margin:0;font:500 clamp(26px,2.4vw,36px)/1 var(--f-display);letter-spacing:-.03em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 9s linear infinite}
+.card h3{margin:4px 0 0;font:inherit;color:var(--dim)}
+.card p{margin:0}
+.card .senses{color:var(--fg)}
+.card .body{color:var(--mute)}
+.legend{display:grid;gap:8px;padding-top:4px}
+.legend:empty{display:none}
+.bar{height:8px;border:1px solid var(--line)}
+.bar-row{display:flex;justify-content:space-between;color:var(--dim);font-size:11px;font-variant-numeric:tabular-nums}
+.sw{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;font-size:11.5px;color:var(--mute)}
+.sw i{display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:-1px;border:1px solid var(--line)}
+.meter{display:grid;grid-template-columns:9ch minmax(0,1fr) 6ch;gap:10px;align-items:center;font-size:11.5px;color:var(--mute)}
+.meter .m{height:6px;border:1px solid var(--line);position:relative;overflow:hidden}
+.meter .m b{position:absolute;inset:0 auto 0 0;width:0;background:var(--fg)}
+.meter output{text-align:right;color:var(--fg);font-variant-numeric:tabular-nums}
+.tickstate{color:var(--dim)}
+.tickstate.drop{color:var(--fg)}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tool{min-height:32px;padding:0 11px;border:1px solid var(--line);color:var(--mute);background:rgba(0,0,0,.45);transition:color .2s,border-color .2s}
+.tool:hover{color:var(--fg)}
+.tool[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+
+@media (max-width:900px){
+  .hero{height:auto;min-height:0;overflow:visible;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  #garden{position:relative;height:60vh;height:60svh;min-height:340px;margin-left:calc(-1 * var(--gut-l));width:calc(100% + var(--gut-l) + var(--gut-r))}
+  .hero-copy{position:relative;max-width:none;padding-top:8px}
+  .panel{position:relative;right:auto;top:auto;bottom:auto;width:auto;overflow:visible;margin-top:28px}
+}
+@media (max-width:420px){.minds{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- sections ---------- */
+.sec{position:relative;padding-block:clamp(100px,13vw,190px) 0}
+.label{display:flex;justify-content:space-between;gap:16px;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--line)}
+.label h2{font:inherit;margin:0}
+.lede{margin:clamp(36px,5vw,64px) 0 0;max-width:24ch;font:400 clamp(28px,3.6vw,54px)/1.1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.lede em{font-style:normal;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 14s linear infinite}
+@media (prefers-reduced-motion:reduce){.lede em,.title:hover,.card h2{animation:none}}
+.prose{max-width:62ch;font-size:14px}
+.prose p{margin:0 0 1em}
+.two{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:start}
+
+.cmp{margin-top:clamp(40px,6vw,80px);border-top:1px solid var(--line)}
+.cmp-row{display:grid;grid-template-columns:minmax(0,.6fr) minmax(0,1fr) minmax(0,1fr);gap:clamp(14px,3vw,40px);padding:20px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.cmp-row.head{color:var(--dim);padding:12px 0}
+.cmp-row b{font:500 clamp(19px,1.7vw,24px)/1.15 var(--f-display);letter-spacing:-.02em}
+.cmp-row span{color:var(--mute)}
+@media (max-width:760px){
+  .cmp-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .cmp-row b{grid-column:1/-1}
+  .cmp-row.head span:first-child{display:none}
+}
+
+.ideas{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.idea{padding:clamp(24px,3vw,40px) 0;border-bottom:1px solid var(--line);display:grid;gap:12px;align-content:start}
+.idea:nth-child(odd){padding-right:clamp(20px,3vw,48px);border-right:1px solid var(--line)}
+.idea:nth-child(even){padding-left:clamp(20px,3vw,48px)}
+.idea h3{margin:0;font:500 clamp(26px,2.6vw,38px)/1 var(--f-display);letter-spacing:-.03em}
+.idea p{margin:0;color:var(--mute);max-width:52ch}
+.idea .k{color:var(--dim)}
+
+.foot{margin-top:clamp(110px,14vw,200px);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;color:var(--dim);border-top:1px solid var(--line)}
+
+@media (max-width:860px){
+  .two{grid-template-columns:minmax(0,1fr)}
+  .ideas{grid-template-columns:minmax(0,1fr)}
+  .idea:nth-child(odd){padding-right:0;border-right:0}
+  .idea:nth-child(even){padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="mark" href="#top">umwelt</a>
+  <nav class="nav" aria-label="sections">
+    <a class="ln opt" href="#idea">idea</a>
+    <a class="ln opt" href="#compare">compare</a>
+    <a class="ln opt" href="#translation">translation</a>
+    <a class="ln" href="index.html">← mattia</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="t">
+    <canvas id="garden" role="img" aria-label="a small garden at dusk with flowers, stones, a running mouse and a circling moth, drawn through the senses of the animal chosen on the right."></canvas>
+    <p class="gl-msg">this study draws the garden with webgl, which this browser has turned off. the notes below still work.</p>
+    <div class="hero-copy">
+      <h1 class="title" id="t">umwelt</h1>
+      <p class="sub">one garden at dusk, through six different minds</p>
+      <p class="hint">drag to look around · keys <kbd>1</kbd>–<kbd>6</kbd> switch minds · as the bat, hold down to call faster</p>
+    </div>
+    <aside class="panel" aria-label="senses">
+      <div class="minds" role="group" aria-label="whose senses" id="minds"></div>
+      <article class="card" id="card">
+        <div class="eyebrow"><span id="cIdx">01 / 06</span><span id="cKind"></span></div>
+        <h2 id="cName">human</h2>
+        <p class="senses" id="cSenses"></p>
+        <p class="body" id="cBody"></p>
+        <h3>on screen</h3>
+        <p id="cScreen"></p>
+        <div class="legend" id="cLegend"></div>
+      </article>
+      <div class="tools">
+        <button class="tool" id="tSound" type="button" aria-pressed="false">bat sound</button>
+        <button class="tool" id="tSpin" type="button" aria-pressed="true">spin</button>
+        <button class="tool" id="tReset" type="button">reset view</button>
+      </div>
+      <p class="sr-only" id="status" role="status" aria-live="polite"></p>
+    </aside>
+  </section>
+
+  <section class="sec wrap" id="idea" aria-labelledby="i-h">
+    <div class="label"><h2 id="i-h" class="scr">( 01 · the idea )</h2><span>01 / 03</span></div>
+    <p class="lede">every animal lives inside a <em>bubble</em> made of what it can sense.</p>
+    <div class="two">
+      <div class="prose"><p>in 1934 the biologist jakob von uexküll gave that bubble a name: the umwelt, german for "the world around". a tick, a bee and a dog standing in the same garden do not share a world. each picks up a handful of signals and ignores the rest, and that handful is everything that exists for it.</p></div>
+      <div class="prose"><p>the garden at the top of this page never changes. the mouse runs the same loop, the moth circles, the stone gives back the day's heat. only the reader changes. switching senses never shows the real garden underneath; it swaps one partial picture for another, and that includes yours.</p></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="compare" aria-labelledby="c-h">
+    <div class="label"><h2 id="c-h" class="scr">( 02 · side by side )</h2><span>02 / 03</span></div>
+    <p class="lede">same garden, six <em>different</em> sets of signals.</p>
+    <div class="cmp" role="table" aria-label="what each animal picks up and misses">
+      <div class="cmp-row head" role="row"><span role="columnheader"></span><span role="columnheader">picks up</span><span role="columnheader">misses</span></div>
+      <div class="cmp-row" role="row"><b role="rowheader">human</b><span role="cell">light from about 400 to 700 nm in three colours, sound up to about 20 khz</span><span role="cell">ultraviolet, heat at a distance, almost every trail a dog would follow</span></div>
+      <div class="cmp-row" role="row"><b role="rowheader">honeybee</b><span role="cell">ultraviolet, blue and green; flicker far faster than you can see; the polarised pattern of the sky</span><span role="cell">red, which looks dark; fine detail</span></div>
+      <div class="cmp-row" role="row"><b role="rowheader">bat</b><span role="cell">echoes of its own calls, up to and past 100 khz, including the flutter of insect wings</span><span role="cell">colour; moths whose fur and scales soak up ultrasound</span></div>
+      <div class="cmp-row" role="row"><b role="rowheader">pit viper</b><span role="cell">heat from warm bodies, even in total darkness, laid over normal sight</span><span role="cell">a sharp heat image: the pits blur like pinhole cameras</span></div>
+      <div class="cmp-row" role="row"><b role="rowheader">dog</b><span role="cell">smells far fainter than you can detect, and how old a trail is and which way it runs</span><span role="cell">the difference between red and green</span></div>
+      <div class="cmp-row" role="row"><b role="rowheader">tick</b><span role="cell">butyric acid, warmth near 37°, touch</span><span role="cell">everything else</span></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="translation" aria-labelledby="l-h">
+    <div class="label"><h2 id="l-h" class="scr">( 03 · lost in translation )</h2><span>03 / 03</span></div>
+    <div class="ideas">
+      <article class="idea"><span class="k">i.</span><h3>false colour</h3><p>a bee has no blue for ultraviolet. drawing it as blue translates it into a colour you already have. the bee's own colour for it is one no human has seen.</p></article>
+      <article class="idea"><span class="k">ii.</span><h3>hearing drawn as light</h3><p>the bat's garden is made of sound. glowing rings keep the timing of each echo but lose the texture a bat hears in every return.</p></article>
+      <article class="idea"><span class="k">iii.</span><h3>one sense at a time</h3><p>real animals blend their senses. a snake's brain lays heat over sight in a single map, and a dog sees and smells at once. this page pulls them apart so each one can be noticed.</p></article>
+      <article class="idea"><span class="k">iv.</span><h3>what is it like to be a bat?</h3><p>in 1974 the philosopher thomas nagel argued that you could learn every fact about echolocation and still not know what it is like from the inside. this page is a set of facts. the inside stays out of reach.</p></article>
+    </div>
+  </section>
+
+  <footer class="foot wrap">
+    <a class="ln" href="index.html">← back to mattia</a>
+    <span>umwelt — a study by mattia, 2026</span>
+    <span>senses simplified from published research. every view is a translation, not a recording.</span>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+/* ---------- grain + heading decode ---------- */
+(() => {
+  const c = document.createElement('canvas'); c.width = c.height = 140;
+  const x = c.getContext('2d'), d = x.createImageData(140, 140);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  root.style.setProperty('--grain', `url(${c.toDataURL()})`);
+})();
+const GLYPHS = '01·/\\_<>=+*#';
+function scramble(el, dur = 650) {
+  if (reduced) return;
+  const final = el.dataset.final || (el.dataset.final = el.textContent);
+  const t0 = performance.now();
+  cancelAnimationFrame(el._scr);
+  const step = now => {
+    const p = clamp((now - t0) / dur, 0, 1);
+    let out = '';
+    for (let i = 0; i < final.length; i++) out += (final[i] === ' ' || i / final.length < p * 1.3 - 0.3) ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    el.textContent = p >= 1 ? final : out;
+    if (p < 1) el._scr = requestAnimationFrame(step);
+  };
+  el._scr = requestAnimationFrame(step);
+}
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), { threshold: 0.6 });
+  $$('.scr').forEach(el => io.observe(el));
+}
+
+/* =====================================================================
+   MINDS — what each animal senses, and how this page translates it
+   ===================================================================== */
+const MINDS = [
+  { name: 'human', kind: 'vision · three cones',
+    senses: 'light from violet to red, about 400 to 700 nm, through three kinds of cone.',
+    body: 'each eye has about six million cones for colour and over a hundred million rods for dim light. at dusk the rods take over, colour drains away and reds darken first, which is why the poppies already look close to black.',
+    screen: 'the reference view: the garden as your own eyes would see it at dusk.',
+    post: { mosaic: 0, blur: 0, vig: .35, fish: 0 },
+    legend: () => '' },
+  { name: 'honeybee', kind: 'vision · ultraviolet',
+    senses: 'ultraviolet, blue and green. no receptor for red.',
+    body: 'many flowers that look plain yellow to you carry ultraviolet bullseyes that point to the nectar. the poppy looks red to you but reflects ultraviolet, so a bee sees it clearly. each eye is a mosaic of about 5,500 tiny lenses: the image is coarse, but fast enough to follow flicker you would never notice.',
+    screen: 'false colour, shifted down one step: ultraviolet is drawn as blue, blue as green, green as red. the honeycomb is the compound eye.',
+    post: { mosaic: 8, blur: 0, vig: .75, fish: .32 },
+    legend: () => `<div class="sw"><span><i style="background:#3a5cff"></i>ultraviolet → blue</span><span><i style="background:#2fc46a"></i>blue → green</span><span><i style="background:#e0443a"></i>green → red</span><span><i style="background:#000"></i>red → nothing</span></div>` },
+  { name: 'bat', kind: 'hearing · echolocation',
+    senses: 'its own calls, from about 20 to over 100 khz, coming back as echoes.',
+    body: 'a bat shouts and listens. the delay of each echo gives distance and its loudness gives size, while the flicker of beating wings tells a moth apart from a leaf. closing in on prey, it speeds up from about ten calls a second to a buzz of up to two hundred.',
+    screen: 'every call is slowed down hundreds of times. surfaces light up the moment their echo gets back, near ones first. hold down on the garden to buzz.',
+    post: { mosaic: 0, blur: 0, vig: .55, fish: 0 },
+    legend: () => `<div class="bar" style="background:var(--sonar)"></div><div class="bar-row"><span>echo back soon · near</span><span>late · far</span></div>` },
+  { name: 'pit viper', kind: 'infrared · pit organs',
+    senses: 'heat radiation, through two pits between the eyes and the nostrils.',
+    body: 'each pit works like a pinhole camera for warmth. its thin membrane reacts to changes of a few thousandths of a degree, enough to strike a mouse in total darkness. the heat image is blurry, and the brain lays it over normal sight in the same region, the optic tectum.',
+    screen: 'thermal colour from cold to hot. the flat stone is still warm from the day; the mouse runs at 37°.',
+    post: { mosaic: 0, blur: 5, vig: .6, fish: 0 },
+    legend: () => `<div class="bar" style="background:var(--heat)"></div><div class="bar-row"><span>8°</span><span>18°</span><span>28°</span><span>39°</span></div>` },
+  { name: 'dog', kind: 'smell · two cones',
+    senses: 'up to 300 million smell receptors, against about 6 million in your nose. two colour cones: blue and yellow.',
+    body: 'a dog smells time. fresh scent is strong and old scent is faint, and from the difference across a few footsteps a dog can tell which way a trail runs. each nostril samples on its own, so it smells in stereo. reds and greens blur into the same muddy tone.',
+    screen: 'scent drawn as haze. vision is two-colour and slightly blurred.',
+    post: { mosaic: 0, blur: 1.6, vig: .5, fish: 0 },
+    legend: () => `<div class="sw"><span><i style="background:#f08038"></i>the mouse's trail</span><span><i style="background:#33ccb3"></i>flowers</span><span><i style="background:#e6c757"></i>another dog, hours ago</span><span><i style="background:linear-gradient(90deg,#fff,#222)"></i>fresh → old</span></div>` },
+  { name: 'tick', kind: 'three signals',
+    senses: 'butyric acid in mammal sweat, warmth near 37°, the touch of hair.',
+    body: 'von uexküll used the tick to explain the idea. it is blind: it climbs a stem and waits. butyric acid makes it let go, warmth tells it that it landed on something alive, and touch sends it looking for skin. he reported a tick kept waiting for eighteen years.',
+    screen: 'only the three signals are left. the bars below are the tick\'s whole world.',
+    post: { mosaic: 0, blur: 12, vig: .85, fish: 0 },
+    legend: () => `<div class="meter"><span>acid</span><span class="m"><b id="mAcid"></b></span><output id="oAcid">0</output></div><div class="meter"><span>warmth</span><span class="m"><b id="mWarm"></b></span><output id="oWarm">13°</output></div><div class="meter"><span>touch</span><span class="m"><b id="mTouch"></b></span><output id="oTouch">no</output></div><p class="tickstate" id="tickState">waiting on a stem</p>` }
+];
+
+const mindsEl = $('#minds');
+MINDS.forEach((m, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'mind'; b.dataset.i = i;
+  b.setAttribute('aria-pressed', String(i === 0));
+  b.innerHTML = `<span>0${i + 1}</span>${m.name}`;
+  b.addEventListener('click', () => setMind(i));
+  mindsEl.appendChild(b);
+});
+const card = { idx: $('#cIdx'), kind: $('#cKind'), name: $('#cName'), senses: $('#cSenses'), body: $('#cBody'), screen: $('#cScreen'), legend: $('#cLegend') };
+let mind = 0;
+function fillCard(i) {
+  const m = MINDS[i];
+  card.idx.textContent = `0${i + 1} / 06`; card.kind.textContent = m.kind;
+  card.name.textContent = m.name; delete card.name.dataset.final;
+  card.senses.textContent = m.senses; card.body.textContent = m.body; card.screen.textContent = m.screen;
+  card.legend.innerHTML = m.legend();
+  $$('.mind').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.i === i)));
+  $('#status').textContent = `now seeing as: ${m.name}`;
+}
+fillCard(0);
+let setMind = i => { mind = i; fillCard(i); };
+addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('input,textarea')) return;
+  if (e.key >= '1' && e.key <= '6') setMind(+e.key - 1);
+});
+
+/* =====================================================================
+   THE GARDEN (three.js)
+   every surface stores a rough spectrum (ultraviolet, blue, green, red),
+   a temperature and how well it reflects sound; each mind reads those.
+   ===================================================================== */
+const canvas = $('#garden');
+if (!window.THREE) { root.classList.add('no-gl'); return; }
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'high-performance' }); }
+catch (e) { root.classList.add('no-gl'); return; }
+const gl2 = renderer.capabilities.isWebGL2;
+renderer.setClearColor(0x000000, 0);
+
+// deterministic randomness so the garden is the same for everyone
+let seed = 1934;
+const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 120);
+
+/* --- the mouse's loop (a closed path, so it keeps coming back past the tick) --- */
+function pathAt(u) {
+  const a = u * Math.PI * 2 + 0.35 * Math.sin(u * Math.PI * 4);
+  const r = 1.95 + 0.62 * Math.sin(u * Math.PI * 6 + 1);
+  return { x: Math.cos(a) * r, z: Math.sin(a) * r };
+}
+const PATH = Array.from({ length: 240 }, (_, i) => pathAt(i / 240));
+const distToPath = (x, z) => { let m = 1e9; for (const p of PATH) m = Math.min(m, (p.x - x) ** 2 + (p.z - z) ** 2); return Math.sqrt(m); };
+const TICK = (() => { const p = pathAt(0.32), q = pathAt(0.322), nx = -(q.z - p.z), nz = q.x - p.x, l = Math.hypot(nx, nz); return { x: p.x + nx / l * 0.14, z: p.z + nz / l * 0.14 }; })();
+
+/* --- scent field: three channels on a grid over the ground --- */
+const SN = 96, SPAN = 7.6;
+const scent = [new Float32Array(SN * SN), new Float32Array(SN * SN), new Float32Array(SN * SN)];
+const scentTmp = new Float32Array(SN * SN);
+const scentPix = new Uint8Array(SN * SN * 4);
+const scentTex = new THREE.DataTexture(scentPix, SN, SN, THREE.RGBAFormat);
+scentTex.magFilter = scentTex.minFilter = THREE.LinearFilter; scentTex.needsUpdate = true;
+const cellOf = (x, z) => { const i = Math.round((x / SPAN + 0.5) * (SN - 1)), j = Math.round((z / SPAN + 0.5) * (SN - 1)); return (i < 1 || j < 1 || i >= SN - 1 || j >= SN - 1) ? -1 : j * SN + i; };
+function deposit(ch, x, z, amt) {
+  const fi = (x / SPAN + 0.5) * (SN - 1), fj = (z / SPAN + 0.5) * (SN - 1);
+  for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+    const i = Math.round(fi) + di, j = Math.round(fj) + dj;
+    if (i < 1 || j < 1 || i >= SN - 1 || j >= SN - 1) continue;
+    const w = Math.exp(-((i - fi) ** 2 + (j - fj) ** 2) * 0.9);
+    scent[ch][j * SN + i] += amt * w;
+  }
+}
+const HALF = [26, 3.5, 7];      // half-life in seconds: mouse trail, flowers, old mark
+function stepScent(dt, sources) {
+  const k = Math.min(0.22, dt * 4);
+  for (let c = 0; c < 3; c++) {
+    const f = scent[c], decay = Math.pow(0.5, dt / HALF[c]);
+    for (const s of sources[c]) deposit(c, s.x, s.z, s.a * dt);
+    for (let j = 1; j < SN - 1; j++) for (let i = 1; i < SN - 1; i++) {
+      const id = j * SN + i;
+      const avg = (f[id - 1] + f[id + 1] + f[id - SN] + f[id + SN]) * 0.25;
+      scentTmp[id] = (f[id] + (avg - f[id]) * k) * decay;
+    }
+    f.set(scentTmp);
+  }
+}
+function uploadScent() {
+  for (let id = 0; id < SN * SN; id++) {
+    scentPix[id * 4] = Math.min(255, scent[0][id] * 255);
+    scentPix[id * 4 + 1] = Math.min(255, scent[1][id] * 255);
+    scentPix[id * 4 + 2] = Math.min(255, scent[2][id] * 255);
+    scentPix[id * 4 + 3] = 255;
+  }
+  scentTex.needsUpdate = true;
+}
+// strongest value within a couple of cells: a tick only needs a whiff
+const sampleScent = (ch, x, z) => { const id = cellOf(x, z); if (id < 0) return 0; let m = 0; for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) { const k = id + dj * SN + di; if (k > 0 && k < SN * SN) m = Math.max(m, scent[ch][k]); } return m; };
+
+/* --- shared uniforms --- */
+const NP = 24;
+const G = {
+  uMode: { value: 0 }, uTime: { value: 0 }, uCam: { value: new THREE.Vector3() },
+  uPings: { value: Array.from({ length: NP }, () => new THREE.Vector4(0, 0, 0, -99)) },
+  uSpeed: { value: 14 }, uScent: { value: scentTex }, uSpan: { value: SPAN },
+  uSun: { value: new THREE.Vector3(-0.62, 0.42, -0.45).normalize() },
+  uLight: { value: new THREE.Vector4(0.8, 1.0, 0.86, 0.74) }, uFlash: { value: 0 }
+};
+
+const VS = `
+attribute float aR;
+uniform float uTime;
+varying vec3 vW; varying vec3 vN; varying float vR; varying float vVar;
+void main(){
+  mat4 m = modelMatrix;
+  #ifdef USE_INSTANCING
+  m = modelMatrix * instanceMatrix;
+  #endif
+  vec4 w = m * vec4(position, 1.0);
+  vVar = 0.5;
+  #ifdef USE_INSTANCING
+  vec3 ip = (m * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+  vVar = fract(sin(dot(ip.xz, vec2(12.9898, 78.233))) * 43758.5453);
+  float bend = aR * aR;
+  w.x += sin(uTime * 1.3 + ip.x * 1.7 + ip.z * 0.9) * 0.05 * bend;
+  w.z += cos(uTime * 1.1 + ip.z * 1.9) * 0.035 * bend;
+  #endif
+  vW = w.xyz; vN = normalize(mat3(m) * normal); vR = aR;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+const FS = `
+precision highp float;
+uniform float uMode, uTime, uRing, uTemp, uEcho, uKind, uSpeed, uFlash, uSpan;
+uniform vec4 uRefA, uRefB, uLight;
+uniform vec3 uCam, uSun;
+uniform vec4 uPings[${NP}];
+uniform sampler2D uScent;
+varying vec3 vW; varying vec3 vN; varying float vR; varying float vVar;
+vec3 heat(float t){
+  t = clamp(t, 0.0, 1.0);
+  vec3 a = vec3(.02,.012,.06), b = vec3(.35,.07,.48), c = vec3(.85,.25,.16), d = vec3(1.,.75,.2), e = vec3(1.,.98,.9);
+  return t < .25 ? mix(a,b,t*4.) : t < .5 ? mix(b,c,(t-.25)*4.) : t < .75 ? mix(c,d,(t-.5)*4.) : mix(d,e,(t-.75)*4.);
+}
+vec3 scentAt(vec2 xz){ return texture2D(uScent, xz / uSpan + 0.5).rgb; }
+void main(){
+  vec3 n = normalize(vN); if (!gl_FrontFacing) n = -n;
+  vec3 V = normalize(uCam - vW);
+  vec4 ref = vR < uRing ? uRefA : uRefB;
+  if (uKind > 0.5 && uKind < 1.5) ref *= (0.4 + 0.6 * vR) * (0.7 + 0.6 * vVar);
+  float edge = 1.0;
+  if (uKind > 1.5) edge = smoothstep(1.0, 0.7, vR);
+  float irr = max(dot(n, uSun), 0.0) * 0.9 + 0.42 + 0.22 * n.y + 0.25 * pow(1.0 - abs(dot(n, V)), 2.0);
+  vec4 s = ref * uLight * irr * edge;
+  float m = uMode; vec3 col;
+  if (m < 0.5) {                       // human, at dusk: rods start to take over
+    col = s.wzy * 2.1;
+    float l = dot(col, vec3(.06, .56, .38));
+    col = mix(col, vec3(l) * vec3(.8, .9, 1.06), .32);
+  } else if (m < 1.5) {                // honeybee: uv, blue, green shown as blue, green, red
+    col = vec3(s.z, s.y, s.x) * 2.2;
+  } else if (m < 2.5) {                // bat: echoes arrive after the round trip
+    float e = 0.0;
+    for (int i = 0; i < ${NP}; i++) {
+      vec4 P = uPings[i];
+      float age = uTime - P.w;
+      if (age < 0.0 || age > 6.0) continue;
+      vec3 dv = P.xyz - vW; float d = length(dv);
+      float x = age * uSpeed - 2.0 * d;
+      if (x < -0.25) continue;
+      float k = smoothstep(-0.25, 0.0, x) * exp(-max(x, 0.0) * 0.28);
+      float face = abs(dot(n, dv / d));
+      float dn = d / length(uCam);
+      e += k * (0.15 + 0.85 * pow(face, 2.0)) * uEcho * 0.9 / (dn * dn);
+    }
+    float dist = length(uCam - vW);
+    col = mix(vec3(.95, .97, 1.), vec3(.2, .6, .78), smoothstep(0.8, 1.2, dist / length(uCam))) * (1.0 - exp(-e * 1.4)) * edge;
+  } else if (m < 3.5) {                // pit viper: heat, faintly over sight
+    float t = (uTemp - 8.0) / 31.0 + (vVar - 0.5) * 0.03;
+    col = heat(t) * (0.6 + 0.4 * max(dot(n, V), 0.0)) * edge + s.wzy * 0.07;
+  } else if (m < 4.5) {                // dog: blue/yellow vision, scent on top
+    float S = s.y * 0.85 + s.x * 0.15, L = s.z * 0.55 + s.w * 0.5;
+    col = vec3(L, L * 0.93, S) * 1.05;
+    vec3 sc = scentAt(vW.xz);
+    float low = smoothstep(0.55, 0.0, vW.y);
+    col += (sc.r * vec3(.95, .5, .22) + sc.g * vec3(.2, .8, .7) + sc.b * vec3(.9, .78, .35)) * low * 1.15 * edge;
+  } else {                             // tick: warmth and acid, nothing else
+    float h = smoothstep(31.0, 37.0, uTemp);
+    vec3 sc = scentAt(vW.xz);
+    col = vec3(1., .86, .7) * h * (1.4 + 0.4 * sin(uTime * 3.0)) + vec3(.6, .45, .26) * sc.r * smoothstep(0.4, 0.0, vW.y) * 0.75 * edge;
+    col += uFlash * vec3(.35, .3, .26);
+  }
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+function mat(o) {
+  return new THREE.ShaderMaterial({
+    uniforms: Object.assign({}, G, {
+      uRefA: { value: new THREE.Vector4(...(o.a || o.b)) }, uRefB: { value: new THREE.Vector4(...o.b) },
+      uRing: { value: o.ring ?? -1 }, uTemp: { value: o.temp }, uEcho: { value: o.echo ?? 1 }, uKind: { value: o.kind ?? 0 }
+    }),
+    vertexShader: VS, fragmentShader: FS, side: THREE.DoubleSide
+  });
+}
+// every geometry gets aR: a 0..1 coordinate used for petal patterns, grass height and the ground's edge
+function withR(geo, fn) {
+  const p = geo.attributes.position, r = new Float32Array(p.count);
+  for (let i = 0; i < p.count; i++) r[i] = fn ? fn(p.getX(i), p.getY(i), p.getZ(i)) : 1;
+  geo.setAttribute('aR', new THREE.BufferAttribute(r, 1));
+  return geo;
+}
+
+const garden = new THREE.Group(); scene.add(garden);
+const meshes = [];
+function add(geo, m, parent = garden) { const mesh = new THREE.Mesh(geo, m); parent.add(mesh); meshes.push(mesh); return mesh; }
+
+// spectra are rough reflectances in (ultraviolet, blue, green, red)
+const SPEC = {
+  soil: [.02, .05, .07, .09], grass: [.04, .07, .36, .13], stem: [.03, .06, .3, .1], stone: [.11, .2, .2, .21],
+  yellowIn: [.02, .05, .66, .8], yellowOut: [.5, .05, .7, .85], disc: [.02, .03, .09, .16],
+  poppy: [.42, .04, .06, .86], poppyIn: [.02, .02, .03, .04], blue: [.22, .62, .16, .1], white: [.06, .5, .52, .55],
+  fur: [.03, .1, .14, .19], pink: [.05, .3, .22, .45], moth: [.12, .34, .37, .4]
+};
+
+/* ground */
+const R0 = 3.7;
+add(withR(new THREE.CircleGeometry(R0, 96).rotateX(-Math.PI / 2), (x, y, z) => Math.hypot(x, z) / R0), mat({ b: SPEC.soil, temp: 12.5, echo: .55, kind: 2 }));
+
+/* items placed off the mouse's path */
+const placed = [];
+function spot(minR, maxR, clear) {
+  for (let k = 0; k < 400; k++) {
+    const a = rnd() * Math.PI * 2, r = minR + (maxR - minR) * Math.sqrt(rnd()), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (distToPath(x, z) < clear) continue;
+    if (Math.hypot(x - TICK.x, z - TICK.z) < 0.5) continue;
+    if (placed.some(p => Math.hypot(p.x - x, p.z - z) < p.r + clear * 0.9)) continue;
+    const s = { x, z, r: clear }; placed.push(s); return s;
+  }
+  return { x: 0, z: 0, r: 0 };
+}
+
+/* flower head: petals radiating from the centre, aR = distance along the petal */
+function flowerHead(n, len, wid, droop, cup) {
+  const pos = [], ar = [], idx = [];
+  const A = 6, U = 3;
+  for (let p = 0; p < n; p++) {
+    const ang = p / n * Math.PI * 2 + (p % 2) * 0.08, ca = Math.cos(ang), sa = Math.sin(ang), base = pos.length / 3;
+    for (let a = 0; a <= A; a++) for (let u = 0; u <= U; u++) {
+      const s = a / A, v = u / U * 2 - 1;
+      const w = wid * (0.25 + 0.75 * Math.pow(Math.sin(Math.PI * Math.min(1, s * 0.92 + 0.08)), 0.7));
+      const lx = 0.03 + s * len, lz = v * w, ly = -droop * s * s + cup * s * (1 - v * v * 0.5);
+      pos.push(lx * ca - lz * sa, ly, lx * sa + lz * ca); ar.push(s);
+    }
+    for (let a = 0; a < A; a++) for (let u = 0; u < U; u++) {
+      const i0 = base + a * (U + 1) + u, i1 = i0 + U + 1;
+      idx.push(i0, i1, i0 + 1, i0 + 1, i1, i1 + 1);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('aR', new THREE.Float32BufferAttribute(ar, 1));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+const stemMat = mat({ b: SPEC.stem, temp: 12.8, echo: .8 });
+const flowerSources = [];
+function flower(o) {
+  const s = spot(o.minR, o.maxR, 0.42), h = o.h * (0.85 + rnd() * 0.3);
+  const lean = new THREE.Group(); lean.position.set(s.x, 0, s.z);
+  lean.rotation.set((rnd() - .5) * 0.18, rnd() * 6.3, (rnd() - .5) * 0.18);
+  garden.add(lean);
+  add(withR(new THREE.CylinderGeometry(0.008, 0.012, h, 5).translate(0, h / 2, 0)), stemMat, lean);
+  const head = new THREE.Group(); head.position.y = h; head.rotation.x = -0.25 + rnd() * 0.2; lean.add(head);
+  add(flowerHead(o.n, o.len, o.wid, o.droop, o.cup), o.petalMat, head);
+  add(withR(new THREE.SphereGeometry(o.disc, 10, 8).scale(1, 0.7, 1)), o.discMat, head);
+  flowerSources.push({ x: s.x, z: s.z, a: 0.5 });
+}
+const yellowMat = mat({ a: SPEC.yellowIn, b: SPEC.yellowOut, ring: 0.42, temp: 13, echo: 1 });
+const discMat = mat({ b: SPEC.disc, temp: 13.2, echo: 1 });
+const poppyMat = mat({ b: SPEC.poppy, temp: 13, echo: 1 });
+const poppyIn = mat({ b: SPEC.poppyIn, temp: 13, echo: 1 });
+const blueMat = mat({ b: SPEC.blue, temp: 13, echo: 1 });
+const whiteDisc = mat({ b: SPEC.white, temp: 13, echo: 1 });
+for (let i = 0; i < 6; i++) flower({ minR: 0.2, maxR: 3.2, h: 0.62, n: 13, len: 0.17, wid: 0.032, droop: 0.06, cup: 0, disc: 0.055, petalMat: yellowMat, discMat });
+for (let i = 0; i < 3; i++) flower({ minR: 0.3, maxR: 3.1, h: 0.72, n: 4, len: 0.12, wid: 0.075, droop: 0, cup: 0.07, disc: 0.03, petalMat: poppyMat, discMat: poppyIn });
+for (let i = 0; i < 5; i++) flower({ minR: 0.2, maxR: 3.3, h: 0.42, n: 9, len: 0.09, wid: 0.022, droop: 0.01, cup: 0.02, disc: 0.025, petalMat: blueMat, discMat: whiteDisc });
+
+/* stones: one flat one still warm from the day */
+const stones = [];
+function stone(r, flat, temp) {
+  const s = spot(0.4, 3.0, r + 0.25);
+  const g = new THREE.IcosahedronGeometry(r, 2), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const k = 1 + (rnd() - 0.5) * 0.18; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * flat, p.getZ(i) * k); }
+  g.computeVertexNormals();
+  const mesh = add(withR(g), mat({ b: SPEC.stone, temp, echo: 1.35 }));
+  mesh.position.set(s.x, r * flat * 0.45, s.z); mesh.rotation.y = rnd() * 6.3;
+  stones.push({ x: s.x, z: s.z });
+  return mesh;
+}
+stone(0.42, 0.42, 25);
+stone(0.2, 0.8, 15); stone(0.15, 0.75, 14.5); stone(0.26, 0.55, 15.5);
+
+/* grass: one instanced blade */
+{
+  const blade = new THREE.PlaneGeometry(0.03, 1, 1, 4).translate(0, 0.5, 0);
+  const p = blade.attributes.position;
+  for (let i = 0; i < p.count; i++) p.setX(i, p.getX(i) * (1 - p.getY(i) * 0.9));
+  blade.computeVertexNormals();
+  withR(blade, (x, y) => y);
+  const N = 2400, gm = new THREE.InstancedMesh(blade, mat({ b: SPEC.grass, temp: 12.8, echo: .85, kind: 1 }), N);
+  const o = new THREE.Object3D();
+  let n = 0;
+  for (let k = 0; k < N * 3 && n < N; k++) {
+    const a = rnd() * Math.PI * 2, r = R0 * 0.97 * Math.sqrt(rnd()), x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (distToPath(x, z) < 0.12 && rnd() < 0.8) continue;
+    if (stones.some(s => Math.hypot(s.x - x, s.z - z) < 0.3)) continue;
+    o.position.set(x, 0, z); o.rotation.set((rnd() - .5) * 0.5, rnd() * 6.3, (rnd() - .5) * 0.5);
+    const h = (0.16 + rnd() * 0.3) * (1 - 0.35 * (r / R0) ** 3); o.scale.set(1, h, 1);
+    o.updateMatrix(); gm.setMatrixAt(n++, o.matrix);
+  }
+  gm.count = n; garden.add(gm); meshes.push(gm);
+}
+
+/* the mouse */
+const mouse = new THREE.Group(); garden.add(mouse);
+{
+  const furMat = mat({ b: SPEC.fur, temp: 37, echo: .7 });
+  const coolMat = mat({ b: SPEC.pink, temp: 31, echo: .6 });
+  add(withR(new THREE.SphereGeometry(0.1, 16, 12).scale(1.55, 0.85, 1)), furMat, mouse).position.set(0, 0.085, 0);
+  add(withR(new THREE.SphereGeometry(0.065, 14, 10).scale(1.3, 0.95, 1)), furMat, mouse).position.set(0.17, 0.1, 0);
+  for (const sd of [-1, 1]) {
+    const ear = add(withR(new THREE.CircleGeometry(0.035, 12)), coolMat, mouse);
+    ear.position.set(0.15, 0.165, sd * 0.04); ear.rotation.set(0, Math.PI / 2 + sd * 0.5, 0);
+  }
+  const tail = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.14, 0.07, 0), new THREE.Vector3(-0.3, 0.03, 0.05), new THREE.Vector3(-0.45, 0.02, -0.03), new THREE.Vector3(-0.56, 0.05, 0.04)]);
+  add(withR(new THREE.TubeGeometry(tail, 16, 0.009, 5)), coolMat, mouse);
+}
+const mouseState = { u: 0, x: 0, z: 0 };
+function stepMouse(t, dt) {
+  const go = Math.pow(Math.max(0, Math.sin(t * 0.55) * 0.6 + 0.62), 1.6);
+  mouseState.u = (mouseState.u + dt * 0.06 * go) % 1;
+  const p = pathAt(mouseState.u), q = pathAt((mouseState.u + 0.002) % 1);
+  mouseState.x = p.x; mouseState.z = p.z; mouseState.go = go;
+  mouse.position.set(p.x, Math.abs(Math.sin(t * 16)) * 0.012 * go, p.z);
+  mouse.rotation.y = -Math.atan2(q.z - p.z, q.x - p.x);
+}
+
+/* the moth: wings flap, so their echoes flicker */
+const moth = new THREE.Group(); garden.add(moth);
+const wings = [];
+{
+  const mm = mat({ b: SPEC.moth, temp: 30, echo: 1.7 });
+  add(withR(new THREE.SphereGeometry(0.025, 10, 8).scale(3, 1, 1)), mm, moth);
+  for (const sd of [-1, 1]) {
+    const hinge = new THREE.Group(); moth.add(hinge);
+    const w = add(withR(new THREE.CircleGeometry(0.08, 14).scale(0.9, 1.15, 1).rotateX(-Math.PI / 2)), mm, hinge);
+    w.position.set(-0.01, 0, sd * 0.085);
+    hinge.userData.sd = sd; wings.push(hinge);
+  }
+}
+function stepMoth(t) {
+  const x = 1.35 * Math.sin(t * 0.47), z = 1.05 * Math.sin(t * 0.81 + 1), y = 1.45 + 0.32 * Math.sin(t * 1.27);
+  const dx = 1.35 * 0.47 * Math.cos(t * 0.47), dz = 1.05 * 0.81 * Math.cos(t * 0.81 + 1);
+  moth.position.set(x, y, z); moth.rotation.y = -Math.atan2(dz, dx);
+  const flap = Math.sin(t * 19) * 0.95;
+  wings.forEach(h => { h.rotation.x = h.userData.sd * flap; });
+}
+
+/* the tick's stem: a faint marker only the tick view shows */
+const tickMark = new THREE.Mesh(new THREE.RingGeometry(0.06, 0.085, 32).rotateX(-Math.PI / 2),
+  new THREE.MeshBasicMaterial({ color: 0xd9c56b, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+tickMark.position.set(TICK.x, 0.02, TICK.z); garden.add(tickMark);
+
+/* scent puffs, drawn only for the dog */
+const NPUFF = 520;
+const puffPos = new Float32Array(NPUFF * 3), puffCol = new Float32Array(NPUFF * 3), puffLife = new Float32Array(NPUFF), puffVel = new Float32Array(NPUFF * 3), puffDur = new Float32Array(NPUFF);
+const puffGeo = new THREE.BufferGeometry();
+puffGeo.setAttribute('position', new THREE.BufferAttribute(puffPos, 3));
+puffGeo.setAttribute('aCol', new THREE.BufferAttribute(puffCol, 3));
+puffGeo.setAttribute('aLife', new THREE.BufferAttribute(puffLife, 1));
+const puffs = new THREE.Points(puffGeo, new THREE.ShaderMaterial({
+  uniforms: { uPx: { value: 1 } },
+  vertexShader: 'attribute vec3 aCol; attribute float aLife; uniform float uPx; varying vec3 vC; varying float vL; void main(){ vC = aCol; vL = aLife; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = uPx * (0.07 + aLife * 0.2) / -mv.z; gl_Position = projectionMatrix * mv; }',
+  fragmentShader: 'varying vec3 vC; varying float vL; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d) * sin(clamp(vL, 0.0, 1.0) * 3.14159) * 0.32; gl_FragColor = vec4(vC * a, a); }',
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+}));
+puffs.frustumCulled = false; garden.add(puffs);
+puffLife.fill(2);
+const PCOL = [[.95, .5, .22], [.2, .8, .7], [.9, .78, .35]];
+function stepPuffs(dt) {
+  let spawned = 0;
+  for (let i = 0; i < NPUFF; i++) {
+    if (puffLife[i] < 1) {
+      puffLife[i] += dt / puffDur[i];
+      puffPos[i * 3] += (puffVel[i * 3] + 0.06) * dt; puffPos[i * 3 + 1] += puffVel[i * 3 + 1] * dt; puffPos[i * 3 + 2] += puffVel[i * 3 + 2] * dt;
+      puffVel[i * 3] += (rnd() - .5) * dt * 0.3; puffVel[i * 3 + 2] += (rnd() - .5) * dt * 0.3;
+      continue;
+    }
+    if (spawned > 14) continue;
+    for (let tries = 0; tries < 5; tries++) {
+      const x = (rnd() - .5) * SPAN * 0.95, z = (rnd() - .5) * SPAN * 0.95, id = cellOf(x, z);
+      if (id < 0) continue;
+      const a = scent[0][id], b = scent[1][id], c = scent[2][id], tot = a + b + c;
+      if (rnd() > tot * 1.2) continue;
+      const pick = rnd() * tot, ch = pick < a ? 0 : pick < a + b ? 1 : 2, br = Math.min(1, tot);
+      puffPos.set([x, 0.02, z], i * 3); puffVel.set([(rnd() - .5) * 0.05, 0.12 + rnd() * 0.22, (rnd() - .5) * 0.05], i * 3);
+      puffCol.set(PCOL[ch].map(v => v * (0.35 + 0.65 * br)), i * 3);
+      puffLife[i] = 0; puffDur[i] = 2 + rnd() * 2.5; spawned++;
+      break;
+    }
+  }
+  puffGeo.attributes.position.needsUpdate = puffGeo.attributes.aCol.needsUpdate = puffGeo.attributes.aLife.needsUpdate = true;
+}
+
+/* scent sources */
+const markSpot = stones[0];
+function sources() {
+  return [
+    [{ x: mouseState.x, z: mouseState.z, a: 2.6 * (0.3 + 0.7 * (mouseState.go || 0)) }],
+    flowerSources,
+    [{ x: markSpot.x + 0.5, z: markSpot.z + 0.1, a: 0.32 }]
+  ];
+}
+// run the garden for a while first, so the mouse has already left a trail
+{
+  let t = 0;
+  for (let k = 0; k < 900; k++) { t += 1 / 20; stepMouse(t, 1 / 20); stepScent(1 / 20, sources()); }
+  G.uTime.value = t; uploadScent();
+}
+
+/* =====================================================================
+   RENDERING: draw the scene for one mind (or two, mid-switch), then a post pass
+   ===================================================================== */
+const rtOpts = { samples: gl2 ? 4 : 0 };
+const rtA = new THREE.WebGLRenderTarget(4, 4, rtOpts), rtB = new THREE.WebGLRenderTarget(4, 4, rtOpts);
+const post = new THREE.ShaderMaterial({
+  uniforms: {
+    tA: { value: rtA.texture }, tB: { value: rtB.texture }, uMix: { value: 0 }, uRes: { value: new THREE.Vector2(1, 1) },
+    uTime: { value: 0 }, pA: { value: new THREE.Vector4() }, pB: { value: new THREE.Vector4() }, mA: { value: 0 }, mB: { value: 0 }, uDpr: { value: 1 }, uWipe: { value: 1 }
+  },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+  fragmentShader: `
+precision highp float;
+uniform sampler2D tA, tB; uniform float uMix, uTime, mA, mB, uDpr, uWipe; uniform vec2 uRes; uniform vec4 pA, pB;
+varying vec2 vUv;
+vec3 bg(float m, vec2 uv){
+  if (m < 0.5) return mix(vec3(.004,.006,.012), vec3(.05,.065,.12), pow(uv.y, 1.6)) + vec3(.12,.06,.03) * exp(-pow((uv.y - .66) * 5., 2.)) * .35;
+  if (m < 1.5) return mix(vec3(.004,.006,.02), vec3(.03,.08,.24), pow(uv.y, 1.4));
+  if (m < 3.5 && m > 2.5) return mix(vec3(.01,.004,.02), vec3(.04,.012,.06), uv.y);
+  if (m < 4.5 && m > 3.5) return mix(vec3(.006,.006,.01), vec3(.03,.035,.06), uv.y);
+  return vec3(0.0);
+}
+vec2 hexCell(vec2 p, float s, out float edge){
+  vec2 r = vec2(1.0, 1.7320508), h = r * 0.5, q = p / s;
+  vec2 a = mod(q, r) - h, b = mod(q - h, r) - h;
+  vec2 g = dot(a, a) < dot(b, b) ? a : b;
+  vec2 ag = abs(g); float hd = max(dot(ag, normalize(vec2(1.0, 1.7320508))), ag.x);
+  edge = smoothstep(0.38, 0.5, hd);
+  return (q - g) * s;
+}
+vec4 blurTex(sampler2D t, vec2 uv, float rad){
+  vec4 acc = texture2D(t, uv);
+  if (rad > 0.5) {
+    acc = vec4(0.0);
+    for (int i = 0; i < 20; i++) {
+      float fi = float(i);
+      float r = sqrt((fi + 0.5) / 20.0) * rad, a = fi * 2.39996;
+      acc += texture2D(t, uv + vec2(cos(a), sin(a)) * r / uRes);
+    }
+    acc /= 20.0;
+  }
+  return acc;
+}
+vec3 view(sampler2D t, vec4 p, float m, vec2 uv){
+  vec2 q = uv - 0.5; q *= (1.0 + p.w * dot(q, q)) / (1.0 + p.w * 0.18); vec2 u = q + 0.5;
+  float edge = 0.0;
+  if (p.x > 0.0) u = hexCell(u * uRes, p.x * uDpr, edge) / uRes;
+  vec4 c = (u.x < 0.0 || u.y < 0.0 || u.x > 1.0 || u.y > 1.0) ? vec4(0.0) : blurTex(t, u, p.y * uDpr);
+  vec3 col = bg(m, uv) * (1.0 - c.a) + c.rgb;
+  if (p.x > 0.0) col *= 1.0 - edge * 0.55;
+  vec2 d = uv - 0.5; d.x *= uRes.x / uRes.y;
+  col *= 1.0 - p.z * smoothstep(0.25, 0.95, length(d));
+  return col;
+}
+void main(){
+  vec3 col = view(tA, pA, mA, vUv);
+  if (uMix > 0.0) {
+    vec3 b = view(tB, pB, mB, vUv);
+    vec2 d = vUv - 0.5; d.x *= uRes.x / uRes.y;
+    float R = uMix * 1.25, dist = length(d);
+    float k = uWipe > 0.5 ? 1.0 - smoothstep(R - 0.05, R, dist) : uMix;
+    col = mix(col, b, k);
+    if (uWipe > 0.5) col += vec3(.75, .8, .85) * exp(-pow((dist - R) * 90.0, 2.0)) * 0.5 * (1.0 - uMix);
+  }
+  col += (fract(sin(dot(gl_FragCoord.xy + fract(uTime) * 91.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.02;
+  gl_FragColor = vec4(max(col, 0.0), 1.0);
+}`,
+  depthTest: false, depthWrite: false
+});
+const postScene = new THREE.Scene(), postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post));
+const pvec = m => new THREE.Vector4(m.post.mosaic, m.post.blur, m.post.vig, m.post.fish);
+
+/* camera orbit */
+const view = { th: 0.6, ph: 1.08, tTh: 0.6, tPh: 1.08, spin: !reduced };
+let W = 1, H = 1, narrow = false, dpr = 1;
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height); narrow = innerWidth <= 900;
+  dpr = Math.min(devicePixelRatio || 1, 1.75);
+  renderer.setPixelRatio(dpr); renderer.setSize(W, H, false);
+  const bw = Math.round(W * dpr), bh = Math.round(H * dpr);
+  rtA.setSize(bw, bh); rtB.setSize(bw, bh);
+  post.uniforms.uRes.value.set(bw, bh); post.uniforms.uDpr.value = dpr;
+  puffs.material.uniforms.uPx.value = bh / 2 / Math.tan(camera.fov * Math.PI / 360);
+  if (narrow) { camera.aspect = W / H; camera.clearViewOffset(); }
+  else { const shift = Math.min(380, W * 0.3); camera.aspect = (W + shift) / (H * 1.3); camera.setViewOffset(W + shift, H * 1.3, shift, H * 0.3, W, H); }
+  camera.updateProjectionMatrix();
+}
+resize();
+addEventListener('resize', resize);
+if ('ResizeObserver' in window) new ResizeObserver(resize).observe(canvas);
+
+/* drag to orbit; as the bat, holding down calls faster */
+let drag = null, holding = false;
+canvas.addEventListener('pointerdown', e => {
+  drag = { x: e.clientX, y: e.clientY, th: view.tTh, ph: view.tPh, id: e.pointerId };
+  holding = true; canvas.classList.add('dragging');
+  if (cur === 2 || next === 2) ping();
+});
+addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (e.pointerType !== 'touch' || Math.abs(dx) > Math.abs(dy)) {
+    view.tTh = drag.th - dx * 0.006;
+    if (e.pointerType !== 'touch') view.tPh = clamp(drag.ph - dy * 0.004, 0.55, 1.42);
+  }
+});
+const endDrag = () => { drag = null; holding = false; canvas.classList.remove('dragging'); };
+addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
+
+const spinBtn = $('#tSpin');
+spinBtn.setAttribute('aria-pressed', String(view.spin));
+spinBtn.addEventListener('click', () => { view.spin = !view.spin; spinBtn.setAttribute('aria-pressed', String(view.spin)); });
+$('#tReset').addEventListener('click', () => { view.tTh = 0.6; view.tPh = 1.08; });
+
+/* bat calls: sound is optional, drawn rings are not */
+let actx = null, sound = false;
+const soundBtn = $('#tSound');
+soundBtn.addEventListener('click', () => {
+  sound = !sound; soundBtn.setAttribute('aria-pressed', String(sound));
+  if (sound && !actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+  if (actx && actx.state === 'suspended') actx.resume();
+});
+function chirp(short) {
+  if (!sound || !actx || actx.state !== 'running') return;
+  // a real call is too high to hear; this is one played back about thirty times slower
+  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+  const len = short ? 0.018 : 0.04;
+  o.type = 'sine'; o.frequency.setValueAtTime(short ? 2400 : 3400, t); o.frequency.exponentialRampToValueAtTime(short ? 1500 : 1100, t + len);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.12, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0008, t + len);
+  o.connect(g).connect(actx.destination); o.start(t); o.stop(t + len + 0.02);
+}
+let pingIdx = 0, lastPing = -9;
+function ping() {
+  const v = G.uPings.value[pingIdx]; pingIdx = (pingIdx + 1) % NP;
+  v.set(camera.position.x, camera.position.y, camera.position.z, G.uTime.value);
+  lastPing = G.uTime.value; chirp(holding);
+}
+
+/* switching minds: a circular wipe from the centre */
+let cur = 0, next = -1, trans = 0;
+const TRANS = reduced ? 0.35 : 0.95;
+post.uniforms.uWipe.value = reduced ? 0 : 1;
+setMind = i => {
+  if (i === (next >= 0 ? next : cur)) return;
+  if (next >= 0) { cur = next; }
+  next = i; trans = 0; mind = i; fillCard(i);
+  if (!reduced) scramble(card.name, 420);
+  canvas.classList.toggle('bat', i === 2);
+  if (i === 2) ping();
+};
+
+/* the tick's three signals */
+const tickUI = () => ({ acid: $('#mAcid'), warm: $('#mWarm'), touch: $('#mTouch'), oA: $('#oAcid'), oW: $('#oWarm'), oT: $('#oTouch'), st: $('#tickState') });
+let tickCool = 0, tickDrop = 0, uiT = 0;
+function stepTick(dt) {
+  const d = Math.hypot(mouseState.x - TICK.x, mouseState.z - TICK.z);
+  const acid = clamp(sampleScent(0, TICK.x, TICK.z) / 0.8, 0, 1);
+  const warm = 12.8 + 24.2 * Math.exp(-((d / 0.45) ** 2));
+  const touch = d < 0.2;
+  tickCool -= dt; tickDrop -= dt;
+  if (touch && acid > 0.4 && warm > 33 && tickCool <= 0) { tickCool = 6; tickDrop = 2.2; G.uFlash.value = 1; }
+  G.uFlash.value *= Math.pow(0.04, dt);
+  if ((cur === 5 || next === 5) && (uiT -= dt) <= 0) {
+    uiT = 0.08;
+    const u = tickUI(); if (!u.acid) return;
+    u.acid.style.width = (acid * 100).toFixed(0) + '%'; u.oA.textContent = acid.toFixed(2);
+    u.warm.style.width = clamp((warm - 12) / 26 * 100, 0, 100).toFixed(0) + '%'; u.oW.textContent = warm.toFixed(0) + '°';
+    u.touch.style.width = touch ? '100%' : '0%'; u.oT.textContent = touch ? 'yes' : 'no';
+    const dropping = tickDrop > 0;
+    u.st.textContent = dropping ? 'all three at once: let go.' : acid > 0.4 ? 'acid in the air. hold on.' : 'waiting on a stem';
+    u.st.classList.toggle('drop', dropping);
+  }
+}
+
+/* main loop */
+let last = performance.now(), visible = true, scentT = 0, uploadT = 0;
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold: 0.01 }).observe(canvas);
+function renderMind(i, rt) {
+  G.uMode.value = i;
+  puffs.visible = i === 4; tickMark.visible = i === 5;
+  renderer.setRenderTarget(rt); renderer.setClearColor(0x000000, 0); renderer.clear();
+  renderer.render(scene, camera);
+}
+function frame(now) { requestAnimationFrame(frame); draw(now); }
+function draw(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!visible) return;
+  const t = (G.uTime.value += dt);
+  if (view.spin && !drag) view.tTh += dt * 0.05;
+  const k = 1 - Math.pow(0.002, dt);
+  view.th = lerp(view.th, view.tTh, k); view.ph = lerp(view.ph, view.tPh, k);
+  const aspect = W / H, rad = narrow ? 13 / Math.min(1, aspect * 1.12) : 13;
+  camera.position.set(Math.sin(view.ph) * Math.cos(view.th) * rad, Math.cos(view.ph) * rad + 0.3, Math.sin(view.ph) * Math.sin(view.th) * rad);
+  camera.lookAt(0, 0.35, 0);
+  G.uCam.value.copy(camera.position);
+
+  stepMouse(t, dt); stepMoth(t);
+  scentT += dt;
+  if (scentT > 1 / 30) { stepScent(scentT, sources()); scentT = 0; }
+  if ((uploadT += dt) > 1 / 15) { uploadScent(); uploadT = 0; }
+  if (cur === 4 || next === 4) stepPuffs(dt);
+  stepTick(dt);
+  tickMark.material.opacity = 0.5 + 0.4 * Math.sin(t * 2.4);
+
+  if (cur === 2 || next === 2) { const gap = holding ? 0.11 : 0.8; if (t - lastPing > gap) ping(); }
+
+  if (next >= 0) {
+    trans += dt / TRANS;
+    if (trans >= 1) { cur = next; next = -1; trans = 0; }
+  }
+  renderMind(cur, rtA);
+  const pu = post.uniforms;
+  pu.pA.value.copy(pvec(MINDS[cur])); pu.mA.value = cur;
+  if (next >= 0) { renderMind(next, rtB); pu.pB.value.copy(pvec(MINDS[next])); pu.mB.value = next; pu.uMix.value = Math.max(0.001, ease(trans)); }
+  else pu.uMix.value = 0;
+  pu.uTime.value = t;
+  renderer.setRenderTarget(null);
+  renderer.render(postScene, postCam);
+}
+requestAnimationFrame(frame);
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); root.classList.add('no-gl'); });
+})();
+</script>
+</body>
+</html>

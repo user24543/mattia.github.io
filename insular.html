@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>insular</title>
+<meta name="description" content="insular — foster's rule, island giants and island dwarfs. an interactive study by mattia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --panel:#08080a;
+  --fg:#e9e7e2;
+  --mute:#8b8d94;
+  --dim:#55575e;
+  --line:rgba(233,231,226,.13);
+  --mouse:#df8a4b;
+  --eleph:#6f9bff;
+  --teal:#39c9b6;
+  --lab:linear-gradient(100deg,#e9e7e2 0%,#6f9bff 18%,#39c9b6 34%,#d9c56b 50%,#df8a4b 62%,#6f9bff 80%,#e9e7e2 100%);
+  --f-display:"Syne","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Fragment Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px);
+  --gut-l:max(var(--gut),env(safe-area-inset-left,0px));
+  --gut-r:max(var(--gut),env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:400 13px/1.65 var(--f-mono);text-transform:lowercase;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+::selection{background:var(--fg);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--fg);outline-offset:4px}
+.wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.ln{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s cubic-bezier(.2,.8,.2,1)}
+.ln:hover,.ln:focus-visible{background-size:100% 1px}
+.grain{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:var(--grain)}
+@keyframes sheen{to{background-position:-320% 0}}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) var(--gut-r) 20px var(--gut-l);mix-blend-mode:difference;color:#fff}
+.mark{font:500 15px/1 var(--f-display);letter-spacing:-.02em}
+.nav{display:flex;gap:clamp(12px,2.2vw,28px)}
+@media (max-width:700px){.nav .opt{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;height:100vh;height:100svh;min-height:700px;overflow:hidden}
+#isle{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab}
+#isle.dragging{cursor:grabbing}
+.no-gl #isle{display:none}
+.gl-msg{display:none}
+.no-gl .gl-msg{display:block;position:absolute;left:var(--gut-l);top:40%;color:var(--mute);max-width:40ch}
+.hero-copy{position:absolute;left:0;bottom:0;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;pointer-events:none;max-width:58%}
+.title{margin:0 0 0 -.04em;font:500 clamp(80px,13.5vw,228px)/.8 var(--f-display);letter-spacing:-.065em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .8s;pointer-events:auto}
+.title:hover{color:transparent;animation:sheen 7s linear infinite}
+.sub{margin:0;font:400 clamp(17px,1.6vw,23px)/1.25 var(--f-display);letter-spacing:-.01em}
+.hint{margin:0;color:var(--mute)}
+
+.panel{position:absolute;z-index:3;right:var(--gut-r);top:calc(72px + env(safe-area-inset-top,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:min(380px,35vw);display:flex;flex-direction:column;gap:14px;overflow:auto;scrollbar-width:thin}
+.ctl{display:grid;gap:4px}
+.ctl-head{display:flex;justify-content:space-between;gap:10px;color:var(--mute)}
+.ctl-head output{color:var(--fg);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--mute)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--fg);border:0}
+input[type=range]::-moz-range-track{height:1px;background:var(--mute)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--fg);border:0}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tool{min-height:32px;padding:0 11px;border:1px solid var(--line);color:var(--mute);background:rgba(0,0,0,.45);transition:color .2s,border-color .2s}
+.tool:hover{color:var(--fg)}
+.tool[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.read{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.read div{padding:10px 0;display:grid;gap:1px;min-width:0}
+.read div+div{padding-left:14px;border-left:1px solid var(--line)}
+.read span{color:var(--dim);font-size:11px}
+.read b{font:500 clamp(19px,1.7vw,24px)/1.15 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.read small{color:var(--mute);font-size:11.5px;font-variant-numeric:tabular-nums}
+.read .m b{color:var(--mouse)}
+.read .e b{color:var(--eleph)}
+.trace{display:grid;gap:6px}
+.trace-head{display:flex;justify-content:space-between;gap:10px;color:var(--dim);font-size:11px}
+.trace-head b{font-weight:400;color:var(--fg);font-variant-numeric:tabular-nums}
+#trace{display:block;box-sizing:border-box;width:100%;aspect-ratio:16/8;max-width:100%;border:1px solid var(--line);background:rgba(0,0,0,.6)}
+.card{border:1px solid var(--line);background:rgba(0,0,0,.62);padding:16px;display:grid;gap:9px}
+.card h2{margin:0;font:500 clamp(22px,2vw,30px)/1.05 var(--f-display);letter-spacing:-.03em}
+.card p{margin:0;color:var(--mute)}
+.card p b{font-weight:400;color:var(--fg)}
+.card .fine{color:var(--dim);font-size:11.5px}
+
+@media (max-width:900px){
+  .hero{height:auto;min-height:0;overflow:visible;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  #isle{position:relative;height:56vh;height:56svh;min-height:320px;margin-left:calc(-1 * var(--gut-l));width:calc(100% + var(--gut-l) + var(--gut-r))}
+  .hero-copy{position:relative;max-width:none;padding-top:8px}
+  .panel{position:relative;right:auto;top:auto;bottom:auto;width:auto;overflow:visible;margin-top:28px}
+}
+
+/* ---------- sections ---------- */
+.sec{position:relative;padding-block:clamp(100px,13vw,190px) 0}
+.label{display:flex;justify-content:space-between;gap:16px;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--line)}
+.label h2{font:inherit;margin:0}
+.lede{margin:clamp(36px,5vw,64px) 0 0;max-width:24ch;font:400 clamp(28px,3.6vw,54px)/1.1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.lede em{font-style:normal;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 14s linear infinite}
+@media (prefers-reduced-motion:reduce){.lede em,.title:hover{animation:none}}
+.prose{max-width:62ch;font-size:14px}
+.prose p{margin:0 0 1em}
+.two{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:start}
+.plot{display:grid;gap:10px}
+.plot-head{display:flex;justify-content:space-between;gap:12px;color:var(--mute)}
+#rule{display:block;box-sizing:border-box;width:100%;aspect-ratio:16/10;max-width:100%;border:1px solid var(--line);background:var(--panel)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;color:var(--mute)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:-1px}
+
+.specimens{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.spec{padding:clamp(20px,2.4vw,32px);border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;gap:10px;align-content:start;min-width:0}
+.spec .where{display:flex;justify-content:space-between;gap:10px;color:var(--dim);font-size:11.5px}
+.spec h3{margin:0;font:500 clamp(24px,2.2vw,32px)/1 var(--f-display);letter-spacing:-.03em}
+.spec p{margin:0;color:var(--mute)}
+.spec .dir{font:500 13px/1 var(--f-mono);color:var(--fg)}
+.spec .dir.up{color:var(--mouse)}
+.spec .dir.down{color:var(--eleph)}
+@media (max-width:1000px){.specimens{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.specimens{grid-template-columns:minmax(0,1fr)}}
+
+.ideas{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.idea{padding:clamp(24px,3vw,40px) 0;border-bottom:1px solid var(--line);display:grid;gap:12px;align-content:start}
+.idea:nth-child(odd){padding-right:clamp(20px,3vw,48px);border-right:1px solid var(--line)}
+.idea:nth-child(even){padding-left:clamp(20px,3vw,48px)}
+.idea h3{margin:0;font:500 clamp(26px,2.6vw,38px)/1 var(--f-display);letter-spacing:-.03em}
+.idea p{margin:0;color:var(--mute);max-width:52ch}
+.idea .k{color:var(--dim)}
+.foot{margin-top:clamp(110px,14vw,200px);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;color:var(--dim);border-top:1px solid var(--line)}
+.foot span:last-child{max-width:64ch}
+@media (max-width:860px){
+  .two,.ideas{grid-template-columns:minmax(0,1fr)}
+  .idea:nth-child(odd){padding-right:0;border-right:0}
+  .idea:nth-child(even){padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="mark" href="#top">insular</a>
+  <nav class="nav" aria-label="sections">
+    <a class="ln opt" href="#rule-sec">rule</a>
+    <a class="ln opt" href="#giants">giants</a>
+    <a class="ln opt" href="#dwarfs">dwarfs</a>
+    <a class="ln opt" href="#breaks">breaks</a>
+    <a class="ln" href="index.html">← mattia</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="t">
+    <canvas id="isle" role="img" aria-label="an island in a chrome sea with a herd of mice and a herd of elephants, each beside a ghost of its mainland ancestor. as time passes on the island the mice grow and the elephants shrink."></canvas>
+    <p class="gl-msg">this study draws the island with webgl, which this browser has turned off. the model, the charts and the notes below still work.</p>
+    <div class="hero-copy">
+      <h1 class="title" id="t">insular</h1>
+      <p class="sub">foster's rule: on islands, the small grow and the big shrink</p>
+      <p class="hint">set the island, then watch two herds evolve · drag to turn</p>
+    </div>
+    <aside class="panel" aria-label="the island">
+      <div class="ctl">
+        <div class="ctl-head"><label for="area">island area</label><output id="areaO" for="area">300 km²</output></div>
+        <input type="range" id="area" min="0" max="5" step="0.01" value="2.48">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="dist">distance from the mainland</label><output id="distO" for="dist">200 km</output></div>
+        <input type="range" id="dist" min="0.7" max="3" step="0.01" value="2.3">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="speed">time</label><output id="speedO" for="speed">300 years a second</output></div>
+        <input type="range" id="speed" min="1" max="3.7" step="0.01" value="2.48">
+      </div>
+      <div class="tools">
+        <button class="tool" id="tPred" type="button" aria-pressed="false">predators on the island</button>
+        <button class="tool" id="tPause" type="button" aria-pressed="false">pause</button>
+        <button class="tool" id="tRestart" type="button">land again</button>
+      </div>
+      <div class="read" aria-live="off">
+        <div class="m"><span>mice · mainland 20 g</span><b id="rMouse">20 g</b><small id="rMouseX">×1.00</small></div>
+        <div class="e"><span>elephants · mainland 4 t</span><b id="rEleph">4.0 t</b><small id="rElephX">×1.00</small></div>
+      </div>
+      <div class="trace">
+        <div class="trace-head"><span>body mass vs. mainland ancestor</span><span>year <b id="rYear">0</b></span></div>
+        <canvas id="trace" role="img" aria-label="a chart of body mass relative to the mainland ancestor over time, on log scales, for mice and elephants"></canvas>
+      </div>
+      <article class="card" id="card" aria-live="polite">
+        <h2 id="cHead">a 300 km² island, 200 km out</h2>
+        <p id="cMouse"></p>
+        <p id="cEleph"></p>
+        <p class="fine">the size each herd is pushed toward comes from a simple formula shaped like the island rule. getting there is a real simulation of selection, inheritance and chance.</p>
+      </article>
+    </aside>
+  </section>
+
+  <section class="sec wrap" id="rule-sec" aria-labelledby="r-h">
+    <div class="label"><h2 id="r-h" class="scr">( 01 · the rule )</h2><span>01 / 04</span></div>
+    <p class="lede">on islands, small animals tend to get <em>bigger</em> and big ones smaller.</p>
+    <div class="two">
+      <div class="prose">
+        <p>in 1964 the canadian biologist j. bristol foster compared mammals living on the islands off british columbia with their relatives on the mainland. rodents on the islands were often larger; deer, carnivores and other large mammals were often smaller. leigh van valen later named the pattern the island rule, and it is often called foster's rule.</p>
+        <p>mark lomolino showed in 1985 that it is a gradient, not two separate tricks. the smallest species grow the most, the largest shrink the most, and somewhere in the middle there is a size that barely changes at all.</p>
+        <p>the usual explanation has two halves. small animals on islands escape the predators and competitors that kept them small, so being big starts to pay. large animals run into a hard ceiling of food and space, so being small starts to pay.</p>
+      </div>
+      <div class="plot">
+        <div class="plot-head"><span>island size ÷ mainland size</span><span>log scales</span></div>
+        <canvas id="rule" role="img" aria-label="a chart of the island rule as used by this page's model: the ratio of island to mainland body mass falls as mainland body mass rises, crossing one at about a kilogram"></canvas>
+        <div class="legend"><span><i style="background:var(--mouse)"></i>mice now</span><span><i style="background:var(--eleph)"></i>elephants now</span><span><i style="background:var(--mute)"></i>the model's rule for this island</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="giants" aria-labelledby="g-h">
+    <div class="label"><h2 id="g-h" class="scr">( 02 · island gigantism )</h2><span>02 / 04</span></div>
+    <p class="lede">a pigeon the size of a turkey, an insect heavier than a <em>mouse</em>.</p>
+    <div class="specimens">
+      <article class="spec"><div class="where"><span>mauritius</span><span>last seen in the 1660s</span></div><h3>dodo</h3><span class="dir up">↑ a giant pigeon</span><p>with no mammal predators on the island it grew to somewhere around 10 to 20 kg and stopped flying. its closest living relative is the nicobar pigeon.</p></article>
+      <article class="spec"><div class="where"><span>new zealand</span><span>gone by about 1450</span></div><h3>moa</h3><span class="dir up">↑ giant flightless birds</span><p>the tallest reached about 3.6 m with the neck stretched up. their nearest relatives are the tinamous of south america, small birds that can still fly.</p></article>
+      <article class="spec"><div class="where"><span>new zealand</span><span>gone by about 1450</span></div><h3>haast's eagle</h3><span class="dir up">↑ the largest eagle known</span><p>females weighed up to about 15 kg. on islands with no land mammals it became the top predator, and it hunted moa.</p></article>
+      <article class="spec"><div class="where"><span>new zealand</span><span>living</span></div><h3>giant weta</h3><span class="dir up">↑ an insect the weight of a songbird</span><p>a cricket relative that filled the niche mice fill elsewhere. the heaviest on record weighed about 70 g, more than three house mice.</p></article>
+      <article class="spec"><div class="where"><span>flores, indonesia</span><span>living</span></div><h3>flores giant rat</h3><span class="dir up">↑ a rat the length of a cat</span><p>nearly twice the body length of a brown rat. flores also had a giant stork about 1.8 m tall, living alongside the island's dwarfs.</p></article>
+      <article class="spec"><div class="where"><span>galápagos</span><span>living</span></div><h3>giant tortoise</h3><span class="dir up">↑ up to about 400 kg</span><p>the classic island giant, though not a clean one: giant tortoises once lived on the mainland too, so the first to float across may already have been large.</p></article>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="dwarfs" aria-labelledby="d-h">
+    <div class="label"><h2 id="d-h" class="scr">( 03 · insular dwarfism )</h2><span>03 / 04</span></div>
+    <p class="lede">elephants that stood as tall as a <em>table</em>, hippos the size of a pig.</p>
+    <div class="specimens">
+      <article class="spec"><div class="where"><span>sicily and malta</span><span>ice age</span></div><h3>dwarf elephant</h3><span class="dir down">↓ about 1 m at the shoulder</span><p>descended from the straight-tusked elephant, which stood around 4 m. one of the most extreme dwarfs known.</p></article>
+      <article class="spec"><div class="where"><span>channel islands, california</span><span>gone about 13,000 years ago</span></div><h3>pygmy mammoth</h3><span class="dir down">↓ about 1.7 m at the shoulder</span><p>its ancestors, columbian mammoths about 4 m tall, swam across from the mainland when sea levels were lower.</p></article>
+      <article class="spec"><div class="where"><span>cyprus</span><span>gone about 10,000 years ago</span></div><h3>dwarf hippo</h3><span class="dir down">↓ about 0.75 m tall</span><p>perhaps 200 kg, against roughly 1,500 kg for a common hippo. it vanished not long after people reached the island.</p></article>
+      <article class="spec"><div class="where"><span>channel islands, california</span><span>living</span></div><h3>island fox</h3><span class="dir down">↓ the size of a house cat</span><p>a living dwarf of the grey fox, and one of the smallest foxes in north america. it nearly died out in the 1990s and has since recovered.</p></article>
+      <article class="spec"><div class="where"><span>jersey</span><span>last interglacial</span></div><h3>red deer</h3><span class="dir down">↓ a sixth of the weight</span><p>cut off when the sea rose, jersey's red deer shrank to about a sixth of their mainland weight in no more than about 6,000 years. dwarfing can be fast.</p></article>
+      <article class="spec"><div class="where"><span>flores, indonesia</span><span>gone by about 50,000 years ago</span></div><h3>homo floresiensis</h3><span class="dir down">↓ about 1.1 m tall</span><p>a small human species found in 2003. whether it shrank from homo erectus or came from an already small ancestor is still argued over.</p></article>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="breaks" aria-labelledby="b-h">
+    <div class="label"><h2 id="b-h" class="scr">( 04 · where the rule breaks )</h2><span>04 / 04</span></div>
+    <div class="ideas">
+      <article class="idea"><span class="k">i.</span><h3>a tendency, not a law</h3><p>plenty of island species ignore it. in 2008 shai meiri and colleagues found the pattern varies a lot between groups, and argued it is better seen as a set of separate stories than one rule.</p></article>
+      <article class="idea"><span class="k">ii.</span><h3>but it does show up</h3><p>a 2021 analysis of thousands of island and mainland populations found the pattern across mammals, birds and reptiles, strongest on small, remote islands, the same knobs this page lets you turn.</p></article>
+      <article class="idea"><span class="k">iii.</span><h3>the dragon that wasn't</h3><p>the komodo dragon looks like an island giant, but fossils show its relatives were already that big in australia. it may simply be the last of a large line, not something the island made.</p></article>
+      <article class="idea"><span class="k">iv.</span><h3>first to go</h3><p>island giants and dwarfs evolved without people, and many disappeared soon after people arrived: the dodo, the moa, the dwarf hippos. their strangeness was a product of isolation, and isolation is what ended.</p></article>
+    </div>
+  </section>
+
+  <footer class="foot wrap">
+    <a class="ln" href="index.html">← back to mattia</a>
+    <span>insular — a study by mattia, 2026</span>
+    <span>sizes are rounded from published estimates, which often disagree. the island model is a teaching toy: its target sizes follow a simple formula, not data from any real island.</span>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+function sizeCanvas(cv) {
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return null;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { x, w, h };
+}
+const css = n => getComputedStyle(root).getPropertyValue(n).trim();
+
+/* ---------- grain + heading decode ---------- */
+(() => {
+  const c = document.createElement('canvas'); c.width = c.height = 140;
+  const x = c.getContext('2d'), d = x.createImageData(140, 140);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  root.style.setProperty('--grain', `url(${c.toDataURL()})`);
+})();
+const GLYPHS = '01·/\\_<>=+*#';
+function scramble(el, dur = 650) {
+  if (reduced) return;
+  const final = el.dataset.final || (el.dataset.final = el.textContent);
+  const t0 = performance.now();
+  cancelAnimationFrame(el._scr);
+  const step = now => {
+    const p = clamp((now - t0) / dur, 0, 1);
+    let out = '';
+    for (let i = 0; i < final.length; i++) out += (final[i] === ' ' || i / final.length < p * 1.3 - 0.3) ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    el.textContent = p >= 1 ? final : out;
+    if (p < 1) el._scr = requestAnimationFrame(step);
+  };
+  el._scr = requestAnimationFrame(step);
+}
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), { threshold: 0.6 });
+  $$('.scr').forEach(el => io.observe(el));
+}
+
+/* =====================================================================
+   THE MODEL
+   each herd is a population of body masses (log10 of mass ÷ mainland mass).
+   every generation, individuals near the island's best size leave more young,
+   young inherit their parent's size with a little mutation, and chance does the rest.
+   the best size follows a graded island rule: pulled toward ~1 kg, harder on
+   small, remote islands, softer when predators are around.
+   ===================================================================== */
+const SP = [
+  { key: 'mouse', M0: 20, gen: 0.5, N: 100, pop: null, nxt: null, w: null },     // grams; generation in years
+  { key: 'eleph', M0: 4e6, gen: 25, N: 60, pop: null, nxt: null, w: null }
+];
+const PIVOT = 3;            // log10 of 1000 g: the size the rule pulls toward
+const PULL = 0.42, MUT = 0.008, OMEGA = 0.5, MAXY = 1e5;
+const isle = { area: 300, dist: 200, pred: false, speed: 300 };
+function strength() {
+  const a = clamp(Math.log10(isle.area) / 5, 0, 1), d = clamp(Math.log10(isle.dist / 5) / Math.log10(200), 0, 1);
+  return (0.2 + 0.8 * (1 - a)) * (0.6 + 0.4 * d) * (isle.pred ? 0.3 : 1);
+}
+const optimum = (sp, s = strength()) => s * PULL * (PIVOT - Math.log10(sp.M0));
+const ruleAt = (logM, s) => s * PULL * (PIVOT - logM);
+let years = 0, paused = false;
+const hist = [[], []];
+let nextMark = 1;
+function landAgain() {
+  SP.forEach(sp => { sp.pop = new Float64Array(sp.N); sp.nxt = new Float64Array(sp.N); sp.w = new Float64Array(sp.N); sp.acc = 0; });
+  years = 0; nextMark = 1; hist[0].length = hist[1].length = 0;
+}
+landAgain();
+function generation(sp, target) {
+  const { pop, nxt, w, N } = sp;
+  let tot = 0;
+  for (let i = 0; i < N; i++) { w[i] = Math.exp(-((pop[i] - target) ** 2) / (2 * OMEGA * OMEGA)); tot += w[i]; }
+  for (let i = 0; i < N; i++) {
+    let r = Math.random() * tot, j = 0;
+    while (r > w[j] && j < N - 1) { r -= w[j]; j++; }
+    nxt[i] = pop[j] + gauss() * MUT;
+  }
+  sp.pop = nxt; sp.nxt = pop;
+}
+const mean = sp => { let m = 0; for (const v of sp.pop) m += v; return m / sp.N; };
+function advance(dy) {
+  if (paused || years >= MAXY) return;
+  dy = Math.min(dy, MAXY - years);
+  const s = strength();
+  SP.forEach(sp => {
+    sp.acc += dy / sp.gen;
+    let g = Math.min(Math.floor(sp.acc), 4000); sp.acc -= Math.floor(sp.acc);
+    const t = optimum(sp, s);
+    while (g-- > 0) generation(sp, t);
+  });
+  years += dy;
+  while (years >= nextMark) { hist[0].push([nextMark, mean(SP[0])]); hist[1].push([nextMark, mean(SP[1])]); nextMark *= 1.06; }
+}
+
+/* ---------- controls + text ---------- */
+const fmtKm = v => v >= 1000 ? Math.round(v).toLocaleString('en-US') : v >= 10 ? Math.round(v) : v.toFixed(1);
+const fmtMass = g => g >= 1e6 ? `${(g / 1e6).toFixed(g >= 1e7 ? 0 : 1)} t` : g >= 1000 ? `${(g / 1000).toFixed(g >= 1e5 ? 0 : 1)} kg` : `${g.toFixed(g >= 100 ? 0 : 1)} g`;
+const fmtX = r => { const x = Math.pow(10, r); return x >= 1 ? `×${x.toFixed(2)}` : `×${x.toFixed(x < 0.1 ? 3 : 2)}`; };
+const fmtYears = y => y < 10 ? y.toFixed(1) : Math.round(y).toLocaleString('en-US');
+const areaEl = $('#area'), distEl = $('#dist'), speedEl = $('#speed');
+function readControls() {
+  isle.area = Math.pow(10, +areaEl.value); isle.dist = Math.pow(10, +distEl.value); isle.speed = Math.pow(10, +speedEl.value);
+  $('#areaO').textContent = `${fmtKm(isle.area)} km²`;
+  $('#distO').textContent = `${fmtKm(isle.dist)} km`;
+  $('#speedO').textContent = `${Math.round(isle.speed).toLocaleString('en-US')} years a second`;
+  writeCard();
+}
+[areaEl, distEl, speedEl].forEach(el => el.addEventListener('input', readControls));
+const tPred = $('#tPred'), tPause = $('#tPause');
+tPred.addEventListener('click', () => { isle.pred = !isle.pred; tPred.setAttribute('aria-pressed', String(isle.pred)); writeCard(); });
+tPause.addEventListener('click', () => { paused = !paused; tPause.setAttribute('aria-pressed', String(paused)); tPause.textContent = paused ? 'resume' : 'pause'; });
+$('#tRestart').addEventListener('click', () => { landAgain(); paused = false; tPause.setAttribute('aria-pressed', 'false'); tPause.textContent = 'pause'; writeCard(); });
+
+function writeCard() {
+  const s = strength(), tm = optimum(SP[0], s), te = optimum(SP[1], s);
+  $('#cHead').textContent = `a ${fmtKm(isle.area)} km² island, ${fmtKm(isle.dist)} km out`;
+  const mT = fmtMass(SP[0].M0 * Math.pow(10, tm)), eT = fmtMass(SP[1].M0 * Math.pow(10, te));
+  $('#cMouse').innerHTML = isle.pred
+    ? `<b>mice head for about ${mT}.</b> owls and snakes still hunt here, so staying small and quick to hide still pays.`
+    : `<b>mice head for about ${mT}.</b> with no predators to hide from and fewer rivals, bigger mice win fights and last through lean seasons.`;
+  $('#cEleph').innerHTML = isle.pred
+    ? `<b>elephants head for about ${eT}.</b> with predators around, size is still a shield, so they shrink less.`
+    : isle.area < 2000
+      ? `<b>elephants head for about ${eT}.</b> ${fmtKm(isle.area)} km² cannot feed a herd of giants. smaller bodies need less food and breed sooner.`
+      : `<b>elephants head for about ${eT}.</b> a big island can still feed fairly large animals, so the push to shrink is gentle.`;
+}
+readControls();
+
+/* ---------- the little trace (log time, log ratio) ---------- */
+const traceCv = $('#trace');
+const COL = () => [css('--mouse'), css('--eleph')];
+const RY = [-1.7, 1];          // log10 ratio range
+function drawTrace() {
+  const c = sizeCanvas(traceCv); if (!c) return;
+  const { x, w, h } = c, pad = { l: 34, r: 8, t: 8, b: 16 };
+  x.clearRect(0, 0, w, h);
+  const X = t => pad.l + (Math.log10(Math.max(1, t)) / 5) * (w - pad.l - pad.r);
+  const Y = r => pad.t + (1 - (clamp(r, RY[0], RY[1]) - RY[0]) / (RY[1] - RY[0])) * (h - pad.t - pad.b);
+  x.font = '10px "Fragment Mono", monospace'; x.textBaseline = 'middle';
+  [[1, '×10'], [Math.log10(3), '×3'], [0, '×1'], [-1, '×1/10'], [Math.log10(1 / 30), '×1/30']].forEach(([r, l]) => {
+    x.strokeStyle = r === 0 ? 'rgba(233,231,226,.3)' : 'rgba(233,231,226,.08)'; x.beginPath(); x.moveTo(pad.l, Y(r)); x.lineTo(w - pad.r, Y(r)); x.stroke();
+    x.fillStyle = css('--dim'); x.textAlign = 'right'; x.fillText(l, pad.l - 5, Y(r));
+  });
+  x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  [[1, '1 yr'], [100, '100'], [1e4, '10k'], [1e5, '100k yrs']].forEach(([t, l], i, arr) => { x.textAlign = i === 0 ? 'left' : i === arr.length - 1 ? 'right' : 'center'; x.fillText(l, X(t), h - 3); });
+  const s = strength();
+  COL().forEach((col, k) => {
+    const t = optimum(SP[k], s);
+    x.setLineDash([3, 4]); x.strokeStyle = col; x.globalAlpha = 0.45; x.beginPath(); x.moveTo(pad.l, Y(t)); x.lineTo(w - pad.r, Y(t)); x.stroke();
+    x.setLineDash([]); x.globalAlpha = 1; x.lineWidth = 1.5; x.beginPath();
+    hist[k].forEach(([t2, r], i) => { i ? x.lineTo(X(t2), Y(r)) : x.moveTo(X(t2), Y(r)); });
+    x.stroke(); x.lineWidth = 1;
+    if (years >= 1) { x.fillStyle = col; x.beginPath(); x.arc(X(years), Y(mean(SP[k])), 3, 0, Math.PI * 2); x.fill(); }
+  });
+}
+
+/* ---------- the rule chart in section 01 ---------- */
+const ruleCv = $('#rule');
+function drawRule() {
+  const c = sizeCanvas(ruleCv); if (!c) return;
+  const { x, w, h } = c, pad = { l: 44, r: 14, t: 14, b: 30 };
+  x.clearRect(0, 0, w, h);
+  const LX = [0, 7], LY = [-1.8, 1.2];
+  const X = m => pad.l + (m - LX[0]) / (LX[1] - LX[0]) * (w - pad.l - pad.r);
+  const Y = r => pad.t + (1 - (r - LY[0]) / (LY[1] - LY[0])) * (h - pad.t - pad.b);
+  x.font = '11px "Fragment Mono", monospace';
+  [[1, '×10'], [0, '×1'], [-1, '×1/10']].forEach(([r, l]) => {
+    x.strokeStyle = r === 0 ? 'rgba(233,231,226,.32)' : 'rgba(233,231,226,.08)'; x.beginPath(); x.moveTo(pad.l, Y(r)); x.lineTo(w - pad.r, Y(r)); x.stroke();
+    x.fillStyle = css('--dim'); x.textAlign = 'right'; x.textBaseline = 'middle'; x.fillText(l, pad.l - 6, Y(r));
+  });
+  [[0, '1 g'], [3, '1 kg'], [6, '1 t'], [7, '10 t']].forEach(([m, l]) => {
+    x.strokeStyle = 'rgba(233,231,226,.06)'; x.beginPath(); x.moveTo(X(m), pad.t); x.lineTo(X(m), h - pad.b); x.stroke();
+    x.fillStyle = css('--dim'); x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(l, X(m), h - 10);
+  });
+  x.textAlign = 'left'; x.fillStyle = css('--dim'); x.fillText('mainland body mass →', pad.l + 6, h - pad.b - 8);
+  // faint family of islands, then this island
+  [0.25, 0.5, 0.75, 1].forEach(s => { x.strokeStyle = 'rgba(233,231,226,.07)'; x.beginPath(); x.moveTo(X(LX[0]), Y(ruleAt(LX[0], s))); x.lineTo(X(LX[1]), Y(ruleAt(LX[1], s))); x.stroke(); });
+  const s = strength();
+  x.strokeStyle = css('--mute'); x.lineWidth = 1.5; x.beginPath(); x.moveTo(X(LX[0]), Y(ruleAt(LX[0], s))); x.lineTo(X(LX[1]), Y(ruleAt(LX[1], s))); x.stroke(); x.lineWidth = 1;
+  x.fillStyle = css('--mute'); x.textBaseline = 'bottom'; x.fillText('larger on islands', pad.l + 6, Y(LY[1]) + 14);
+  x.textBaseline = 'top'; x.textAlign = 'right'; x.fillText('smaller on islands', w - pad.r - 4, Y(LY[0]) - 16);
+  COL().forEach((col, k) => {
+    const mx = Math.log10(SP[k].M0), r = mean(SP[k]);
+    x.strokeStyle = col; x.setLineDash([2, 3]); x.beginPath(); x.moveTo(X(mx), Y(0)); x.lineTo(X(mx), Y(r)); x.stroke(); x.setLineDash([]);
+    x.fillStyle = col; x.beginPath(); x.arc(X(mx), Y(r), 5, 0, Math.PI * 2); x.fill();
+    x.textAlign = k ? 'right' : 'left'; x.textBaseline = 'middle'; x.fillText(k ? 'elephants' : 'mice', X(mx) + (k ? -10 : 10), Y(r));
+  });
+}
+
+/* =====================================================================
+   THE ISLAND (three.js)
+   ===================================================================== */
+const canvas = $('#isle');
+let renderer = null;
+if (window.THREE) { try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' }); } catch (e) { renderer = null; } }
+if (!renderer) root.classList.add('no-gl');
+
+let scene, camera, U, herds = [], ghosts = [], islandMesh, islandR = 2, setIslandSize = () => {};
+const BASE = [0.22, 0.4];   // drawn scale of each ancestor; mice and elephants are not to scale with each other
+if (renderer) {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(32, 1, 0.1, 120);
+  U = { uTime: { value: 0 }, uFlash: { value: 0.75 } };
+  const ENV = `
+  vec3 env(vec3 r){
+    float top = smoothstep(0.55, 0.95, r.y);
+    float s1 = smoothstep(0.07, 0.0, abs(r.x - 0.5)) * smoothstep(-0.3, 0.5, r.y);
+    float s2 = smoothstep(0.04, 0.0, abs(r.x + 0.75)) * 0.55;
+    float hz = smoothstep(0.12, 0.0, abs(r.y + 0.02)) * 0.22;
+    return vec3(top * 0.9 + s1 * 1.5 + s2 + hz);
+  }
+  vec3 lab(float x){
+    x = fract(x);
+    vec3 a = vec3(0.10, 0.25, 0.85), b = vec3(0.08, 0.68, 0.62), c = vec3(0.85, 0.72, 0.30), d = vec3(0.82, 0.42, 0.20);
+    return x < 0.333 ? mix(a, b, x * 3.0) : (x < 0.666 ? mix(b, c, (x - 0.333) * 3.0) : mix(c, a * 0.6 + d * 0.4, (x - 0.666) * 3.0));
+  }`;
+
+  /* liquid chrome sea */
+  {
+    const g = new THREE.PlaneGeometry(60, 60, 1, 1).rotateX(-Math.PI / 2);
+    const m = new THREE.ShaderMaterial({
+      uniforms: U,
+      vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: `uniform float uTime, uFlash; varying vec3 vW; ${ENV}
+        void main(){
+          vec2 p = vW.xz * 2.6; float t = uTime * 0.5;
+          float rr = length(vW.xz);
+          vec2 grad = vec2(cos(p.x * 1.3 + t) * 0.5 + cos((p.x + p.y) * 2.1 - t * 1.3) * 0.35 + cos(p.x * 3.7 - p.y * 1.1 + t * 0.7) * 0.18,
+                           cos(p.y * 1.1 - t * 0.8) * 0.5 + cos((p.x + p.y) * 2.1 - t * 1.3) * 0.35 + cos(p.y * 4.1 + p.x * 0.6 - t) * 0.16);
+          grad += vec2(vW.x, vW.z) / max(rr, 0.001) * sin(rr * 9.0 - uTime * 1.6) * 0.35;
+          vec3 n = normalize(vec3(-grad.x * 0.07, 1.0, -grad.y * 0.07));
+          vec3 v = normalize(cameraPosition - vW), r = reflect(-v, n);
+          float fr = pow(1.0 - max(dot(v, n), 0.0), 3.0);
+          vec3 e = env(r);
+          vec3 c = e * vec3(0.8, 0.82, 0.86) * 0.26 + 0.006;
+          float fl = pow(max(dot(n, normalize(vec3(sin(uTime * 0.11) * 0.8, 0.6, 0.7))), 0.0), 40.0);
+          vec3 ir = lab(dot(n.xz, vec2(3.0, 2.0)) + fr * 0.5 + uTime * 0.015);
+          c = mix(c, c * 0.4 + ir * 0.35, fl * uFlash) + fr * 0.08 * ir * uFlash;
+          float fade = exp(-pow(length(vW.xz) / 9.5, 2.0));
+          gl_FragColor = vec4((1.0 - exp(-c * 1.4)) * fade, 1.0);
+        }`
+    });
+    scene.add(new THREE.Mesh(g, m));
+  }
+
+  /* the island: a lathe of rock with a ragged coast, scaled by area */
+  {
+    const prof = [[0, 0.32], [0.55, 0.31], [0.82, 0.27], [0.95, 0.17], [1.0, 0.04], [0.98, -0.12], [0.8, -0.5], [0.4, -0.9], [0, -1.1]].reverse().map(([r, y]) => new THREE.Vector2(r, y));
+    const g = new THREE.LatheGeometry(prof, 96);
+    const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), z = p.getZ(i), a = Math.atan2(z, x);
+      const k = 1 + 0.1 * Math.sin(3 * a + 1.2) + 0.06 * Math.sin(7 * a + 0.3) + 0.035 * Math.sin(13 * a + 2.1);
+      p.setX(i, x * k); p.setZ(i, z * k);
+      if (p.getY(i) > 0.2) p.setY(i, p.getY(i) + 0.05 * Math.sin(x * 3.1) * Math.cos(z * 2.7) * Math.hypot(x, z));
+    }
+    g.computeVertexNormals();
+    const m = new THREE.ShaderMaterial({
+      uniforms: U,
+      vertexShader: 'varying vec3 vN; varying vec3 vW; varying vec3 vL; void main(){ vL = position; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: `varying vec3 vN; varying vec3 vW; varying vec3 vL;
+        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        void main(){
+          vec3 n = normalize(vN);
+          float top = smoothstep(0.55, 0.9, n.y);
+          float grain = 0.5 + 0.16 * sin(vL.x * 23.0 + 3.0 * sin(vL.z * 7.0)) * sin(vL.z * 19.0 + 3.0 * sin(vL.x * 5.0)) + 0.1 * sin(vL.x * 61.0 + vL.z * 37.0 + 2.0 * sin(vL.z * 11.0)) + (h(vL.xz * 400.0) - 0.5) * 0.12;
+          vec3 rock = vec3(0.075, 0.075, 0.085) * (0.7 + 0.6 * grain), moss = vec3(0.13, 0.15, 0.115) * (0.75 + 0.5 * grain);
+          vec3 c = mix(rock, moss, top);
+          float l = max(dot(n, normalize(vec3(0.4, 0.8, 0.45))), 0.0) * 0.9 + 0.25;
+          vec3 v = normalize(cameraPosition - vW);
+          float rim = pow(1.0 - max(dot(v, n), 0.0), 3.0) * 0.12;
+          float shore = smoothstep(0.1, 0.0, abs(vW.y - 0.03)) * 0.25;
+          gl_FragColor = vec4(c * l * 1.8 + rim * vec3(0.5, 0.6, 0.75) + shore * vec3(0.7, 0.8, 0.9), 1.0);
+        }`
+    });
+    islandMesh = new THREE.Mesh(g, m); scene.add(islandMesh);
+    setIslandSize = () => {
+      const a = clamp(Math.log10(isle.area) / 5, 0, 1);
+      islandR = 1.25 + 2.6 * a;
+    };
+  }
+
+  /* chrome animals: built from simple shapes, one material */
+  const chrome = tint => new THREE.ShaderMaterial({
+    uniforms: Object.assign({}, U, { uTint: { value: new THREE.Color(tint) } }),
+    vertexShader: 'varying vec3 vN; varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: `uniform float uTime, uFlash; uniform vec3 uTint; varying vec3 vN; varying vec3 vW; ${ENV}
+      void main(){
+        vec3 n = normalize(vN), v = normalize(cameraPosition - vW), r = reflect(-v, n);
+        float fr = pow(1.0 - max(dot(v, n), 0.0), 3.0);
+        vec3 e = env(r);
+        vec3 c = e * vec3(0.8, 0.82, 0.86) * mix(vec3(1.0), uTint, 0.35) + uTint * (0.05 + 0.1 * max(n.y, 0.0)) + vec3(0.025);
+        vec3 fd = normalize(vec3(sin(uTime * 0.13) * 0.8, 0.6, 0.75));
+        float fl = pow(max(dot(n, fd), 0.0), 3.5);
+        vec3 ir = lab(dot(n, vec3(0.35, 0.55, 0.25)) * 1.3 + fr * 0.5 + uTime * 0.015);
+        c = mix(c, c * 0.35 + ir * (0.18 + e.r * 0.8), fl * uFlash) + fr * 0.1 * ir * uFlash;
+        gl_FragColor = vec4(1.0 - exp(-c * 1.5), 1.0);
+      }`
+  });
+  const ghostMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec3 vN; varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }',
+    fragmentShader: 'varying vec3 vN; varying vec3 vW; void main(){ vec3 v = normalize(cameraPosition - vW); float f = pow(1.0 - abs(dot(v, normalize(vN))), 2.2); gl_FragColor = vec4(vec3(0.75, 0.8, 0.9) * f * 0.5, 1.0); }'
+  });
+  const S = (r, sx = 1, sy = 1, sz = 1) => new THREE.SphereGeometry(r, 20, 14).scale(sx, sy, sz);
+  function part(group, geo, mat, x, y, z, rx = 0, ry = 0, rz = 0) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, ry, rz); group.add(m); return m; }
+  // a mouse about 1 unit long, standing on y = 0, facing +x
+  function makeMouse(mat) {
+    const g = new THREE.Group();
+    part(g, S(0.5, 1, 0.7, 0.68), mat, 0, 0.33, 0);
+    part(g, S(0.24, 1.25, 0.95, 0.95), mat, 0.55, 0.36, 0);
+    for (const s of [-1, 1]) part(g, S(0.16, 0.3, 1, 1), mat, 0.48, 0.6, s * 0.17);
+    const tail = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.45, 0.25, 0), new THREE.Vector3(-0.8, 0.12, 0.12), new THREE.Vector3(-1.1, 0.08, -0.05), new THREE.Vector3(-1.35, 0.18, 0.08)]);
+    part(g, new THREE.TubeGeometry(tail, 20, 0.03, 6), mat, 0, 0, 0);
+    return g;
+  }
+  // an elephant about 1.6 units long and 1.3 tall, facing +x
+  function makeElephant(mat) {
+    const g = new THREE.Group();
+    part(g, S(0.6, 1.3, 0.92, 0.85), mat, 0, 0.95, 0);
+    part(g, S(0.36, 1, 1.05, 0.95), mat, 0.82, 1.18, 0);
+    for (const s of [-1, 1]) part(g, S(0.34, 0.18, 1.05, 0.95), mat, 0.68, 1.15, s * 0.36, 0, s * 0.35, 0);
+    const trunk = new THREE.CatmullRomCurve3([new THREE.Vector3(1.08, 1.12, 0), new THREE.Vector3(1.24, 0.82, 0), new THREE.Vector3(1.28, 0.45, 0.04), new THREE.Vector3(1.38, 0.24, 0.02)]);
+    part(g, new THREE.TubeGeometry(trunk, 20, 0.09, 10), mat, 0, 0, 0);
+    for (const s of [-1, 1]) part(g, new THREE.ConeGeometry(0.045, 0.42, 8), mat, 1.12, 0.86, s * 0.14, 0, 0, -2.3);
+    for (const [x, z] of [[0.42, 0.3], [0.42, -0.3], [-0.42, 0.3], [-0.42, -0.3]]) part(g, new THREE.CylinderGeometry(0.15, 0.17, 0.7, 14), mat, x, 0.35, z);
+    part(g, new THREE.CylinderGeometry(0.02, 0.03, 0.5, 6), mat, -0.8, 0.85, 0, 0, 0, -0.5);
+    return g;
+  }
+  const SHOW = [9, 5];
+  const mats = [chrome(0xf0b48a), chrome(0x9fb6ff)];
+  [makeMouse, makeElephant].forEach((make, k) => {
+    const list = [];
+    for (let i = 0; i < SHOW[k]; i++) {
+      const g = make(mats[k]); scene.add(g);
+      const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random());
+      list.push({ g, k, i, px: Math.cos(a) * r, pz: Math.sin(a) * r, tx: 0, tz: 0, face: Math.random() * 6.3, sc: BASE[k], wait: Math.random() * 3 });
+    }
+    herds.push(list);
+    const gh = make(ghostMat); scene.add(gh); ghosts.push(gh);
+  });
+}
+
+// herds live in two halves of the island: mice to the west, elephants to the east (in island-radius units)
+const HOME = [{ x: -0.42, z: 0.08, r: 0.42 }, { x: 0.38, z: -0.05, r: 0.45 }];
+const GHOST = [{ x: -0.5, z: -0.62 }, { x: 0.55, z: 0.62 }];
+function pickTarget(a) { const h = HOME[a.k], ang = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * h.r; a.tx = h.x + Math.cos(ang) * r; a.tz = h.z + Math.sin(ang) * r; }
+herds.flat().forEach(a => { pickTarget(a); a.px = a.tx; a.pz = a.tz; pickTarget(a); });
+
+/* camera */
+const view = { th: 0.5, ph: 0.9, tTh: 0.5, tPh: 0.9, spin: !reduced };
+let W = 1, H = 1, narrow = false;
+function resize() {
+  if (!renderer) return;
+  const r = canvas.getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height); narrow = innerWidth <= 900;
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); renderer.setSize(W, H, false);
+  if (narrow) { camera.aspect = W / H; camera.clearViewOffset(); }
+  else { const shift = Math.min(400, W * 0.3), fh = H * 1.3; camera.aspect = (W + shift) / fh; camera.setViewOffset(W + shift, fh, shift, H * 0.3, W, H); }
+  camera.updateProjectionMatrix();
+}
+resize();
+addEventListener('resize', () => { resize(); drawRule(); drawTrace(); });
+if (renderer && 'ResizeObserver' in window) new ResizeObserver(resize).observe(canvas);
+let drag = null;
+canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, th: view.tTh, ph: view.tPh, id: e.pointerId }; canvas.classList.add('dragging'); });
+addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (e.pointerType !== 'touch' || Math.abs(dx) > Math.abs(dy)) {
+    view.tTh = drag.th - dx * 0.006;
+    if (e.pointerType !== 'touch') view.tPh = clamp(drag.ph - dy * 0.004, 0.45, 1.3);
+  }
+});
+const endDrag = () => { drag = null; canvas.classList.remove('dragging'); };
+addEventListener('pointerup', endDrag); addEventListener('pointercancel', endDrag);
+
+/* readouts */
+let uiT = 0, chartT = 0;
+function readouts() {
+  const rm = mean(SP[0]), re = mean(SP[1]);
+  $('#rMouse').textContent = fmtMass(SP[0].M0 * Math.pow(10, rm)); $('#rMouseX').textContent = fmtX(rm);
+  $('#rEleph').textContent = fmtMass(SP[1].M0 * Math.pow(10, re)); $('#rElephX').textContent = fmtX(re);
+  $('#rYear').textContent = years >= MAXY ? '100,000 · settled' : fmtYears(years);
+}
+
+/* main loop */
+let last = performance.now(), visible = true;
+if (renderer && 'IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold: 0.01 }).observe(canvas);
+function draw(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  advance(dt * isle.speed);
+  if ((uiT -= dt) <= 0) { uiT = 0.1; readouts(); drawTrace(); }
+  if ((chartT -= dt) <= 0) { chartT = 0.4; drawRule(); }
+  if (!renderer || !visible) return;
+  U.uTime.value += dt;
+  setIslandSize();
+  const sc = lerp(islandMesh.scale.x, islandR, 1 - Math.pow(0.05, dt));
+  islandMesh.scale.set(sc, 1, sc);
+  herds.forEach((list, k) => {
+    const sp = SP[k];
+    list.forEach(a => {
+      // each shown animal is one member of the population; size = cube root of its mass ratio
+      const r = sp.pop[(a.i * 7) % sp.N];
+      const target = BASE[k] * Math.pow(10, r / 3);
+      a.sc = lerp(a.sc, target, 1 - Math.pow(0.1, dt));
+      const dx = a.tx - a.px, dz = a.tz - a.pz, d = Math.hypot(dx, dz);
+      if (a.wait > 0) a.wait -= dt;
+      else if (d < 0.02) { a.wait = 1 + Math.random() * 4; pickTarget(a); }
+      else {
+        const v = (k ? 0.05 : 0.09) * dt;
+        a.px += dx / d * Math.min(v, d); a.pz += dz / d * Math.min(v, d);
+        const want = Math.atan2(-dz, dx); let df = want - a.face; df = Math.atan2(Math.sin(df), Math.cos(df));
+        a.face += df * Math.min(1, dt * 4);
+      }
+      const walking = a.wait <= 0 && d > 0.02;
+      a.g.position.set(a.px * sc, 0.31 + (walking ? Math.abs(Math.sin(U.uTime.value * (k ? 5 : 14) + a.i)) * 0.02 * a.sc : 0), a.pz * sc);
+      a.g.rotation.y = a.face;
+      a.g.scale.setScalar(a.sc);
+    });
+    const gh = ghosts[k];
+    gh.position.set(GHOST[k].x * sc, 0.31, GHOST[k].z * sc); gh.rotation.y = k ? 2.6 : 0.5; gh.scale.setScalar(BASE[k]);
+  });
+  if (view.spin && !drag) view.tTh += dt * 0.05;
+  const k2 = 1 - Math.pow(0.002, dt);
+  view.th = lerp(view.th, view.tTh, k2); view.ph = lerp(view.ph, view.tPh, k2);
+  const rad = narrow ? 10.5 / Math.min(1, W / H) : 14.5;
+  camera.position.set(Math.sin(view.ph) * Math.cos(view.th) * rad, Math.cos(view.ph) * rad + 0.4, Math.sin(view.ph) * Math.sin(view.th) * rad);
+  camera.lookAt(0, 0.25, 0);
+  renderer.render(scene, camera);
+}
+function frame(now) { requestAnimationFrame(frame); draw(now); }
+requestAnimationFrame(frame);
+if (renderer) canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); root.classList.add('no-gl'); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawRule(); drawTrace(); });
+})();
+</script>
+</body>
+</html>

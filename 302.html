@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>302</title>
+<meta name="description" content="302 — the whole nervous system of a worm, wired from the real map. an interactive study by mattia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --panel:#08080a;
+  --fg:#e9e7e2;
+  --mute:#8b8d94;
+  --dim:#55575e;
+  --line:rgba(233,231,226,.13);
+  --sens:#39c9b6;
+  --inter:#6f9bff;
+  --motor:#df8a4b;
+  --phar:#d9c56b;
+  --lab:linear-gradient(100deg,#e9e7e2 0%,#6f9bff 18%,#39c9b6 34%,#d9c56b 50%,#df8a4b 62%,#6f9bff 80%,#e9e7e2 100%);
+  --f-display:"Syne","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Fragment Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px);
+  --gut-l:max(var(--gut),env(safe-area-inset-left,0px));
+  --gut-r:max(var(--gut),env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:400 13px/1.65 var(--f-mono);text-transform:lowercase;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+::selection{background:var(--fg);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--fg);outline-offset:4px}
+.wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.ln{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s cubic-bezier(.2,.8,.2,1)}
+.ln:hover,.ln:focus-visible{background-size:100% 1px}
+.grain{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:var(--grain)}
+@keyframes sheen{to{background-position:-320% 0}}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) var(--gut-r) 20px var(--gut-l);mix-blend-mode:difference;color:#fff}
+.mark{font:500 15px/1 var(--f-display);letter-spacing:-.02em}
+.nav{display:flex;gap:clamp(12px,2.2vw,28px)}
+@media (max-width:700px){.nav .opt{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;height:100vh;height:100svh;min-height:660px;overflow:hidden}
+#worm{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab}
+#worm.dragging{cursor:grabbing}
+#worm.over{cursor:pointer}
+.no-gl #worm{display:none}
+.gl-msg{display:none}
+.no-gl .gl-msg{display:block;position:absolute;left:var(--gut-l);top:40%;color:var(--mute);max-width:40ch}
+.hero-copy{position:absolute;left:0;bottom:0;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;pointer-events:none;max-width:58%}
+.title{margin:0 0 0 -.05em;font:500 clamp(96px,17vw,280px)/.78 var(--f-display);letter-spacing:-.07em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .8s;pointer-events:auto;font-variant-numeric:tabular-nums}
+.title:hover{color:transparent;animation:sheen 7s linear infinite}
+.sub{margin:0;font:400 clamp(17px,1.6vw,23px)/1.25 var(--f-display);letter-spacing:-.01em}
+.hint{margin:0;color:var(--mute)}
+.tag{position:absolute;left:0;top:0;z-index:2;pointer-events:none;padding:4px 8px;border-left:1px solid var(--fg);background:rgba(0,0,0,.55);font:400 10.5px/1.4 var(--f-mono);white-space:nowrap;opacity:0;transition:opacity .15s;will-change:transform}
+
+.panel{position:absolute;z-index:3;right:var(--gut-r);top:calc(72px + env(safe-area-inset-top,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:min(370px,34vw);display:flex;flex-direction:column;gap:14px;overflow:auto;scrollbar-width:thin}
+.group-h{color:var(--dim);margin:0 0 6px}
+.pokes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.poke{min-height:40px;padding:6px 10px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--mute);text-align:left;transition:color .2s,border-color .2s}
+.poke:hover{color:var(--fg);border-color:var(--mute)}
+.poke.on{color:var(--fg);border-color:var(--fg)}
+.read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.read div{padding:10px 0;display:grid;gap:2px;min-width:0}
+.read div+div{padding-left:12px;border-left:1px solid var(--line)}
+.read span{color:var(--dim);font-size:11px}
+.read b{font:500 clamp(17px,1.5vw,21px)/1.15 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{border:1px solid var(--line);background:rgba(0,0,0,.62);padding:16px;display:grid;gap:9px}
+.card .eyebrow{display:flex;justify-content:space-between;gap:12px;color:var(--dim)}
+.card h2{margin:0;font:500 clamp(26px,2.4vw,36px)/1 var(--f-display);letter-spacing:-.03em;text-transform:none}
+.card .what{color:var(--fg)}
+.card .more{color:var(--mute)}
+.card dl{margin:4px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 14px}
+.card dt{color:var(--dim)}
+.card dd{margin:0;font-variant-numeric:tabular-nums;text-transform:none}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:0}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--mute);font-size:11.5px}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tool{min-height:32px;padding:0 11px;border:1px solid var(--line);color:var(--mute);background:rgba(0,0,0,.45);transition:color .2s,border-color .2s}
+.tool:hover{color:var(--fg)}
+.tool[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+
+@media (max-width:900px){
+  .hero{height:auto;min-height:0;overflow:visible;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  #worm{position:relative;height:56vh;height:56svh;min-height:320px;margin-left:calc(-1 * var(--gut-l));width:calc(100% + var(--gut-l) + var(--gut-r))}
+  .hero-copy{position:relative;max-width:none;padding-top:8px}
+  .panel{position:relative;right:auto;top:auto;bottom:auto;width:auto;overflow:visible;margin-top:28px}
+}
+
+/* ---------- sections ---------- */
+.sec{position:relative;padding-block:clamp(100px,13vw,190px) 0}
+.label{display:flex;justify-content:space-between;gap:16px;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--line)}
+.label h2{font:inherit;margin:0}
+.lede{margin:clamp(36px,5vw,64px) 0 0;max-width:24ch;font:400 clamp(28px,3.6vw,54px)/1.1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.lede em{font-style:normal;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 14s linear infinite}
+@media (prefers-reduced-motion:reduce){.lede em,.title:hover{animation:none}}
+.prose{max-width:62ch;font-size:14px}
+.prose p{margin:0 0 1em}
+.two{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:start}
+.stats{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats div{padding:20px 0;display:grid;gap:4px;min-width:0}
+.stats div+div{padding-left:clamp(14px,2vw,28px);border-left:1px solid var(--line)}
+.stats b{font:500 clamp(30px,4vw,60px)/1 var(--f-display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.stats span{color:var(--mute)}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stats div:nth-child(3){padding-left:0;border-left:0}.stats div:nth-child(n+3){border-top:1px solid var(--line)}}
+
+.ladder{margin-top:clamp(40px,6vw,80px);display:grid;gap:0;border-top:1px solid var(--line)}
+.rung{display:grid;grid-template-columns:minmax(0,17ch) minmax(0,1fr);gap:clamp(12px,3vw,36px);padding:18px 0;border-bottom:1px solid var(--line);align-items:center}
+.rung b{font:500 clamp(18px,1.6vw,23px)/1.15 var(--f-display);letter-spacing:-.02em}
+.rung .meta{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.track{position:relative;height:30px}
+.track i{position:absolute;left:0;top:9px;height:12px;background:var(--lab);background-size:320% 100%;animation:sheen 18s linear infinite}
+.track i.part{opacity:.35}
+.track output{position:absolute;top:5px;font-variant-numeric:tabular-nums;color:var(--fg);padding-left:10px;white-space:nowrap}
+.axis{display:grid;grid-template-columns:minmax(0,17ch) minmax(0,1fr);gap:clamp(12px,3vw,36px);padding-top:8px;color:var(--dim);font-size:11px}
+.axis .ticks{position:relative;height:16px}
+.axis .ticks span{position:absolute;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){.track i{animation:none}}
+@media (max-width:600px){.rung,.axis{grid-template-columns:minmax(0,1fr)}.axis>span:first-child{display:none}.track output{font-size:11px}}
+
+.ideas{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.idea{padding:clamp(24px,3vw,40px) 0;border-bottom:1px solid var(--line);display:grid;gap:12px;align-content:start}
+.idea:nth-child(odd){padding-right:clamp(20px,3vw,48px);border-right:1px solid var(--line)}
+.idea:nth-child(even){padding-left:clamp(20px,3vw,48px)}
+.idea h3{margin:0;font:500 clamp(26px,2.6vw,38px)/1 var(--f-display);letter-spacing:-.03em}
+.idea p{margin:0;color:var(--mute);max-width:52ch}
+.idea .k{color:var(--dim)}
+.foot{margin-top:clamp(110px,14vw,200px);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;color:var(--dim);border-top:1px solid var(--line)}
+.foot span:last-child{max-width:70ch}
+@media (max-width:860px){
+  .two,.ideas{grid-template-columns:minmax(0,1fr)}
+  .idea:nth-child(odd){padding-right:0;border-right:0}
+  .idea:nth-child(even){padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="mark" href="#top">302</a>
+  <nav class="nav" aria-label="sections">
+    <a class="ln opt" href="#map">map</a>
+    <a class="ln opt" href="#scale">scale</a>
+    <a class="ln opt" href="#gaps">gaps</a>
+    <a class="ln" href="index.html">← mattia</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="t">
+    <canvas id="worm" role="img" aria-label="a 3d worm with all 302 of its neurons and their connections. hover a neuron to name it, click it to fire it, or use the buttons to touch the worm."></canvas>
+    <div class="tag" id="tag" aria-hidden="true"></div>
+    <p class="gl-msg">this study draws the worm with webgl, which this browser has turned off. the notes below still work.</p>
+    <div class="hero-copy">
+      <h1 class="title" id="t">302</h1>
+      <p class="sub">the whole nervous system of a worm, from the real wiring map</p>
+      <p class="hint">point at a neuron to name it · tap or click to fire it · drag to turn</p>
+    </div>
+    <aside class="panel" aria-label="the worm">
+      <div>
+        <p class="group-h">touch the worm</p>
+        <div class="pokes" id="pokes"></div>
+      </div>
+      <div class="read" aria-live="polite">
+        <div><span>heading</span><b id="rHead">forward</b></div>
+        <div><span>speed</span><b id="rSpeed">0.0</b></div>
+        <div><span>firing</span><b id="rFire">0</b></div>
+      </div>
+      <article class="card" id="card">
+        <div class="eyebrow"><span id="cKind">c. elegans · hermaphrodite</span><span id="cIdx">302 neurons</span></div>
+        <h2 id="cName">the worm</h2>
+        <p class="what" id="cWhat">a millimetre long, with exactly 302 neurons in every adult hermaphrodite. every dot is one of them, where it sits in the body.</p>
+        <p class="more" id="cMore">hover a dot to see what it is and who it talks to. click it to make it fire and watch the signal spread through the real connections.</p>
+        <dl id="cStats" hidden></dl>
+        <div class="key"><span><i class="dot" style="background:var(--sens)"></i>sensory</span><span><i class="dot" style="background:var(--inter)"></i>interneuron</span><span><i class="dot" style="background:var(--motor)"></i>motor</span><span><i class="dot" style="background:var(--phar)"></i>pharynx</span></div>
+      </article>
+      <div class="tools">
+        <button class="tool" id="tChem" type="button" aria-pressed="true">synapses</button>
+        <button class="tool" id="tGap" type="button" aria-pressed="true">gap junctions</button>
+        <button class="tool" id="tSpin" type="button" aria-pressed="false">spin</button>
+        <button class="tool" id="tReset" type="button">reset view</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="sec wrap" id="map" aria-labelledby="m-h">
+    <div class="label"><h2 id="m-h" class="scr">( 01 · the map )</h2><span>01 / 03</span></div>
+    <p class="lede">the first animal whose whole nervous system was <em>mapped</em>, cell by cell.</p>
+    <div class="stats">
+      <div><b id="sN">302</b><span>neurons</span></div>
+      <div><b id="sC">—</b><span>pairs joined by chemical synapses</span></div>
+      <div><b id="sG">—</b><span>pairs joined by gap junctions</span></div>
+      <div><b id="sM">—</b><span>neurons that reach muscle</span></div>
+    </div>
+    <div class="two">
+      <div class="prose"><p>in 1986 john white, sydney brenner and colleagues published the wiring of caenorhabditis elegans, traced by hand through thousands of electron micrographs over more than a decade. it was the first complete connectome of any animal.</p><p>the map on this page is a newer reading of the same animal by cook and colleagues in 2019, which redid the hermaphrodite and added the male, including every connection to muscle.</p></div>
+      <div class="prose"><p>there are two kinds of line. a chemical synapse sends a signal one way, from one cell to the next. a gap junction is a direct electrical pore between two cells, and current can flow either way through it.</p><p>the activity you see is a simple model running on those real connections. the wiring is real; how strong each connection is, and whether it excites or calms, is mostly guessed.</p></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="scale" aria-labelledby="s-h">
+    <div class="label"><h2 id="s-h" class="scr">( 02 · scale )</h2><span>02 / 03</span></div>
+    <p class="lede">from 302 to 86 billion. each tick on the scale is a <em>hundred times</em> more neurons.</p>
+    <div class="ladder" id="ladder" role="list" aria-label="neuron counts on a logarithmic scale"></div>
+    <div class="axis" aria-hidden="true"><span>neurons (log scale)</span><div class="ticks" id="ticks"></div></div>
+  </section>
+
+  <section class="sec wrap" id="gaps" aria-labelledby="g-h">
+    <div class="label"><h2 id="g-h" class="scr">( 03 · what the map leaves out )</h2><span>03 / 03</span></div>
+    <div class="ideas">
+      <article class="idea"><span class="k">i.</span><h3>no plus or minus</h3><p>the map says which cells touch, and how many synapses join them. it does not say whether each synapse excites or calms the next cell, and the same chemical can do either depending on the receptor.</p></article>
+      <article class="idea"><span class="k">ii.</span><h3>a second, wireless map</h3><p>neuropeptides and amines such as serotonin drift between cells that never touch. mapped in 2023, that chemical network is denser than the wiring itself.</p></article>
+      <article class="idea"><span class="k">iii.</span><h3>one map, many moods</h3><p>a hungry worm and a fed worm have the same wiring and behave differently. state changes which connections matter, minute to minute.</p></article>
+      <article class="idea"><span class="k">iv.</span><h3>still not solved</h3><p>nearly forty years after the first map, no simulation fully reproduces what this worm does. having every wire is a start, not an answer.</p></article>
+    </div>
+  </section>
+
+  <footer class="foot wrap">
+    <a class="ln" href="index.html">← back to mattia</a>
+    <span>302 — a study by mattia, 2026</span>
+    <span>wiring: cook et al., nature 2019. neuron positions and the packaged wiring from openworm's <a class="ln" href="https://github.com/openworm/c302" target="_blank" rel="noopener">c302</a> and neuron types from its <a class="ln" href="https://github.com/openworm/ConnectomeToolbox" target="_blank" rel="noopener">connectome toolbox</a>, both mit licence. the body is straightened and the activity is a simplified model.</span>
+  </footer>
+</main>
+
+<script type="application/json" id="wormData">{"neurons":[["I2L",0.0229,0.052,0.222,3,0,"Interneuron 2 (pharynx) Left"],["I2R",0.0229,-0.193,0.222,3,0,"Interneuron 2 (pharynx) Right"],["I1L",0.0371,0.097,0.265,3,0,"Interneuron 1 (pharynx) Left"],["I1R",0.0371,-0.238,0.265,3,0,"Interneuron 1 (pharynx) Right"],["I3",0.0418,-0.068,0.464,3,0,"Interneuron 3 (pharynx)"],["MCL",0.0423,0.107,0.269,3,1,"Marginal Cell Neuron (pharynx) Left"],["MCR",0.0423,-0.242,0.269,3,1,"Marginal Cell Neuron (pharynx) Right"],["M3L",0.0433,0.125,0.136,3,2,"Motor Neuron 3 (pharynx) Left"],["M3R",0.0433,-0.268,0.136,3,2,"Motor Neuron 3 (pharynx) Right"],["MI",0.0456,-0.072,0.436,3,1,"Motor/Interneuron (pharynx)"],["NSML",0.0472,0.087,0.282,3,1,"NeuroSecretory Motor Neuron (pharynx) Left"],["NSMR",0.0472,-0.212,0.282,3,1,"NeuroSecretory Motor Neuron (pharynx) Right"],["M4",0.0513,-0.068,0.502,3,2,"Motor Neuron 4 (pharynx)"],["IL2VL",0.0514,0.11,0.014,0,3,"Inner Labial 2 Ventral Left"],["IL2VR",0.0514,-0.253,0.014,0,3,"Inner Labial 2 Ventral Right"],["IL2DL",0.0532,0.237,0.498,0,3,"Inner Labial 2 Dorsal Left"],["IL2DR",0.0532,-0.378,0.498,0,3,"Inner Labial 2 Dorsal Right"],["IL2L",0.0563,0.225,0.259,0,3,"Inner Labial 2 Left"],["IL2R",0.0563,-0.367,0.259,0,3,"Inner Labial 2 Right"],["URADL",0.0567,0.167,0.357,2,4,"Unknown Receptor, not Ciliated A Dorsal Left"],["URADR",0.0567,-0.31,0.357,2,4,"Unknown Receptor, not Ciliated A Dorsal Right"],["OLLL",0.0576,0.147,0.29,0,3,"Outer Labial Lateral Dendrite Left"],["OLLR",0.0576,-0.288,0.29,0,3,"Outer Labial Lateral Dendrite Right"],["IL1DL",0.0591,0.094,0.39,0,3,"Inner Labial 1 Dorsal Left"],["IL1DR",0.0591,-0.235,0.39,0,3,"Inner Labial 1 Dorsal Right"],["IL1L",0.0591,0.127,0.227,0,3,"Inner Labial 1 Left"],["IL1R",0.0591,-0.269,0.227,0,3,"Inner Labial 1 Right"],["URYDL",0.0607,0.137,0.372,0,3,"Unknown Receptor, not Ciliated Y Dorsal Left"],["URYDR",0.0607,-0.28,0.372,0,3,"Unknown Receptor, not Ciliated Y Dorsal Right"],["URYVL",0.0613,0.113,0.158,0,3,"Unknown Receptor, not Ciliated Y Ventral Left"],["URYVR",0.0613,-0.257,0.158,0,3,"Unknown Receptor, not Ciliated Y Ventral Right"],["OLQDL",0.0625,0.092,0.435,0,3,"Outer Labial Quadrant Dendrite Dorsal Left"],["OLQDR",0.0625,-0.234,0.435,0,3,"Outer Labial Quadrant Dendrite Dorsal Right"],["URBL",0.0626,0.168,0.239,1,5,"Unknown Receptor, not Ciliated B Left"],["URBR",0.0626,-0.311,0.239,1,5,"Unknown Receptor, not Ciliated B Right"],["URAVL",0.063,0.011,0.037,2,4,"Unknown Receptor, not Ciliated A Ventral Left"],["URAVR",0.063,-0.153,0.037,2,4,"Unknown Receptor, not Ciliated A Ventral Right"],["IL1VL",0.0631,0.075,0.025,0,3,"Inner Labial 1 Ventral Left"],["IL1VR",0.0631,-0.218,0.025,0,3,"Inner Labial 1 Ventral Right"],["OLQVL",0.0634,0.14,0.124,0,3,"Outer Labial Quadrant Dendrite Ventral Left"],["OLQVR",0.0634,-0.282,0.124,0,3,"Outer Labial Quadrant Dendrite Ventral Right"],["RIPL",0.0643,0.113,0.293,1,6,"Ring Interneuron P Left"],["RIPR",0.0643,-0.254,0.293,1,6,"Ring Interneuron P Right"],["CEPVL",0.0661,0.023,0.008,0,3,"CEPhalic Sensory Neuron Ventral Left"],["CEPVR",0.0661,-0.165,0.008,0,3,"CEPhalic Sensory Neuron Ventral Right"],["BAGL",0.0661,0.156,0.177,0,7,"BAG-like Dendritic Ending Left"],["BAGR",0.0661,-0.3,0.177,0,7,"BAG-like Dendritic Ending Right"],["RMED",0.0678,-0.05,0.638,2,4,"Ring Motor Neuron E Dorsal"],["CEPDL",0.0687,0.045,0.497,0,3,"CEPhalic Sensory Neuron Dorsal Left"],["CEPDR",0.0687,-0.187,0.497,0,3,"CEPhalic Sensory Neuron Dorsal Right"],["RMEL",0.0695,0.155,0.265,2,4,"Ring Motor Neuron E Left"],["RMER",0.0695,-0.297,0.265,2,4,"Ring Motor Neuron E Right"],["RMEV",0.0713,-0.068,-0.101,2,4,"Ring Motor Neuron E Ventral"],["RID",0.0721,-0.041,0.547,1,8,"Ring Interneuron D"],["AVAL",0.0731,-0.018,-0.012,1,8,"Anterior Ventral Process A Left"],["AVAR",0.0731,-0.117,-0.012,1,8,"Anterior Ventral Process A Right"],["RMDVL",0.0735,0.162,0.205,2,4,"Ring Motor Neuron D Ventral Left"],["RMDVR",0.0735,-0.302,0.205,2,4,"Ring Motor Neuron D Ventral Right"],["ALA",0.0737,-0.045,0.421,1,9,"Anterior Lateral Neuron A"],["RMDL",0.0737,0.103,0.1,2,4,"Ring Motor Neuron D Left"],["RMDR",0.0737,-0.247,0.1,2,4,"Ring Motor Neuron D Right"],["SMDVL",0.0738,0.157,0.282,2,10,"Sublateral Motor Neuron D Ventral Left"],["SMDVR",0.0738,-0.297,0.282,2,10,"Sublateral Motor Neuron D Ventral Right"],["SAAVL",0.0739,0.13,0.241,1,11,"Sublateral Anterior A Ventral Left"],["SAAVR",0.0739,-0.273,0.241,1,11,"Sublateral Anterior A Ventral Right"],["RIAL",0.0747,0.133,0.232,1,8,"Ring Interneuron A Left"],["RIAR",0.0747,-0.273,0.232,1,8,"Ring Interneuron A Right"],["SAADL",0.0748,-0.156,0.137,1,11,"Sublateral Anterior A Dorsal Left"],["SAADR",0.0748,0.018,0.137,1,11,"Sublateral Anterior A Dorsal Right"],["URXL",0.0752,0.102,0.344,0,7,"Unknown Receptor, not Ciliated X Left"],["URXR",0.0752,-0.245,0.344,0,7,"Unknown Receptor, not Ciliated X Right"],["SIBVL",0.0752,-0.089,-0.084,2,12,"Sublateral Interneuron B Ventral Left"],["SIBVR",0.0752,-0.092,-0.084,2,12,"Sublateral Interneuron B Ventral Right"],["AVBL",0.0753,0.008,-0.002,1,8,"Anterior Ventral Process B Left"],["AVBR",0.0753,-0.153,-0.002,1,8,"Anterior Ventral Process B Right"],["AINL",0.0756,-0.048,0.05,1,5,"Anterior Interneuron N Left"],["AINR",0.0756,-0.102,0.05,1,5,"Anterior Interneuron N Right"],["AVEL",0.0758,0.092,0.094,1,8,"Anterior Ventral Process E Left"],["AVER",0.0758,-0.28,0.094,1,8,"Anterior Ventral Process E Right"],["SIADR",0.076,-0.013,0.196,2,12,"Sublateral Interneuron A Dorsal Right"],["SIBDL",0.0761,-0.176,0.268,2,12,"Sublateral Interneuron B Dorsal Left"],["SIBDR",0.0761,0.032,0.268,2,12,"Sublateral Interneuron B Dorsal Right"],["RMDDL",0.0762,0.12,-0.003,2,4,"Ring Motor Neuron D Dorsal Left"],["RMDDR",0.0762,-0.258,-0.003,2,4,"Ring Motor Neuron D Dorsal Right"],["AVDL",0.0766,-0.006,-0.012,1,11,"Anterior Ventral Process D Left"],["AVDR",0.0766,-0.134,-0.012,1,11,"Anterior Ventral Process D Right"],["AFDL",0.077,0.15,0.197,0,13,"Amphid Finger-like Endings D Left"],["AFDR",0.077,-0.292,0.197,0,13,"Amphid Finger-like Endings D Right"],["ASKL",0.0775,0.123,0.297,0,13,"Amphid Single Cilium K Left"],["ASKR",0.0775,-0.267,0.297,0,13,"Amphid Single Cilium K Right"],["AWCL",0.0776,0.127,0.049,0,13,"Amphid Wing Neuron C Left"],["AWCR",0.0776,-0.27,0.049,0,13,"Amphid Wing Neuron C Right"],["ADFL",0.0776,0.124,0.138,0,13,"Amphid Dual Ciliated Ending F Left"],["ADFR",0.0776,-0.267,0.138,0,13,"Amphid Dual Ciliated Ending F Right"],["SIADL",0.0779,-0.132,0.219,2,12,"Sublateral Interneuron A Dorsal Left"],["RIH",0.0783,-0.067,-0.045,1,5,"Ring Interneuron H"],["RICL",0.0787,-0.025,0.03,1,11,"Ring Interneuron C Left"],["RICR",0.0787,-0.119,0.03,1,11,"Ring Interneuron C Right"],["SMDDL",0.0797,0.108,-0.091,2,10,"Sublateral Motor Neuron D Dorsal Left"],["SMDDR",0.0797,-0.248,-0.091,2,10,"Sublateral Motor Neuron D Dorsal Right"],["AWBL",0.0797,0.183,0.21,0,13,"Amphid Wing Neuron B Left"],["AWBR",0.0797,-0.325,0.21,0,13,"Amphid Wing Neuron B Right"],["AIBL",0.0798,0.09,0.007,1,11,"Anterior Interneuron B Left"],["AIBR",0.0798,-0.23,0.007,1,11,"Anterior Interneuron B Right"],["RIR",0.0801,-0.387,-0.001,1,5,"Ring Interneuron R"],["RMHL",0.0801,0.037,-0.032,2,4,"Ring Motor Neuron H Left"],["RMHR",0.0801,-0.177,-0.032,2,4,"Ring Motor Neuron H Right"],["AWAL",0.0801,0.13,0.203,0,13,"Amphid Wing Neuron A Left"],["AWAR",0.0801,-0.273,0.203,0,13,"Amphid Wing Neuron A Right"],["ADLL",0.0803,0.09,0.365,0,14,"Amphid Dual Ciliated Ending L Left"],["ADLR",0.0803,-0.232,0.365,0,14,"Amphid Dual Ciliated Ending L Right"],["ASHL",0.0805,0.185,0.148,0,14,"Amphid Single Cilium H Left"],["ASHR",0.0805,-0.327,0.148,0,14,"Amphid Single Cilium H Right"],["ASGL",0.0808,0.123,0.3,0,13,"Amphid Single Cilium G Left"],["ASGR",0.0808,-0.267,0.3,0,13,"Amphid Single Cilium G Right"],["RIVL",0.0809,0.15,0.465,2,4,"Ring Interneuron V Left"],["RIVR",0.0809,-0.292,0.465,2,4,"Ring Interneuron V Right"],["RMFL",0.0812,0.037,-0.073,1,11,"Ring Motor Neuron F Left"],["RMFR",0.0812,-0.18,-0.073,1,11,"Ring Motor Neuron F Right"],["AVJL",0.0814,0.007,0.377,1,11,"Anterior Ventral Process J Left"],["AVJR",0.0814,-0.158,0.377,1,11,"Anterior Ventral Process J Right"],["AVHL",0.082,0.138,0.3,1,9,"Anterior Ventral Process H Left"],["AVHR",0.082,-0.297,0.3,1,9,"Anterior Ventral Process H Right"],["RIBL",0.0821,0.183,0.067,1,11,"Ring Interneuron B Left"],["RIBR",0.0821,-0.327,0.067,1,11,"Ring Interneuron B Right"],["SMBDL",0.0821,0.103,-0.096,2,10,"Sublateral Motor Neuron B Dorsal Left"],["SMBDR",0.0821,-0.233,-0.096,2,10,"Sublateral Motor Neuron B Dorsal Right"],["AIAL",0.0823,0.027,-0.012,1,9,"Anterior Interneuron A Left"],["AIAR",0.0823,-0.17,-0.012,1,9,"Anterior Interneuron A Right"],["AUAL",0.0825,0.15,0.055,1,9,"Amphid-associated Unknown Receptor A Left"],["AUAR",0.0825,-0.293,0.055,1,9,"Amphid-associated Unknown Receptor A Right"],["ASIL",0.0829,0.088,0.372,0,13,"Amphid Single Cilium I Left"],["ASIR",0.0829,-0.23,0.372,0,13,"Amphid Single Cilium I Right"],["ASEL",0.0829,0.137,0.145,0,13,"Amphid Single Cilium E Left"],["ASER",0.0829,-0.279,0.145,0,13,"Amphid Single Cilium E Right"],["AVL",0.0832,-0.25,0.025,1,11,"Anterior Ventral Process L"],["SMBVL",0.0832,0.014,-0.085,2,10,"Sublateral Motor Neuron B Ventral Left"],["SMBVR",0.0832,-0.153,-0.085,2,10,"Sublateral Motor Neuron B Ventral Right"],["ASJL",0.0838,0.099,0.069,0,13,"Amphid Single Cilium J Left"],["ASJR",0.0838,-0.242,0.069,0,13,"Amphid Single Cilium J Right"],["RIS",0.0848,-0.161,-0.046,1,9,"Ring Interneuron S"],["RIML",0.0864,0.117,0.151,1,15,"Ring Interneuron M Left"],["RIMR",0.0864,-0.258,0.151,1,15,"Ring Interneuron M Right"],["SIAVL",0.0877,0.198,-0.058,2,12,"Sublateral Interneuron A Ventral Left"],["SIAVR",0.0877,-0.34,-0.058,2,12,"Sublateral Interneuron A Ventral Right"],["AIZL",0.0891,0.187,0.13,1,9,"Anterior Interneuron Z Left"],["AIZR",0.0891,-0.332,0.13,1,9,"Anterior Interneuron Z Right"],["AVKL",0.0938,0.055,-0.311,1,11,"Anterior Ventral Process K Left"],["M2L",0.0946,0.123,0.234,3,2,"Motor Neuron 2 (pharynx) Left"],["M2R",0.0946,-0.267,0.234,3,2,"Motor Neuron 2 (pharynx) Right"],["I4",0.0951,-0.068,0.389,3,0,"Interneuron 4 (pharynx)"],["AIML",0.0957,0.308,-0.094,1,5,"Anterior Interneuron M Left"],["AIMR",0.0957,-0.45,-0.094,1,5,"Anterior Interneuron M Right"],["VB2",0.0959,-0.067,-0.377,2,16,"Ventral B-type Motor Neuron 2"],["AIYL",0.0969,0.248,-0.062,1,9,"Anterior Interneuron Y Left"],["AIYR",0.0969,-0.39,-0.062,1,9,"Anterior Interneuron Y Right"],["M1",0.0973,-0.029,0.459,3,2,"Motor Neuron 1 (pharynx)"],["I6",0.0979,0.057,0.42,3,0,"Interneuron 6 (pharynx)"],["SABVL",0.1009,0.111,-0.168,2,12,"Sublateral Anterior B Ventral Left"],["SABVR",0.1009,-0.27,-0.168,2,12,"Sublateral Anterior B Ventral Right"],["I5",0.1027,-0.07,0.063,3,0,"Interneuron 5 (pharynx)"],["AVKR",0.1038,-0.153,-0.313,1,11,"Anterior Ventral Process K Right"],["VB1",0.1044,-0.052,-0.392,2,16,"Ventral B-type Motor Neuron 1"],["AVFL",0.1045,0.07,-0.318,1,9,"Anterior Ventral Process F Left"],["AVFR",0.1045,-0.217,-0.318,1,9,"Anterior Ventral Process F Right"],["FLPL",0.1046,0.363,0.098,0,17,"FLaP-like Dendritic Ending Left"],["FLPR",0.1046,-0.502,0.098,0,17,"FLaP-like Dendritic Ending Right"],["RIFR",0.1056,-0.172,-0.128,1,9,"Ring Interneuron F Right"],["DB2",0.1069,-0.007,-0.384,2,16,"Dorsal B-type Motor Neuron 2"],["AQR",0.1087,-0.493,0.242,0,18,"Anterior, Q-cell Derived Receptor"],["ADEL",0.1095,0.367,0.203,0,17,"Anterior DEirid Neuron Left"],["ADER",0.1095,-0.51,0.203,0,17,"Anterior DEirid Neuron Right"],["RIGR",0.1101,-0.157,-0.182,1,11,"Ring Interneuron G Right"],["M5",0.1107,-0.073,0.532,3,2,"Motor Neuron 5 (pharynx)"],["RIFL",0.1127,0.0,-0.219,1,9,"Ring Interneuron F Left"],["ADAL",0.1134,0.288,0.216,1,9,"Anterior Process from Deirid Commissure A Left"],["ADAR",0.1134,-0.43,0.216,1,9,"Anterior Process from Deirid Commissure A Right"],["RMGL",0.1146,0.275,0.289,1,11,"Ring Motor Neuron G Left"],["RMGR",0.1146,-0.417,0.289,1,11,"Ring Motor Neuron G Right"],["AVG",0.1161,-0.067,-0.349,1,9,"Anterior Ventral Process G"],["VA1",0.1181,-0.045,-0.356,2,16,"Ventral A-type Motor Neuron 1"],["SABD",0.119,-0.107,-0.236,2,12,"Sublateral Anterior B Dorsal"],["RIGL",0.1209,0.0,-0.159,1,11,"Ring Interneuron G Left"],["DD1",0.1226,-0.03,-0.451,2,16,"Dorsal D-type Motor Neuron 1"],["DB1",0.1246,-0.063,-0.42,2,16,"Dorsal B-type Motor Neuron 1"],["AS1",0.1262,-0.009,-0.465,2,16,"A-type Short Motor Neuron 1"],["VD1",0.1268,-0.023,-0.48,2,16,"Ventral D-type Motor Neuron 1"],["DA1",0.1286,-0.025,-0.471,2,16,"Dorsal A-type Motor Neuron 1"],["VD2",0.1299,-0.022,-0.487,2,16,"Ventral D-type Motor Neuron 2"],["VA2",0.1411,-0.062,-0.528,2,16,"Ventral A-type Motor Neuron 2"],["VB3",0.1497,-0.062,-0.591,2,16,"Ventral B-type Motor Neuron 3"],["AS2",0.1577,-0.063,-0.635,2,16,"A-type Short Motor Neuron 2"],["DB3",0.1684,-0.062,-0.709,2,16,"Dorsal B-type Motor Neuron 3/1"],["DA2",0.1741,-0.063,-0.744,2,16,"Dorsal A-type Motor Neuron 2"],["VD3",0.1774,-0.027,-0.755,2,16,"Ventral D-type Motor Neuron 3"],["BDUL",0.1786,0.512,0.037,1,9,"Black Vesicles, Deirid Locale, Unknown Function Left"],["BDUR",0.1786,-0.655,0.037,1,9,"Black Vesicles, Deirid Locale, Unknown Function Right"],["VA3",0.1824,-0.049,-0.78,2,16,"Ventral A-type Motor Neuron 3"],["VB4",0.1959,-0.067,-0.822,2,16,"Ventral B-type Motor Neuron 4"],["VC1",0.2,-0.024,-0.839,2,19,"Ventral C-type Motor Neuron 1"],["DD2",0.2169,-0.062,-0.864,2,16,"Dorsal D-type Motor Neuron 2"],["AS3",0.2233,-0.063,-0.88,2,16,"A-type Short Motor Neuron 3"],["VD4",0.241,-0.026,-0.894,2,16,"Ventral D-type Motor Neuron 4"],["SDQR",0.2478,-0.473,0.537,0,18,"Sublateral Dorsal Q-cell Derived Right"],["DA3",0.2579,-0.051,-0.899,2,16,"Dorsal A-type Motor Neuron 3"],["VA4",0.2631,-0.059,-0.898,2,16,"Ventral A-type Motor Neuron 4"],["VB5",0.2756,-0.056,-0.898,2,16,"Ventral B-type Motor Neuron 5"],["VC2",0.2808,-0.019,-0.9,2,19,"Ventral C-type Motor Neuron 2"],["DB4",0.2922,-0.057,-0.898,2,16,"Dorsal B-type Motor Neuron 4"],["AS4",0.2998,-0.058,-0.898,2,16,"A-type Short Motor Neuron 4"],["VD5",0.3271,-0.025,-0.851,2,16,"Ventral D-type Motor Neuron 5"],["ALML",0.3366,0.756,0.122,0,17,"Anterior Lateral Microtubule Neuron Left"],["ALMR",0.3366,-0.805,0.122,0,17,"Anterior Lateral Microtubule Neuron Right"],["AVM",0.3429,-0.683,-0.141,0,17,"Anterior Ventral Microtubule Neuron"],["VA5",0.3446,-0.062,-0.86,2,16,"Ventral A-type Motor Neuron 5"],["VB6",0.3668,-0.062,-0.821,2,16,"Ventral B-type Motor Neuron 6"],["DA4",0.372,-0.057,-0.816,2,16,"Dorsal A-type Motor Neuron 4"],["DD3",0.3767,-0.063,-0.8,2,16,"Dorsal D-type Motor Neuron 3"],["VC3",0.4044,-0.048,-0.773,2,19,"Ventral C-type Motor Neuron 3"],["AS5",0.4078,-0.063,-0.752,2,16,"A-type Short Motor Neuron 5"],["VD6",0.4108,-0.023,-0.765,2,16,"Ventral D-type Motor Neuron 6"],["VA6",0.4394,-0.062,-0.73,2,16,"Ventral A-type Motor Neuron 6"],["AS6",0.4478,-0.063,-0.612,2,16,"A-type Short Motor Neuron 6"],["DB5",0.4566,-0.135,-0.602,2,16,"Dorsal B-type Motor Neuron 5"],["VB7",0.4643,-0.323,-0.501,2,16,"Ventral B-type Motor Neuron 7"],["VC4",0.4673,-0.038,-0.535,2,19,"Ventral C-type Motor Neuron 4"],["CANL",0.4724,0.845,0.259,4,20,"Excretory CANal-associated Neuron Left"],["CANR",0.4724,-0.865,0.247,4,20,"Excretory CANal-associated Neuron Right"],["VD7",0.4849,-0.412,-0.433,2,16,"Ventral D-type Motor Neuron 7"],["HSNL",0.4888,0.582,0.225,2,19,"Hermaphrodite-Specific Neuron Left"],["HSNR",0.4888,-0.722,0.225,2,19,"Hermaphrodite-Specific Neuron Right"],["VC5",0.4957,-0.038,-0.505,2,19,"Ventral C-type Motor Neuron 5"],["DA5",0.5177,-0.055,-0.452,2,16,"Dorsal A-type Motor Neuron 5"],["VA7",0.5351,-0.062,-0.472,2,16,"Ventral A-type Motor Neuron 7"],["VB8",0.5485,-0.061,-0.535,2,16,"Ventral B-type Motor Neuron 8"],["AS7",0.5624,-0.063,-0.567,2,16,"A-type Short Motor Neuron 7"],["DD4",0.5661,-0.063,-0.565,2,16,"Dorsal D-type Motor Neuron 4"],["VD8",0.5814,-0.025,-0.638,2,16,"Ventral D-type Motor Neuron 8"],["PDEL",0.5923,0.858,0.103,0,17,"Posterior DEirid Left"],["PDER",0.5923,-0.894,0.101,0,17,"Posterior DEirid Right"],["VA8",0.6004,-0.06,-0.623,2,16,"Ventral A-type Motor Neuron 8"],["VB9",0.6119,-0.062,-0.612,2,16,"Ventral B-type Motor Neuron 9"],["VC6",0.6302,-0.061,-0.669,2,19,"Ventral C-type Motor Neuron 6"],["PVDL",0.6314,0.825,0.13,0,17,"Posterior Ventral Process D Left"],["PVDR",0.6314,-0.87,0.13,0,17,"Posterior Ventral Process D Right"],["DB6",0.6351,-0.061,-0.705,2,16,"Dorsal B-type Motor Neuron 6"],["AS8",0.6398,-0.063,-0.754,2,16,"A-type Short Motor Neuron 8"],["PVM",0.6485,0.828,0.035,0,17,"Posterior Ventral Microtubule Neuron"],["VD9",0.6519,-0.027,-0.758,2,16,"Ventral D-type Motor Neuron 9"],["DA6",0.6609,-0.055,-0.792,2,16,"Dorsal A-type Motor Neuron 6"],["VA9",0.6735,-0.06,-0.811,2,16,"Ventral A-type Motor Neuron 9"],["VB10",0.6851,-0.062,-0.82,2,16,"Ventral B-type Motor Neuron 10"],["SDQL",0.691,0.713,0.236,0,18,"Sublateral Dorsal Q-cell Derived Left"],["AS9",0.6986,-0.063,-0.842,2,16,"A-type Short Motor Neuron 9"],["DD5",0.7051,-0.063,-0.846,2,16,"Dorsal D-type Motor Neuron 5"],["VD10",0.7076,-0.025,-0.855,2,16,"Ventral D-type Motor Neuron 10"],["VA10",0.7308,-0.061,-0.868,2,16,"Ventral A-type Motor Neuron 10"],["VB11",0.7404,-0.059,-0.842,2,16,"Ventral B-type Motor Neuron 11"],["DB7",0.7472,-0.058,-0.823,2,16,"Dorsal B-type Motor Neuron 7"],["AS10",0.7603,-0.057,-0.787,2,16,"A-type Short Motor Neuron 10"],["DA7",0.7645,-0.047,-0.775,2,16,"Dorsal A-type Motor Neuron 7"],["VD11",0.7672,-0.023,-0.769,2,16,"Ventral D-type Motor Neuron 11"],["VA11",0.8029,-0.038,-0.667,2,16,"Ventral A-type Motor Neuron 11"],["AS11",0.8071,-0.045,-0.654,2,16,"A-type Short Motor Neuron 11"],["VD12",0.8444,-0.015,-0.546,2,16,"Ventral D-type Motor Neuron 12"],["PVPR",0.8582,-0.003,-0.505,1,9,"Posterior Ventral Process P Right"],["PVT",0.8609,-0.002,-0.496,1,11,"Posterior Ventral Process T"],["VA12",0.8656,-0.002,-0.482,2,16,"Ventral A-type Motor Neuron 12"],["DD6",0.8697,-0.039,-0.468,2,16,"Dorsal D-type Motor Neuron 6"],["PVPL",0.8708,-0.002,-0.466,1,9,"Posterior Ventral Process P Left"],["DA8",0.8835,0.029,-0.426,2,16,"Dorsal A-type Motor Neuron 8"],["DA9",0.8835,-0.104,-0.414,2,16,"Dorsal A-type Motor Neuron 9"],["VD13",0.8873,-0.017,-0.415,2,16,"Ventral D-type Motor Neuron 13"],["PDB",0.8933,-0.08,-0.388,2,16,"Preanal Cell Body Dorsal Axon B"],["PDA",0.8966,-0.078,-0.378,2,16,"Preanal Cell Body Dorsal Axon A"],["DVB",0.9056,-0.025,-0.196,1,9,"Dorsorectal Ganglion Ventral Process B"],["DVA",0.9058,-0.078,-0.208,0,17,"Dorsorectal Ganglion Ventral Process A"],["DVC",0.9068,-0.004,-0.135,1,11,"Dorsorectal Ganglion Ventral Process C"],["PLNL",0.9154,0.141,-0.142,0,18,"Posterior Lateral N Left"],["PLNR",0.9154,-0.207,-0.142,0,18,"Posterior Lateral N Right"],["PVQL",0.9155,0.028,-0.201,1,9,"Posterior Ventral Process Q Left"],["PVQR",0.9155,-0.11,-0.201,1,9,"Posterior Ventral Process Q Right"],["PHAL",0.9161,0.04,-0.239,0,21,"PHasmid Neuron A Left"],["PHAR",0.9161,-0.127,-0.239,0,21,"PHasmid Neuron A Right"],["LUAL",0.9172,0.045,-0.244,1,9,"LUmbar Ganglion A Left"],["LUAR",0.9172,-0.128,-0.244,1,9,"LUmbar Ganglion A Right"],["PVCL",0.9177,0.028,-0.199,1,8,"Posterior Ventral Process C Left"],["PVCR",0.9177,-0.115,-0.199,1,8,"Posterior Ventral Process C Right"],["PVWL",0.9193,0.027,-0.162,1,11,"Posterior Ventral Process W Left"],["PVWR",0.9193,-0.113,-0.162,1,11,"Posterior Ventral Process W Right"],["PHBL",0.9195,0.04,-0.208,0,21,"PHasmid Neuron B Left"],["PHBR",0.9195,-0.124,-0.208,0,21,"PHasmid Neuron B Right"],["ALNL",0.9209,0.011,0.017,0,18,"Anterior Lateral Neuron N Left"],["ALNR",0.9209,-0.097,0.017,0,18,"Anterior Lateral Neuron N Right"],["PQR",0.9216,-0.011,-0.144,0,18,"Posterior Q-cell Derived Receptor"],["PVR",0.9217,-0.062,-0.143,1,9,"Posterior Ventral Process R"],["PHCL",0.9235,0.025,-0.158,0,21,"PHasmid Neuron C Left"],["PHCR",0.9235,-0.114,-0.158,0,21,"PHasmid Neuron C Right"],["PVNR",0.9249,-0.108,-0.104,1,9,"Posterior Ventral Process N Right"],["PVNL",0.925,0.018,-0.104,1,9,"Posterior Ventral Process N Left"],["PLML",0.9252,0.083,-0.128,0,17,"Posterior Lateral Microtubule Neuron Left"],["PLMR",0.9252,-0.122,-0.128,0,17,"Posterior Lateral Microtubule Neuron Right"]],"types":["Pharyngeal interneuron","Pharyngeal polymodal neuron","Pharyngeal motor neuron","Cephalic","Head motor neuron","Category 4 interneuron","Linker to pharynx","O2, CO2, social signals, touch","Layer 1 interneuron","Layer 3 interneuron","Sublateral motor neuron","Layer 2 interneuron","Sublateral motor neuron; interneuron in White et al., 1986","Amphid","Amphid, nociceptive","Layer 1 interneuron; motorneuron in White et al., 1986","Ventral cord motor neuron","Mechanosensory","Touch","Hermaphrodite specific motor neuron","Canal neuron","Phasmid"],"chem":[[0,1,3],[0,2,2],[0,10,14],[0,11,24],[0,150,13],[0,156,1],[0,160,2],[1,0,3],[1,3,1],[1,5,1],[1,8,2],[1,10,34],[1,11,7],[1,12,3],[1,149,2],[1,150,20],[1,156,3],[1,160,2],[2,0,10],[2,4,3],[2,5,2],[2,6,2],[2,7,8],[2,8,2],[2,9,2],[2,10,3],[2,148,3],[2,157,1],[2,160,2],[3,1,6],[3,4,1],[3,5,3],[3,6,4],[3,7,1],[3,8,6],[3,9,1],[3,10,1],[3,11,2],[3,148,1],[3,149,3],[3,156,1],[3,160,2],[4,2,1],[4,5,1],[4,6,2],[4,7,2],[4,8,2],[4,9,1],[4,11,2],[4,12,2],[4,148,2],[4,156,2],[4,157,1],[4,160,2],[7,10,1],[8,12,2],[9,2,1],[9,4,2],[9,5,3],[9,7,2],[9,10,1],[9,11,2],[9,148,3],[9,149,2],[9,150,1],[9,156,7],[10,7,21],[10,8,1],[10,11,7],[10,12,13],[10,150,1],[11,0,1],[11,1,1],[11,8,24],[11,150,3],[11,157,4],[12,5,1],[12,7,1],[12,148,1],[12,150,5],[12,160,1],[13,17,1],[13,35,7],[13,37,27],[13,39,6],[13,41,36],[13,46,1],[13,50,7],[13,51,6],[13,52,2],[13,65,4],[13,95,5],[13,277,1],[14,36,16],[14,38,29],[14,40,9],[14,42,43],[14,47,2],[14,50,8],[14,51,17],[14,52,15],[14,54,1],[14,66,2],[14,70,1],[14,79,1],[14,95,5],[14,110,1],[15,19,8],[15,23,17],[15,31,2],[15,41,28],[15,47,2],[15,50,11],[15,51,8],[15,52,1],[15,74,2],[15,95,2],[15,105,1],[15,123,1],[15,129,2],[16,20,5],[16,24,28],[16,32,2],[16,41,1],[16,42,43],[16,47,3],[16,49,2],[16,50,12],[16,51,11],[16,52,5],[16,96,1],[16,97,2],[17,25,6],[17,31,20],[17,35,2],[17,39,19],[17,51,10],[17,52,5],[17,59,5],[17,60,3],[17,69,3],[17,77,2],[17,95,25],[17,96,1],[17,170,6],[18,20,2],[18,22,5],[18,26,2],[18,32,10],[18,34,3],[18,36,1],[18,40,26],[18,50,5],[18,52,2],[18,59,3],[18,70,1],[18,78,2],[18,95,19],[18,171,5],[18,178,1],[19,23,4],[19,41,12],[19,50,8],[19,95,3],[20,24,3],[20,28,1],[20,42,16],[20,51,1],[21,27,2],[21,29,1],[21,37,3],[21,43,14],[21,48,5],[21,50,5],[21,56,3],[21,59,6],[21,62,10],[21,78,53],[21,82,22],[21,98,8],[21,99,9],[21,123,24],[22,18,1],[22,24,1],[22,29,3],[22,32,1],[22,38,2],[22,44,16],[22,47,1],[22,49,4],[22,51,3],[22,57,6],[22,59,9],[22,60,2],[22,61,11],[22,62,4],[22,77,39],[22,83,26],[22,98,3],[22,99,1],[22,124,21],[22,140,2],[22,171,2],[23,15,1],[23,19,10],[23,41,11],[23,50,1],[23,56,3],[23,80,3],[23,83,3],[24,16,5],[24,20,8],[24,22,1],[24,26,2],[24,28,2],[24,42,28],[24,57,32],[24,82,11],[24,295,5],[25,17,1],[25,21,1],[25,33,1],[25,35,4],[25,51,4],[25,56,22],[25,57,5],[25,59,3],[25,60,9],[25,78,5],[25,82,20],[25,177,1],[26,22,1],[26,50,5],[26,56,8],[26,57,17],[26,59,11],[26,60,4],[26,70,1],[26,77,2],[26,78,5],[26,82,8],[26,83,12],[26,105,3],[27,21,3],[27,23,3],[27,31,2],[27,56,18],[27,77,1],[27,78,9],[27,83,15],[27,98,2],[27,99,3],[27,123,8],[27,145,1],[28,24,5],[28,32,1],[28,47,7],[28,49,3],[28,57,12],[28,62,3],[28,70,1],[28,73,1],[28,77,5],[28,78,2],[28,82,9],[28,90,1],[28,98,11],[28,124,1],[29,21,9],[29,22,5],[29,37,1],[29,39,9],[29,43,3],[29,53,4],[29,57,17],[29,62,13],[29,65,2],[29,69,2],[29,71,1],[29,72,4],[29,74,1],[29,77,8],[29,78,23],[29,82,23],[29,85,2],[29,95,2],[29,120,1],[29,123,9],[29,124,3],[29,140,1],[30,38,3],[30,44,1],[30,54,2],[30,56,19],[30,59,2],[30,61,11],[30,66,2],[30,71,5],[30,72,4],[30,73,5],[30,77,26],[30,83,32],[30,124,19],[30,126,1],[30,135,5],[30,176,1],[31,27,3],[31,47,1],[31,48,3],[31,50,2],[31,80,9],[31,82,1],[31,83,10],[31,95,3],[31,97,6],[31,105,1],[32,24,1],[32,51,1],[32,81,6],[32,82,11],[32,95,2],[32,96,2],[32,97,2],[32,106,3],[33,21,1],[33,25,10],[33,27,1],[33,48,2],[33,69,26],[33,71,1],[33,73,1],[33,79,2],[33,83,2],[33,96,1],[33,97,1],[33,106,5],[33,126,3],[33,136,1],[33,143,2],[33,175,3],[33,295,1],[34,18,3],[34,22,1],[34,24,2],[34,26,5],[34,32,2],[34,44,4],[34,49,1],[34,59,1],[34,60,1],[34,70,16],[34,72,2],[34,74,1],[34,81,2],[34,84,1],[34,94,3],[34,96,1],[34,97,1],[34,110,2],[34,125,4],[34,137,1],[34,144,3],[34,171,1],[34,176,5],[34,178,8],[35,25,3],[35,37,6],[35,41,15],[35,43,1],[35,50,8],[35,51,3],[35,52,10],[35,57,1],[35,78,1],[35,82,7],[35,123,1],[35,277,1],[36,14,3],[36,26,2],[36,30,1],[36,38,9],[36,42,13],[36,50,1],[36,51,4],[36,52,2],[36,56,1],[36,83,1],[36,95,1],[36,176,1],[36,266,3],[37,25,3],[37,29,4],[37,35,4],[37,39,2],[37,41,13],[37,57,3],[37,82,30],[37,105,1],[37,135,1],[38,14,2],[38,22,1],[38,26,4],[38,36,4],[38,40,5],[38,42,16],[38,56,5],[38,83,40],[39,17,1],[39,54,1],[39,57,14],[39,71,13],[39,85,1],[39,96,4],[39,105,2],[40,38,2],[40,42,18],[40,51,2],[40,56,18],[40,66,10],[40,72,18],[40,95,18],[40,97,3],[40,106,1],[41,32,2],[41,39,1],[41,95,2],[42,32,3],[42,36,1],[42,40,2],[42,74,2],[42,95,1],[43,21,4],[43,29,5],[43,35,6],[43,37,9],[43,39,19],[43,41,4],[43,57,8],[43,62,1],[43,65,1],[43,69,2],[43,78,5],[43,82,7],[43,96,20],[43,97,17],[43,105,10],[43,106,5],[43,123,3],[43,136,1],[43,143,6],[43,177,2],[43,295,3],[44,14,3],[44,22,14],[44,30,2],[44,36,3],[44,38,8],[44,40,11],[44,42,3],[44,49,1],[44,65,1],[44,66,1],[44,77,13],[44,83,4],[44,96,13],[44,97,12],[44,99,2],[44,106,15],[44,110,3],[44,114,2],[44,115,2],[44,137,2],[44,144,7],[45,36,1],[45,42,1],[45,44,2],[45,46,1],[45,53,3],[45,55,3],[45,66,18],[45,70,1],[45,75,1],[45,77,2],[45,78,7],[45,93,1],[45,102,2],[45,116,2],[45,124,19],[45,130,2],[45,146,2],[45,172,7],[45,182,3],[46,39,2],[46,45,3],[46,54,4],[46,61,1],[46,65,18],[46,77,8],[46,123,22],[46,124,1],[46,154,3],[46,169,3],[46,182,10],[47,98,1],[47,99,4],[47,123,1],[47,124,1],[48,15,1],[48,19,8],[48,21,8],[48,23,18],[48,27,7],[48,31,27],[48,33,11],[48,41,8],[48,49,1],[48,56,13],[48,72,2],[48,75,2],[48,78,13],[48,79,4],[48,80,2],[48,86,2],[48,95,1],[48,96,11],[48,97,8],[48,105,1],[48,106,8],[48,123,3],[48,126,5],[48,140,3],[48,177,6],[48,211,2],[49,20,3],[49,22,13],[49,24,15],[49,26,1],[49,28,3],[49,32,20],[49,34,14],[49,57,3],[49,60,1],[49,70,2],[49,77,9],[49,81,1],[49,95,4],[49,96,13],[49,97,19],[49,105,7],[49,106,1],[49,125,1],[49,167,2],[49,178,1],[49,196,5],[50,22,1],[50,26,2],[50,42,1],[50,52,1],[51,25,4],[51,106,3],[52,47,1],[52,61,1],[52,82,1],[52,83,1],[52,95,2],[52,99,1],[52,124,2],[52,140,1],[53,47,5],[53,165,1],[53,183,3],[53,184,1],[53,193,1],[53,200,2],[53,210,1],[53,249,2],[54,55,12],[54,65,3],[54,73,2],[54,77,1],[54,78,2],[54,84,3],[54,85,2],[54,158,2],[54,180,2],[54,187,6],[54,189,8],[54,191,2],[54,193,10],[54,197,6],[54,204,12],[54,205,7],[54,209,2],[54,214,7],[54,216,12],[54,219,6],[54,221,8],[54,232,14],[54,233,7],[54,235,6],[54,240,7],[54,246,6],[54,250,7],[54,253,11],[54,256,9],[54,258,2],[54,259,5],[54,260,4],[54,262,6],[54,263,8],[54,267,5],[54,270,5],[54,271,3],[54,284,6],[54,285,2],[54,286,21],[54,287,16],[54,299,1],[55,54,7],[55,62,1],[55,64,6],[55,73,3],[55,74,4],[55,78,3],[55,84,3],[55,85,6],[55,159,2],[55,168,2],[55,182,1],[55,185,2],[55,187,2],[55,189,5],[55,191,3],[55,192,2],[55,193,9],[55,197,6],[55,204,8],[55,205,6],[55,209,2],[55,214,2],[55,216,9],[55,219,1],[55,221,9],[55,222,2],[55,232,9],[55,233,7],[55,235,6],[55,240,7],[55,246,10],[55,249,4],[55,250,7],[55,253,10],[55,256,4],[55,260,6],[55,262,13],[55,263,10],[55,270,20],[55,271,3],[55,284,4],[55,285,16],[55,286,20],[55,287,20],[56,14,1],[56,26,2],[56,30,1],[56,40,3],[56,48,2],[56,57,1],[56,60,2],[56,72,1],[56,78,2],[56,83,41],[56,144,2],[57,24,1],[57,25,1],[57,29,2],[57,35,8],[57,39,2],[57,55,1],[57,66,1],[57,71,1],[57,81,1],[57,82,43],[57,126,1],[57,143,2],[58,55,3],[58,60,3],[58,66,2],[58,77,8],[58,78,4],[58,85,1],[58,139,4],[59,21,1],[59,22,3],[59,25,1],[59,26,1],[59,43,1],[59,51,3],[59,56,2],[59,57,3],[59,60,8],[59,65,20],[59,66,22],[59,70,1],[59,81,3],[59,83,7],[59,99,1],[59,105,3],[59,106,1],[59,115,1],[59,118,1],[59,124,1],[59,137,2],[59,140,1],[59,141,3],[59,161,1],[59,170,1],[59,171,3],[60,22,2],[60,25,2],[60,56,9],[60,59,11],[60,65,14],[60,66,21],[60,82,6],[60,99,1],[60,140,1],[60,142,1],[60,143,1],[60,161,1],[60,177,1],[61,17,1],[61,44,1],[61,52,1],[61,62,2],[61,65,19],[61,66,31],[61,71,30],[61,79,1],[61,83,3],[61,99,22],[61,115,6],[61,124,1],[61,144,30],[61,278,6],[61,292,2],[61,293,6],[61,295,1],[62,43,1],[62,47,9],[62,55,1],[62,61,1],[62,65,24],[62,66,16],[62,78,1],[62,81,30],[62,82,3],[62,98,14],[62,103,1],[62,116,1],[62,141,1],[62,143,30],[62,162,1],[62,278,6],[63,22,1],[63,54,56],[63,61,1],[63,68,5],[63,99,18],[63,102,1],[63,118,11],[63,126,2],[63,141,5],[63,142,33],[63,153,1],[63,159,2],[63,180,1],[63,181,1],[63,183,1],[63,186,4],[63,188,2],[63,189,2],[63,197,2],[63,205,2],[64,23,12],[64,41,12],[64,52,1],[64,55,39],[64,66,1],[64,73,1],[64,98,17],[64,103,1],[64,125,1],[64,132,1],[64,141,12],[64,142,7],[64,158,2],[64,293,1],[65,46,2],[65,48,1],[65,54,2],[65,56,48],[65,57,48],[65,59,26],[65,60,17],[65,61,14],[65,62,32],[65,66,23],[65,67,1],[65,69,2],[65,82,48],[65,83,35],[65,94,3],[65,98,22],[65,99,33],[65,104,3],[65,115,8],[65,116,12],[65,123,2],[65,126,7],[65,141,2],[65,142,2],[65,144,2],[65,145,1],[65,169,4],[66,26,2],[66,43,1],[66,44,1],[66,55,2],[66,56,57],[66,57,47],[66,59,9],[66,60,35],[66,61,43],[66,62,26],[66,65,38],[66,68,1],[66,79,4],[66,82,48],[66,83,53],[66,93,2],[66,98,32],[66,99,26],[66,115,3],[66,116,3],[66,124,1],[66,126,2],[66,130,2],[66,137,2],[66,143,7],[67,22,4],[67,54,17],[67,57,1],[67,71,1],[67,74,1],[67,80,1],[67,81,1],[67,102,1],[67,116,1],[67,118,1],[67,141,11],[67,142,16],[67,181,2],[67,182,1],[68,21,3],[68,54,1],[68,55,26],[68,61,5],[68,102,1],[68,103,1],[68,117,5],[68,118,1],[68,126,2],[68,137,1],[68,141,14],[68,142,23],[68,177,1],[68,181,2],[68,278,1],[69,17,1],[69,23,2],[69,39,2],[69,46,2],[69,48,1],[69,54,1],[69,65,15],[69,73,4],[69,77,9],[69,85,1],[69,92,1],[69,96,8],[69,104,1],[69,111,1],[69,120,4],[69,129,14],[69,131,1],[69,145,1],[69,151,2],[69,175,6],[69,177,5],[69,182,6],[69,230,1],[70,34,8],[70,40,2],[70,42,10],[70,49,1],[70,55,2],[70,60,8],[70,66,20],[70,73,2],[70,74,3],[70,78,2],[70,82,2],[70,93,4],[70,94,2],[70,97,3],[70,101,2],[70,104,4],[70,110,3],[70,130,21],[70,137,7],[70,144,4],[70,152,3],[70,167,3],[70,172,7],[70,176,1],[70,178,6],[70,212,1],[71,61,22],[71,82,1],[71,98,1],[71,144,5],[71,178,1],[71,293,1],[72,40,1],[72,62,22],[72,96,3],[72,106,1],[72,110,3],[72,143,5],[72,144,1],[72,278,1],[73,54,9],[73,55,14],[73,74,6],[73,78,1],[73,85,3],[73,120,1],[73,135,1],[73,153,3],[73,189,3],[73,209,1],[73,218,3],[73,219,2],[73,232,1],[73,252,1],[73,256,1],[73,259,2],[73,260,1],[73,265,3],[73,276,2],[73,287,2],[73,298,3],[74,54,10],[74,55,14],[74,73,2],[74,78,2],[74,84,4],[74,103,1],[74,119,2],[74,185,2],[74,194,2],[74,197,3],[74,201,3],[74,204,3],[74,205,2],[74,208,1],[74,209,1],[74,216,1],[74,230,1],[74,259,1],[74,260,1],[75,44,2],[75,45,5],[75,53,2],[75,56,3],[75,63,3],[75,87,10],[75,114,1],[75,117,1],[75,123,2],[75,124,3],[75,128,1],[75,130,2],[75,131,11],[75,133,1],[76,46,9],[76,48,2],[76,53,2],[76,69,2],[76,70,2],[76,75,1],[76,86,9],[76,87,3],[76,90,2],[76,102,2],[76,113,1],[76,123,8],[76,127,2],[76,129,1],[76,130,2],[76,133,1],[76,134,3],[77,54,17],[77,55,3],[77,84,5],[77,158,16],[77,159,12],[77,177,2],[77,180,12],[77,181,18],[77,185,3],[77,187,11],[77,188,1],[77,192,1],[77,193,5],[77,194,1],[77,197,1],[77,204,6],[77,211,1],[77,266,1],[77,286,1],[77,287,2],[78,21,1],[78,48,1],[78,54,14],[78,55,33],[78,70,1],[78,77,3],[78,84,4],[78,85,4],[78,142,1],[78,146,1],[78,158,12],[78,159,11],[78,178,1],[78,180,5],[78,181,1],[78,185,6],[78,187,11],[78,189,4],[78,191,4],[78,192,1],[78,193,7],[78,197,1],[78,201,1],[78,204,3],[78,205,2],[79,38,1],[79,48,1],[79,54,1],[79,81,4],[79,99,17],[79,126,17],[79,211,1],[79,252,4],[80,48,1],[80,94,2],[80,98,10],[80,136,1],[80,169,1],[80,269,1],[81,79,2],[81,99,10],[82,24,2],[82,26,9],[82,43,2],[82,52,2],[82,56,1],[82,57,22],[82,65,1],[82,78,1],[82,105,1],[83,56,26],[83,57,3],[83,82,1],[84,54,37],[84,55,37],[84,77,5],[84,85,5],[84,119,1],[84,158,2],[84,159,5],[84,181,5],[84,187,4],[84,193,2],[84,197,3],[84,204,9],[84,209,2],[84,214,1],[84,216,3],[84,232,1],[84,256,2],[84,259,1],[84,263,4],[84,267,1],[84,270,2],[84,277,2],[84,284,2],[84,286,1],[85,54,41],[85,55,52],[85,58,1],[85,73,1],[85,78,2],[85,84,3],[85,120,1],[85,158,5],[85,159,1],[85,181,1],[85,184,1],[85,187,5],[85,189,1],[85,193,5],[85,197,2],[85,204,3],[85,208,1],[85,214,3],[85,216,2],[85,232,3],[85,259,2],[85,262,1],[85,263,3],[85,270,1],[85,277,4],[85,284,3],[85,287,2],[85,294,3],[86,76,3],[86,100,4],[86,102,1],[86,133,1],[86,134,1],[86,154,25],[87,86,1],[87,133,1],[87,134,4],[87,155,29],[88,102,9],[88,127,29],[88,134,4],[88,138,1],[88,151,5],[89,44,2],[89,58,1],[89,103,2],[89,108,2],[89,110,3],[89,114,1],[89,127,1],[89,128,35],[89,134,1],[89,152,5],[89,167,1],[89,229,1],[90,54,1],[90,61,1],[90,65,6],[90,86,2],[90,91,11],[90,102,12],[90,103,2],[90,114,1],[90,127,2],[90,128,4],[90,131,1],[90,134,1],[90,145,1],[90,154,22],[91,17,2],[91,65,3],[91,90,17],[91,93,1],[91,102,3],[91,103,18],[91,112,1],[91,114,3],[91,115,3],[91,127,1],[91,128,8],[91,131,2],[91,132,2],[91,133,8],[91,134,5],[91,154,12],[91,155,22],[92,61,1],[92,65,46],[92,69,1],[92,86,1],[92,91,2],[92,100,2],[92,102,2],[92,103,1],[92,104,4],[92,109,1],[92,115,1],[92,123,4],[92,125,1],[92,127,2],[92,129,12],[92,136,9],[92,145,39],[92,172,1],[92,175,2],[92,182,4],[93,30,2],[93,40,1],[93,45,6],[93,66,61],[93,70,10],[93,87,1],[93,91,1],[93,95,2],[93,101,4],[93,104,7],[93,108,1],[93,112,6],[93,121,1],[93,126,2],[93,130,9],[93,137,19],[93,146,37],[93,155,2],[93,172,24],[93,176,4],[93,265,1],[94,59,4],[94,80,4],[94,98,17],[94,125,18],[94,164,1],[94,203,4],[94,293,4],[95,13,4],[95,14,5],[95,17,2],[95,18,3],[95,30,4],[95,31,11],[95,32,7],[95,36,1],[95,39,13],[95,40,7],[95,41,18],[95,42,7],[95,43,3],[95,44,6],[95,45,2],[95,46,5],[95,48,6],[95,51,6],[95,52,10],[95,65,34],[95,66,36],[95,93,3],[95,123,18],[95,124,15],[95,130,2],[95,145,12],[95,146,19],[95,154,3],[95,155,4],[96,34,2],[96,39,1],[96,43,2],[96,48,1],[96,54,15],[96,55,18],[96,62,1],[96,63,2],[96,97,2],[96,98,11],[96,99,8],[96,110,2],[96,116,4],[96,118,2],[96,125,5],[96,126,1],[96,141,1],[96,142,8],[96,175,1],[96,176,7],[97,34,2],[97,48,1],[97,49,1],[97,54,15],[97,55,13],[97,61,6],[97,62,3],[97,96,3],[97,98,9],[97,99,9],[97,102,2],[97,103,2],[97,115,1],[97,117,1],[97,126,3],[97,141,10],[97,142,1],[97,145,6],[97,161,1],[97,162,7],[97,176,2],[97,177,1],[98,47,7],[98,52,1],[98,59,3],[98,60,1],[98,62,17],[98,64,1],[98,65,9],[98,66,14],[98,71,2],[98,77,1],[98,78,1],[98,80,14],[98,94,14],[98,99,1],[98,116,1],[98,125,3],[98,140,2],[98,141,2],[98,142,1],[99,47,5],[99,60,1],[99,61,5],[99,65,5],[99,66,3],[99,72,3],[99,78,1],[99,79,14],[99,81,14],[99,98,4],[99,115,1],[99,123,1],[99,126,3],[99,140,3],[99,142,3],[99,146,2],[99,292,1],[99,293,2],[100,65,10],[100,73,2],[100,90,1],[100,92,25],[100,103,1],[100,107,2],[100,111,2],[100,122,2],[100,125,2],[100,127,4],[100,133,1],[100,136,3],[100,145,15],[100,154,1],[100,182,2],[100,229,1],[101,30,1],[101,40,1],[101,66,3],[101,74,2],[101,93,7],[101,104,7],[101,112,2],[101,114,1],[101,134,1],[101,146,8],[101,152,1],[101,155,1],[101,167,1],[101,229,2],[101,230,2],[102,16,1],[102,54,5],[102,62,4],[102,63,3],[102,67,6],[102,68,10],[102,73,21],[102,77,1],[102,79,2],[102,81,3],[102,99,16],[102,111,1],[102,112,3],[102,118,6],[102,124,16],[102,141,1],[102,142,56],[102,144,2],[102,146,7],[102,165,1],[102,172,5],[102,174,1],[103,55,2],[103,61,7],[103,64,1],[103,65,2],[103,67,2],[103,68,2],[103,72,2],[103,74,13],[103,77,4],[103,91,1],[103,94,1],[103,97,1],[103,98,17],[103,110,1],[103,117,1],[103,123,11],[103,128,1],[103,129,1],[103,141,47],[103,142,5],[103,155,1],[103,162,3],[103,169,1],[103,182,1],[103,276,1],[104,46,1],[104,65,11],[104,66,4],[104,69,9],[104,70,6],[104,77,4],[104,87,1],[104,92,1],[104,93,4],[104,101,1],[104,111,1],[104,112,1],[104,129,7],[104,145,12],[104,146,15],[104,152,1],[104,169,2],[104,172,4],[104,176,1],[104,177,1],[104,178,1],[104,182,2],[104,229,1],[104,265,1],[104,269,2],[104,276,9],[105,26,2],[105,53,1],[105,55,1],[105,60,1],[105,63,1],[105,81,1],[105,82,2],[105,96,1],[105,97,1],[106,43,1],[106,51,4],[106,59,4],[106,60,1],[106,98,3],[106,103,3],[106,105,3],[106,177,8],[107,86,7],[107,100,9],[107,111,2],[107,113,1],[107,133,7],[107,145,23],[107,154,3],[107,175,2],[108,87,23],[108,93,9],[108,101,3],[108,104,2],[108,114,1],[108,128,3],[108,130,1],[108,131,2],[108,134,5],[108,146,25],[108,155,8],[108,167,5],[108,172,6],[109,39,2],[109,41,3],[109,54,9],[109,55,5],[109,58,5],[109,65,1],[109,73,12],[109,84,4],[109,85,15],[109,90,2],[109,100,3],[109,102,26],[109,104,1],[109,107,1],[109,111,6],[109,113,2],[109,119,3],[109,120,9],[109,127,19],[109,133,1],[109,134,12],[109,136,5],[109,175,1],[109,182,1],[110,22,1],[110,34,6],[110,40,1],[110,42,2],[110,44,1],[110,55,8],[110,70,8],[110,71,2],[110,73,3],[110,74,7],[110,84,26],[110,85,3],[110,91,7],[110,96,1],[110,97,5],[110,103,27],[110,112,4],[110,119,2],[110,120,3],[110,128,22],[110,134,2],[110,137,5],[110,167,2],[110,176,1],[110,286,3],[111,41,4],[111,54,15],[111,55,1],[111,65,9],[111,69,2],[111,73,14],[111,84,7],[111,85,20],[111,88,1],[111,92,6],[111,102,13],[111,104,4],[111,109,6],[111,122,2],[111,127,24],[111,141,4],[111,145,3],[111,163,2],[111,175,2],[111,229,2],[112,55,10],[112,66,3],[112,74,6],[112,78,7],[112,84,27],[112,85,2],[112,93,3],[112,100,1],[112,103,7],[112,108,1],[112,110,13],[112,121,1],[112,128,28],[112,137,7],[112,176,5],[112,178,6],[112,229,4],[112,230,5],[112,265,1],[112,286,3],[113,76,2],[113,88,2],[113,102,17],[113,127,46],[114,103,20],[114,128,51],[114,134,3],[114,155,1],[114,167,14],[115,56,5],[115,59,4],[115,61,2],[115,65,5],[115,66,2],[115,68,11],[115,99,8],[115,113,1],[115,138,1],[115,144,5],[116,57,1],[116,60,4],[116,62,3],[116,65,6],[116,66,2],[116,67,12],[116,71,1],[116,82,1],[116,98,6],[116,106,2],[116,115,8],[116,125,1],[116,143,5],[117,45,1],[117,60,13],[117,61,1],[117,64,1],[117,105,2],[117,124,1],[117,140,1],[117,142,2],[117,147,9],[117,161,14],[117,266,3],[117,277,1],[118,59,6],[118,60,1],[118,95,1],[118,147,7],[118,161,9],[118,277,2],[119,55,1],[119,73,5],[119,74,6],[119,75,1],[119,77,1],[119,84,1],[119,112,1],[119,120,1],[119,121,3],[119,140,1],[119,167,1],[119,181,1],[119,286,5],[119,287,1],[119,298,4],[120,53,2],[120,54,4],[120,55,5],[120,73,10],[120,74,2],[120,78,3],[120,84,1],[120,85,7],[120,119,1],[120,158,3],[120,166,2],[120,211,3],[120,213,1],[120,286,5],[120,287,7],[121,55,1],[121,73,2],[121,74,1],[121,84,1],[121,93,5],[121,101,3],[121,104,2],[121,112,1],[121,119,4],[121,120,1],[121,122,1],[121,126,4],[121,137,4],[121,142,1],[121,163,1],[121,164,5],[121,167,1],[121,181,1],[121,183,1],[121,186,1],[121,196,1],[121,265,2],[121,281,3],[122,54,1],[122,73,3],[122,74,1],[122,85,1],[122,89,1],[122,100,1],[122,104,8],[122,110,3],[122,120,5],[122,121,1],[122,125,3],[122,136,1],[122,163,2],[122,164,2],[122,169,1],[122,182,1],[122,269,9],[122,276,1],[123,27,3],[123,43,5],[123,46,3],[123,54,5],[123,60,1],[123,62,6],[123,65,6],[123,74,1],[123,77,9],[123,78,14],[123,85,4],[123,103,8],[123,129,9],[123,140,5],[123,141,1],[123,182,1],[123,277,1],[124,22,1],[124,30,2],[124,45,8],[124,47,1],[124,55,6],[124,57,1],[124,61,2],[124,62,2],[124,66,8],[124,73,2],[124,75,1],[124,77,6],[124,78,4],[124,95,2],[124,98,2],[124,102,3],[124,130,2],[124,140,1],[124,146,2],[124,172,5],[125,47,4],[125,64,9],[125,94,19],[125,95,2],[125,98,7],[125,136,2],[125,143,3],[125,145,1],[125,203,18],[125,293,1],[126,47,25],[126,54,1],[126,63,8],[126,79,20],[126,99,4],[126,115,1],[126,125,3],[126,144,1],[126,252,18],[126,292,5],[127,88,9],[127,90,1],[127,91,6],[127,92,2],[127,102,35],[127,104,2],[127,109,1],[127,111,1],[127,113,1],[127,133,5],[127,134,10],[127,138,4],[127,145,4],[127,151,6],[127,174,10],[127,175,1],[127,177,2],[127,280,1],[128,90,6],[128,91,6],[128,103,33],[128,108,4],[128,110,10],[128,114,5],[128,132,2],[128,134,5],[128,146,2],[128,167,10],[128,176,4],[129,46,3],[129,54,11],[129,65,21],[129,69,1],[129,77,9],[129,85,2],[129,92,1],[129,103,1],[129,123,35],[129,145,2],[129,154,1],[129,276,2],[130,45,1],[130,55,3],[130,66,22],[130,70,5],[130,75,1],[130,76,1],[130,78,13],[130,124,31],[130,146,2],[130,155,1],[131,44,1],[131,63,2],[131,65,3],[131,88,3],[131,90,3],[131,91,4],[131,92,1],[131,102,3],[131,108,2],[131,113,3],[131,117,1],[131,123,1],[131,127,2],[131,134,8],[131,145,1],[131,154,3],[131,155,2],[132,44,1],[132,90,2],[132,91,5],[132,103,3],[132,108,1],[132,110,1],[132,112,2],[132,114,3],[132,127,1],[132,128,4],[132,133,2],[132,134,2],[133,18,1],[133,22,1],[133,66,2],[133,87,3],[133,90,16],[133,91,11],[133,93,1],[133,100,1],[133,102,16],[133,103,13],[133,104,1],[133,127,6],[133,134,2],[133,138,1],[133,145,1],[133,154,32],[133,155,21],[134,86,2],[134,87,3],[134,88,1],[134,90,1],[134,91,1],[134,102,4],[134,103,32],[134,108,1],[134,109,4],[134,110,1],[134,112,2],[134,127,8],[134,128,4],[134,133,3],[134,145,1],[134,154,9],[134,155,38],[135,77,3],[135,140,1],[135,142,2],[135,158,9],[135,159,6],[135,161,2],[135,181,9],[135,183,4],[135,199,2],[135,207,2],[135,230,2],[135,242,1],[135,264,3],[135,265,2],[135,268,1],[135,275,1],[135,277,2],[135,288,1],[136,52,20],[136,57,1],[136,67,16],[136,74,1],[136,120,1],[136,122,1],[136,125,2],[136,143,1],[136,151,1],[136,163,1],[136,269,1],[136,278,5],[136,279,2],[137,44,8],[137,52,8],[137,59,2],[137,60,3],[137,66,1],[137,68,12],[137,110,2],[137,121,2],[137,126,2],[137,144,1],[137,178,3],[137,278,5],[137,279,5],[137,295,2],[138,48,1],[138,58,3],[138,88,12],[138,89,1],[138,139,1],[138,229,1],[138,230,1],[138,280,34],[139,89,12],[139,230,1],[139,281,19],[140,22,5],[140,28,1],[140,29,1],[140,30,5],[140,43,7],[140,44,4],[140,48,4],[140,52,3],[140,59,10],[140,60,16],[140,61,1],[140,62,1],[140,77,17],[140,78,18],[140,82,1],[140,83,1],[140,98,1],[140,99,6],[140,123,8],[140,124,18],[140,135,9],[140,141,10],[140,142,15],[140,147,6],[140,161,13],[141,54,5],[141,55,2],[141,59,9],[141,60,21],[141,61,11],[141,63,10],[141,64,10],[141,65,3],[141,67,1],[141,68,4],[141,73,9],[141,74,11],[141,78,5],[141,97,1],[141,98,11],[141,99,14],[141,102,1],[141,103,22],[141,117,2],[141,118,2],[141,123,9],[141,142,2],[141,161,1],[141,162,8],[142,54,9],[142,59,15],[142,60,12],[142,61,2],[142,62,3],[142,63,11],[142,64,8],[142,73,9],[142,74,12],[142,98,9],[142,99,14],[142,102,15],[142,117,1],[142,118,7],[142,119,4],[142,124,4],[142,140,2],[142,141,4],[142,147,1],[142,162,2],[142,176,9],[143,17,1],[143,62,10],[143,72,2],[143,136,2],[143,170,1],[143,278,10],[144,59,1],[144,61,10],[144,71,2],[144,137,2],[144,279,10],[145,27,3],[145,61,3],[145,65,29],[145,77,3],[145,78,26],[145,86,1],[145,91,2],[145,92,1],[145,97,11],[145,102,10],[145,103,53],[145,125,24],[145,127,12],[145,133,4],[145,136,21],[145,141,35],[145,153,1],[145,161,4],[145,182,4],[145,276,1],[146,66,25],[146,77,28],[146,78,1],[146,79,1],[146,91,2],[146,93,1],[146,99,4],[146,102,50],[146,103,3],[146,108,1],[146,126,17],[146,128,5],[146,134,2],[146,137,10],[146,142,34],[146,276,3],[147,59,1],[147,63,3],[147,67,1],[147,68,3],[147,72,2],[147,73,2],[147,77,4],[147,78,2],[147,115,5],[147,117,2],[147,141,3],[147,142,2],[147,144,2],[147,213,2],[147,276,1],[148,4,2],[148,7,3],[148,8,1],[148,150,8],[148,160,2],[149,7,2],[149,8,1],[149,11,1],[149,150,1],[149,160,3],[150,1,7],[150,7,6],[150,8,22],[150,9,1],[150,10,8],[150,11,15],[150,148,5],[150,160,2],[151,48,3],[151,53,2],[151,69,1],[151,84,1],[151,88,7],[151,113,8],[151,119,1],[151,121,2],[151,122,1],[151,127,11],[151,136,4],[151,138,2],[151,163,5],[151,164,4],[151,174,2],[151,177,3],[151,211,1],[151,280,1],[152,32,1],[152,44,1],[152,55,1],[152,58,2],[152,60,1],[152,70,5],[152,85,2],[152,89,4],[152,93,2],[152,114,6],[152,120,1],[152,122,2],[152,128,10],[152,139,4],[152,163,3],[152,164,4],[152,167,3],[152,178,4],[152,196,2],[152,229,3],[152,230,3],[152,298,1],[153,77,1],[153,183,30],[153,188,14],[153,189,5],[153,194,4],[153,197,11],[153,200,1],[153,207,1],[154,65,51],[154,86,2],[154,90,5],[154,91,3],[154,95,1],[154,102,3],[154,104,1],[154,107,14],[154,123,42],[154,134,1],[154,145,67],[154,230,1],[155,46,1],[155,66,50],[155,75,1],[155,87,1],[155,93,1],[155,101,1],[155,108,1],[155,114,2],[155,116,1],[155,124,60],[155,133,2],[155,134,4],[155,146,70],[155,154,7],[156,0,3],[156,1,2],[156,4,8],[156,9,6],[156,10,2],[156,150,1],[156,160,2],[157,0,1],[157,1,4],[157,3,1],[157,4,12],[157,7,10],[157,10,24],[157,11,23],[157,12,15],[158,64,4],[158,172,1],[159,63,4],[160,0,3],[160,1,1],[160,2,2],[160,4,1],[160,7,4],[160,8,2],[160,9,4],[160,10,1],[160,11,5],[160,12,19],[160,148,4],[160,150,7],[160,156,3],[161,59,1],[161,60,2],[161,62,1],[161,67,2],[161,94,3],[161,99,3],[161,106,1],[161,117,2],[161,125,3],[161,141,5],[161,142,3],[161,147,3],[161,177,2],[161,182,1],[161,195,3],[161,269,1],[161,280,1],[162,67,18],[162,103,2],[162,117,10],[162,136,3],[162,141,10],[162,175,5],[162,180,7],[162,183,1],[162,186,4],[162,188,2],[162,189,2],[162,197,2],[162,205,2],[163,73,4],[163,74,1],[163,119,2],[163,121,4],[163,122,1],[163,135,5],[163,136,1],[163,151,1],[163,153,2],[163,162,2],[163,164,12],[163,167,1],[163,174,1],[163,179,5],[163,199,1],[163,229,2],[163,230,3],[163,259,1],[163,275,1],[163,280,1],[163,299,1],[164,54,1],[164,73,6],[164,74,6],[164,82,1],[164,112,1],[164,119,5],[164,121,3],[164,122,3],[164,127,1],[164,151,1],[164,163,7],[164,177,1],[164,179,1],[164,189,1],[164,229,4],[164,230,3],[164,243,1],[164,265,1],[164,280,2],[164,287,1],[165,54,33],[165,55,48],[165,73,22],[165,74,22],[165,84,30],[165,85,34],[165,102,3],[165,103,3],[165,140,1],[165,166,2],[165,170,22],[165,171,3],[165,180,5],[165,183,6],[165,276,1],[165,287,6],[166,54,23],[166,55,10],[166,73,30],[166,74,11],[166,77,21],[166,78,7],[166,84,25],[166,85,8],[166,119,2],[166,120,2],[166,162,1],[166,165,14],[166,171,6],[166,175,1],[166,176,1],[166,276,6],[166,286,2],[167,42,2],[167,44,2],[167,66,1],[167,70,3],[167,73,1],[167,74,35],[167,101,2],[167,110,1],[167,112,6],[167,119,2],[167,120,2],[167,142,10],[167,145,1],[167,163,1],[167,174,1],[167,229,2],[167,230,3],[167,265,6],[167,286,1],[167,287,1],[168,183,3],[168,193,3],[168,194,33],[168,200,16],[168,201,3],[168,202,15],[168,204,12],[168,209,2],[168,216,1],[169,45,8],[169,46,5],[169,54,4],[169,55,6],[169,65,8],[169,66,4],[169,69,5],[169,73,7],[169,74,12],[169,84,3],[169,85,2],[169,104,1],[169,119,3],[169,182,1],[169,265,1],[169,269,3],[169,276,6],[169,286,1],[169,287,4],[170,17,5],[170,21,6],[170,25,3],[170,33,2],[170,48,1],[170,51,1],[170,54,7],[170,55,9],[170,59,11],[170,65,2],[170,68,1],[170,72,2],[170,77,3],[170,79,2],[170,84,2],[170,95,3],[170,105,1],[170,106,2],[170,115,2],[170,116,2],[170,121,2],[170,126,1],[170,135,1],[170,136,2],[170,162,2],[170,165,4],[170,171,5],[170,172,15],[170,174,1],[170,175,1],[170,177,7],[170,182,18],[170,195,1],[170,211,1],[171,18,1],[171,22,3],[171,26,1],[171,34,1],[171,44,1],[171,49,5],[171,54,9],[171,55,4],[171,59,1],[171,60,6],[171,62,1],[171,66,1],[171,70,2],[171,78,4],[171,85,5],[171,120,1],[171,132,1],[171,165,1],[171,166,4],[171,170,3],[171,172,11],[171,176,1],[171,178,5],[171,182,12],[171,293,1],[172,30,2],[172,40,2],[172,45,2],[172,66,3],[172,70,3],[172,78,4],[172,84,1],[172,87,1],[172,102,2],[172,104,5],[172,105,17],[172,124,2],[172,146,5],[172,147,21],[172,161,5],[172,266,5],[172,276,4],[172,277,2],[172,293,3],[174,73,26],[174,74,1],[174,120,8],[174,122,1],[174,141,7],[174,211,5],[174,269,8],[175,35,1],[175,41,4],[175,53,1],[175,54,3],[175,55,7],[175,62,3],[175,69,2],[175,73,5],[175,74,21],[175,77,3],[175,84,1],[175,85,2],[175,96,3],[175,97,1],[175,102,2],[175,103,2],[175,109,2],[175,120,11],[175,127,2],[175,141,9],[175,269,1],[176,28,2],[176,42,9],[176,55,8],[176,61,1],[176,70,2],[176,73,8],[176,74,15],[176,77,1],[176,84,2],[176,85,3],[176,102,1],[176,103,3],[176,112,2],[176,116,5],[176,119,13],[176,142,15],[176,167,1],[176,295,6],[177,48,1],[177,53,2],[177,54,3],[177,56,15],[177,59,2],[177,60,16],[177,67,1],[177,69,3],[177,72,4],[177,74,3],[177,77,2],[177,79,2],[177,80,5],[177,83,1],[177,94,2],[177,98,1],[177,99,2],[177,103,2],[177,105,1],[177,106,4],[177,109,1],[177,111,1],[177,116,1],[177,136,2],[177,143,4],[177,151,3],[177,164,1],[177,174,1],[177,175,4],[177,269,1],[178,16,1],[178,18,2],[178,22,1],[178,54,1],[178,57,23],[178,59,20],[178,60,7],[178,67,3],[178,70,3],[178,71,2],[178,73,2],[178,74,3],[178,78,6],[178,82,1],[178,84,2],[178,94,1],[178,104,1],[178,112,1],[178,119,4],[178,137,1],[178,144,2],[178,152,2],[178,171,2],[178,172,2],[178,176,2],[178,212,1],[178,293,4],[179,54,3],[179,55,3],[179,73,5],[179,74,3],[179,78,1],[179,84,1],[179,85,3],[179,119,7],[179,120,3],[179,163,3],[179,199,2],[179,221,1],[179,262,1],[179,266,2],[179,270,1],[179,277,2],[179,281,2],[179,282,3],[179,286,1],[179,287,2],[179,298,4],[179,299,2],[180,183,12],[180,186,3],[180,193,1],[181,67,4],[181,68,4],[182,39,2],[182,46,3],[182,69,6],[182,77,7],[182,78,1],[182,92,1],[182,95,2],[182,103,4],[182,104,8],[182,106,23],[182,109,2],[182,123,3],[182,145,10],[182,146,2],[182,161,17],[182,177,6],[182,269,2],[182,276,1],[182,292,6],[183,153,1],[183,188,1],[183,193,3],[184,53,1],[184,166,1],[184,183,31],[184,185,28],[184,187,16],[184,188,24],[184,191,4],[184,193,2],[184,194,2],[185,183,2],[185,184,3],[185,186,20],[185,187,8],[186,63,1],[186,162,5],[186,180,8],[186,183,2],[187,166,2],[187,183,12],[187,184,1],[187,185,13],[187,188,4],[188,77,1],[188,153,4],[188,183,1],[188,185,1],[188,189,12],[189,54,1],[189,63,1],[189,153,1],[189,162,1],[189,180,2],[189,183,20],[189,186,1],[189,188,27],[189,197,2],[190,194,4],[190,200,36],[190,202,6],[190,205,10],[190,214,1],[191,53,2],[191,183,3],[191,184,1],[191,188,21],[192,200,3],[192,202,9],[192,209,2],[192,210,24],[192,216,4],[192,217,14],[192,219,1],[192,220,4],[192,232,1],[192,254,14],[193,183,7],[193,184,1],[193,188,17],[193,191,1],[193,194,11],[193,204,1],[194,153,2],[194,183,6],[194,190,1],[194,197,4],[195,19,3],[195,67,3],[195,120,2],[195,121,2],[195,170,6],[195,174,2],[195,175,2],[195,177,3],[195,211,1],[195,229,3],[195,298,4],[195,299,2],[196,20,3],[196,44,1],[196,54,7],[196,74,1],[196,119,5],[196,121,2],[196,171,4],[196,212,4],[196,230,8],[196,252,2],[196,286,3],[196,298,5],[196,299,11],[197,153,1],[197,183,18],[197,188,3],[197,190,3],[197,194,11],[197,200,10],[197,205,2],[198,179,1],[198,200,7],[198,202,1],[198,205,1],[198,206,1],[198,210,3],[198,214,1],[198,217,13],[199,135,2],[199,163,1],[199,183,6],[199,186,5],[199,188,1],[199,194,2],[199,200,8],[199,202,4],[199,207,4],[199,210,4],[199,217,8],[199,218,2],[199,220,1],[199,265,1],[199,266,4],[199,277,1],[200,194,1],[200,202,1],[200,204,2],[201,194,23],[201,204,1],[202,190,2],[202,205,1],[203,54,8],[203,73,23],[203,74,19],[203,81,1],[203,94,2],[203,97,3],[203,102,8],[203,105,15],[203,106,7],[203,109,1],[203,136,11],[203,211,1],[203,252,4],[203,276,10],[204,192,2],[204,194,43],[204,200,3],[204,202,13],[204,209,2],[204,216,2],[205,55,1],[205,78,1],[205,84,1],[205,190,8],[205,198,1],[205,200,17],[205,202,8],[206,217,34],[206,220,10],[206,221,2],[207,183,6],[207,186,2],[207,188,3],[207,199,3],[207,200,4],[207,202,6],[207,208,1],[207,210,4],[207,217,8],[207,218,4],[207,220,2],[207,265,1],[207,266,6],[207,277,3],[207,281,1],[207,286,1],[208,217,9],[208,220,14],[208,222,2],[208,232,3],[208,236,2],[208,254,9],[208,268,2],[209,168,2],[209,183,2],[209,200,4],[209,202,21],[209,204,2],[210,55,1],[210,63,1],[210,162,1],[210,198,2],[210,214,2],[210,221,1],[211,43,3],[211,48,2],[211,77,3],[211,83,1],[211,85,3],[211,96,2],[211,97,3],[211,126,2],[211,151,1],[211,174,2],[211,177,3],[211,195,15],[211,252,2],[211,286,11],[211,287,4],[212,34,1],[212,44,3],[212,49,1],[212,82,1],[212,94,1],[212,98,1],[212,196,14],[212,287,10],[213,53,2],[213,71,4],[213,73,13],[213,74,9],[213,84,1],[213,85,1],[213,120,1],[213,121,3],[213,147,1],[213,171,4],[213,187,2],[213,189,1],[213,190,1],[213,195,3],[213,196,5],[213,286,10],[213,287,17],[213,295,6],[213,298,3],[213,299,4],[214,198,1],[214,200,6],[214,210,9],[214,217,17],[214,221,2],[215,220,1],[215,228,22],[215,233,3],[215,236,32],[215,240,2],[215,298,1],[216,168,2],[216,200,4],[216,202,11],[216,210,21],[217,232,1],[218,73,1],[218,119,1],[218,135,1],[218,153,1],[218,158,1],[218,183,1],[218,186,2],[218,188,1],[218,194,2],[218,198,1],[218,199,5],[218,200,3],[218,202,3],[218,207,2],[218,210,3],[218,217,5],[218,220,5],[218,228,8],[218,230,1],[218,265,2],[218,266,5],[218,281,2],[218,298,1],[219,210,12],[220,54,1],[220,206,1],[220,221,3],[220,298,1],[221,55,1],[221,185,13],[221,191,1],[221,198,1],[221,206,7],[221,210,3],[221,214,2],[221,217,21],[221,220,6],[222,208,1],[222,220,20],[222,232,1],[223,202,3],[223,210,3],[223,220,13],[223,228,13],[223,235,3],[223,246,2],[223,249,3],[223,260,12],[223,270,1],[224,237,5],[224,248,6],[224,250,1],[224,254,29],[224,256,1],[225,74,1],[225,122,1],[225,218,1],[225,231,2],[228,215,2],[228,224,1],[228,233,2],[229,88,3],[229,89,2],[229,100,5],[229,101,3],[229,104,3],[229,108,3],[229,109,1],[229,110,1],[229,111,3],[229,112,1],[229,119,3],[229,127,8],[229,139,2],[229,141,4],[229,145,6],[229,146,3],[229,152,2],[229,163,11],[229,164,4],[229,174,9],[229,178,1],[229,230,5],[229,231,9],[229,280,1],[230,74,1],[230,78,1],[230,83,1],[230,85,1],[230,100,2],[230,102,2],[230,111,4],[230,119,3],[230,121,2],[230,122,2],[230,127,3],[230,141,1],[230,142,1],[230,145,3],[230,146,1],[230,159,1],[230,163,4],[230,164,2],[230,167,6],[230,178,1],[230,181,1],[230,196,2],[230,207,6],[230,218,1],[230,219,2],[230,221,2],[230,225,1],[230,229,1],[230,231,2],[230,232,2],[230,249,1],[230,265,1],[230,266,1],[230,281,1],[230,298,2],[231,163,2],[231,164,1],[231,225,4],[231,229,1],[231,230,3],[231,266,1],[231,277,3],[231,295,1],[232,208,1],[232,210,1],[232,216,1],[232,217,12],[232,220,22],[233,185,1],[233,191,10],[233,201,3],[233,215,1],[233,217,3],[233,220,2],[233,228,13],[233,236,17],[234,248,5],[234,254,10],[234,255,6],[234,262,2],[234,268,19],[235,228,20],[237,224,2],[237,240,2],[237,250,1],[238,276,1],[239,238,5],[239,276,7],[239,295,2],[240,191,1],[240,201,4],[240,209,11],[240,215,1],[240,219,3],[240,228,2],[240,236,9],[240,237,3],[240,248,3],[240,254,9],[241,254,10],[241,255,5],[241,261,6],[241,262,2],[241,268,19],[242,135,2],[242,179,1],[242,261,5],[242,264,3],[242,268,2],[242,298,2],[243,54,13],[243,55,29],[243,84,1],[243,85,1],[243,163,1],[243,179,8],[243,244,10],[243,254,3],[243,255,3],[243,269,1],[243,286,13],[243,287,36],[244,54,9],[244,55,30],[244,84,1],[244,206,1],[244,215,4],[244,243,2],[244,250,2],[244,267,3],[244,276,5],[244,286,29],[244,287,29],[245,228,10],[245,237,12],[245,246,2],[245,248,10],[245,253,1],[245,270,4],[245,271,1],[246,237,20],[247,147,15],[247,213,2],[247,276,3],[247,286,1],[247,287,2],[247,295,3],[248,234,2],[248,250,3],[249,202,3],[249,210,3],[249,217,7],[249,220,13],[249,223,1],[249,228,13],[249,232,1],[250,222,5],[250,224,1],[250,234,1],[250,235,3],[250,236,6],[250,248,2],[250,254,6],[250,255,3],[250,261,3],[250,268,6],[251,261,7],[251,262,3],[251,264,6],[251,266,1],[251,268,19],[252,42,1],[252,54,6],[252,55,8],[252,68,2],[252,71,1],[252,73,1],[252,74,2],[252,77,1],[252,79,2],[252,84,3],[252,97,3],[252,103,2],[252,117,3],[252,126,11],[252,140,8],[252,165,2],[252,211,1],[252,276,1],[252,286,1],[253,248,20],[255,241,1],[255,256,2],[256,222,3],[256,234,1],[256,235,6],[256,241,1],[256,254,9],[256,255,2],[256,261,3],[256,264,3],[256,268,9],[257,264,2],[257,267,5],[257,268,19],[257,272,22],[257,287,1],[257,288,1],[257,289,1],[258,237,5],[258,248,5],[258,255,7],[258,259,2],[258,261,5],[258,263,2],[258,264,5],[258,271,3],[258,272,5],[259,255,10],[259,261,10],[260,228,10],[260,236,3],[260,237,12],[260,245,1],[260,248,10],[260,249,1],[261,55,2],[261,251,1],[261,262,2],[261,266,1],[261,268,2],[262,235,2],[262,246,10],[262,251,6],[262,253,1],[262,261,5],[262,264,3],[262,268,19],[262,298,1],[263,264,20],[263,268,6],[263,272,4],[264,257,1],[264,262,3],[264,267,13],[264,268,2],[265,54,1],[265,55,5],[265,66,2],[265,70,1],[265,73,8],[265,74,11],[265,93,2],[265,112,2],[265,119,2],[265,121,3],[265,135,4],[265,169,5],[265,172,2],[265,179,1],[265,200,1],[265,230,2],[265,277,3],[265,281,1],[265,286,6],[265,287,13],[266,52,4],[266,95,2],[266,102,5],[266,103,10],[266,117,3],[266,118,7],[266,135,3],[266,140,1],[266,147,7],[266,161,8],[266,172,6],[266,182,1],[266,277,3],[267,54,3],[267,246,2],[267,253,8],[267,257,4],[267,258,10],[267,259,6],[267,262,4],[267,263,6],[267,264,7],[267,268,2],[267,270,9],[267,271,17],[267,272,12],[267,284,2],[267,286,3],[267,287,4],[267,297,1],[269,54,4],[269,55,3],[269,73,13],[269,74,12],[269,85,3],[269,104,1],[269,122,3],[269,169,8],[269,175,1],[269,182,3],[269,243,1],[269,286,3],[269,287,9],[270,236,4],[270,237,5],[270,248,5],[270,254,4],[270,255,7],[270,258,1],[270,260,1],[270,261,5],[270,264,5],[270,272,5],[271,248,5],[271,255,5],[271,258,1],[271,261,11],[271,263,1],[271,264,11],[271,267,1],[271,268,4],[271,270,1],[271,272,1],[271,276,1],[272,55,2],[272,264,1],[272,267,11],[272,268,3],[272,287,1],[272,288,1],[273,264,10],[273,268,2],[273,272,10],[274,261,10],[274,264,12],[274,268,3],[274,271,1],[274,272,10],[274,298,1],[275,135,21],[275,268,10],[275,269,10],[275,270,10],[275,272,1],[275,274,2],[275,277,5],[275,296,2],[276,27,3],[276,54,6],[276,55,2],[276,61,1],[276,63,3],[276,64,1],[276,65,3],[276,66,4],[276,68,5],[276,69,1],[276,73,1],[276,74,1],[276,77,19],[276,78,17],[276,85,2],[276,104,4],[276,125,6],[276,126,6],[276,129,4],[276,130,8],[276,136,5],[276,137,6],[276,142,5],[276,145,5],[276,146,3],[276,162,1],[276,168,2],[276,169,6],[276,181,2],[276,189,2],[276,192,3],[276,193,1],[276,208,1],[276,221,1],[276,239,1],[276,240,1],[276,257,2],[276,258,1],[276,265,3],[276,267,1],[276,286,4],[276,287,1],[276,295,2],[277,35,1],[277,54,14],[277,55,16],[277,73,1],[277,102,3],[277,103,3],[277,116,2],[277,117,14],[277,118,9],[277,123,2],[277,124,6],[277,147,2],[277,172,13],[277,182,16],[277,244,1],[277,248,2],[277,266,1],[277,269,4],[278,56,1],[278,62,2],[278,63,1],[278,68,8],[278,136,10],[278,137,13],[278,143,10],[279,61,2],[279,67,5],[279,136,7],[279,137,10],[279,144,10],[280,88,12],[280,107,1],[280,122,1],[280,127,10],[280,138,3],[280,177,1],[280,229,3],[280,230,6],[280,268,1],[280,269,1],[280,270,1],[281,74,1],[281,89,6],[281,108,4],[281,127,1],[281,128,12],[281,134,2],[281,135,2],[281,138,1],[281,152,2],[281,164,1],[281,167,4],[281,178,1],[281,183,1],[281,186,1],[281,207,1],[281,268,2],[282,85,2],[282,121,4],[282,122,1],[282,163,4],[282,179,11],[282,270,3],[282,276,2],[282,280,3],[282,283,13],[282,290,7],[282,291,10],[283,85,2],[283,122,1],[283,179,9],[283,266,2],[283,269,3],[283,270,2],[283,276,6],[283,280,4],[283,281,1],[283,282,11],[283,290,3],[283,291,8],[284,54,27],[284,55,23],[284,84,27],[284,85,6],[284,119,4],[284,120,1],[284,288,1],[284,290,2],[284,299,1],[285,54,13],[285,55,31],[285,84,5],[285,85,14],[285,120,4],[285,273,2],[285,287,9],[285,288,3],[285,289,2],[285,294,7],[285,295,2],[285,299,1],[286,53,12],[286,54,5],[286,55,7],[286,71,7],[286,73,7],[286,74,27],[286,77,2],[286,78,7],[286,84,7],[286,85,11],[286,110,2],[286,112,2],[286,119,3],[286,120,2],[286,137,3],[286,140,2],[286,168,4],[286,179,2],[286,185,1],[286,191,1],[286,192,2],[286,198,3],[286,208,6],[286,215,2],[286,232,1],[286,239,1],[286,257,1],[286,258,5],[286,262,1],[286,270,2],[286,276,4],[286,287,10],[287,53,19],[287,54,10],[287,55,5],[287,72,10],[287,73,21],[287,74,14],[287,77,6],[287,78,6],[287,84,16],[287,85,6],[287,121,1],[287,135,1],[287,165,2],[287,168,4],[287,169,2],[287,190,1],[287,192,6],[287,193,1],[287,198,1],[287,208,6],[287,215,4],[287,216,1],[287,232,2],[287,239,1],[287,243,2],[287,244,1],[287,257,3],[287,260,1],[287,265,1],[287,276,3],[287,285,1],[287,286,4],[287,289,1],[287,295,1],[288,264,1],[288,266,1],[288,286,1],[288,287,1],[288,289,1],[289,55,1],[289,85,2],[289,267,1],[289,285,1],[290,54,48],[290,55,33],[290,84,6],[290,85,1],[290,179,1],[290,263,1],[290,267,5],[290,270,1],[290,286,71],[290,291,4],[290,299,1],[291,54,35],[291,55,38],[291,84,7],[291,85,5],[291,267,1],[291,286,39],[291,287,21],[291,290,3],[291,297,3],[292,61,1],[292,63,8],[292,65,1],[292,79,1],[292,83,1],[292,105,1],[292,126,7],[292,177,1],[293,16,7],[293,54,6],[293,61,2],[293,64,3],[293,99,1],[293,125,4],[293,141,5],[293,171,1],[294,54,23],[294,55,26],[294,84,15],[294,85,20],[294,120,1],[294,121,1],[294,179,1],[294,258,2],[294,265,1],[294,270,1],[294,285,3],[294,286,1],[294,287,1],[294,290,2],[294,299,2],[295,19,3],[295,24,5],[295,37,9],[295,38,9],[295,41,16],[295,42,19],[295,44,2],[295,73,17],[295,74,17],[295,119,11],[295,120,5],[295,147,1],[295,168,2],[295,176,1],[295,181,2],[295,190,2],[295,192,3],[295,203,5],[295,208,1],[295,212,2],[295,232,1],[295,247,1],[295,258,2],[295,271,2],[295,276,2],[295,286,4],[296,54,5],[296,122,1],[296,267,6],[296,271,1],[296,276,12],[296,281,2],[296,284,2],[296,286,7],[296,297,2],[297,122,2],[297,267,8],[297,271,23],[297,276,22],[297,281,4],[297,283,2],[297,285,6],[297,287,25],[297,296,4],[298,33,2],[298,48,2],[298,54,5],[298,69,2],[298,74,1],[298,77,5],[298,84,1],[298,85,2],[298,119,1],[298,120,1],[298,135,3],[298,192,1],[298,194,3],[298,195,1],[298,200,1],[298,202,6],[298,207,1],[298,211,2],[298,220,1],[298,221,1],[298,228,1],[298,230,1],[298,244,5],[298,262,1],[298,266,3],[298,272,2],[298,287,2],[298,288,9],[298,289,2],[298,294,4],[298,295,1],[299,54,6],[299,74,2],[299,84,7],[299,85,6],[299,119,6],[299,120,8],[299,135,1],[299,179,2],[299,183,5],[299,195,5],[299,196,2],[299,243,1],[299,264,1],[299,265,1],[299,266,6],[299,267,1],[299,284,3],[299,286,5],[299,288,4],[299,289,1],[299,294,5],[299,298,9]],"gap":[[0,2,2],[0,148,1],[0,150,1],[1,3,1],[1,6,1],[1,11,2],[1,149,1],[1,156,1],[2,6,1],[2,7,2],[2,10,3],[2,41,2],[3,4,1],[3,6,4],[3,11,2],[3,42,2],[4,9,1],[4,156,1],[5,148,1],[6,149,11],[7,11,1],[8,11,2],[8,149,1],[9,149,5],[10,11,2],[12,148,1],[12,150,1],[12,157,5],[12,173,2],[13,35,3],[14,38,1],[14,44,1],[15,19,1],[16,20,1],[16,47,1],[17,21,2],[17,33,4],[17,35,1],[17,51,2],[17,59,2],[17,69,1],[17,138,1],[17,177,5],[18,34,4],[18,70,4],[18,178,1],[20,28,1],[21,22,11],[21,182,3],[22,172,5],[23,24,3],[23,25,2],[23,52,1],[24,26,8],[24,52,4],[24,57,1],[25,33,2],[25,37,8],[25,41,1],[25,51,1],[26,38,8],[27,54,2],[27,182,4],[28,55,5],[28,172,3],[29,182,3],[30,54,2],[31,33,3],[31,48,2],[31,56,1],[31,123,5],[31,182,3],[32,34,7],[32,49,8],[32,57,1],[32,95,2],[32,124,5],[32,172,4],[33,86,9],[33,92,1],[34,40,5],[34,87,2],[34,137,1],[35,41,1],[35,43,3],[35,266,1],[36,38,4],[37,38,11],[37,47,3],[37,82,1],[39,43,4],[39,82,3],[39,123,2],[39,175,4],[39,182,2],[40,44,1],[40,56,2],[40,124,6],[40,172,6],[41,42,2],[41,47,2],[41,92,2],[42,47,4],[43,95,1],[44,152,1],[45,46,1],[45,76,3],[45,104,4],[45,172,2],[45,182,1],[46,77,1],[46,104,5],[47,52,6],[47,102,2],[50,52,4],[50,182,2],[51,52,1],[51,59,1],[52,61,1],[52,77,1],[52,78,1],[52,123,2],[52,140,1],[52,266,1],[53,58,4],[53,73,2],[53,74,7],[53,184,2],[53,192,1],[54,55,18],[54,58,1],[54,77,2],[54,84,7],[54,85,9],[54,119,7],[54,120,4],[54,142,11],[54,159,8],[54,180,5],[54,181,7],[54,187,2],[54,189,13],[54,193,7],[54,197,6],[54,204,6],[54,205,6],[54,214,5],[54,216,2],[54,221,13],[54,232,2],[54,233,2],[54,240,2],[54,244,6],[54,249,4],[54,250,5],[54,256,6],[54,257,2],[54,259,5],[54,260,10],[54,262,2],[54,265,2],[54,269,1],[54,270,8],[54,271,1],[54,284,2],[54,285,2],[54,286,5],[54,287,15],[54,296,1],[54,297,3],[54,299,1],[55,57,1],[55,60,2],[55,64,1],[55,73,3],[55,78,2],[55,84,2],[55,85,15],[55,112,2],[55,120,3],[55,141,8],[55,142,2],[55,158,15],[55,159,2],[55,180,7],[55,187,9],[55,193,3],[55,197,3],[55,201,1],[55,204,7],[55,205,3],[55,214,5],[55,216,2],[55,219,3],[55,222,2],[55,232,5],[55,233,5],[55,240,2],[55,243,4],[55,249,4],[55,250,5],[55,256,4],[55,259,2],[55,261,1],[55,262,16],[55,263,3],[55,266,2],[55,267,3],[55,270,5],[55,271,4],[55,285,4],[55,286,10],[55,287,22],[55,289,2],[55,290,1],[55,297,1],[56,59,1],[56,63,3],[56,78,1],[56,82,2],[56,129,2],[56,144,1],[57,60,1],[57,62,8],[57,64,9],[57,67,1],[57,77,2],[57,78,7],[57,83,5],[57,87,1],[57,143,1],[58,78,3],[58,89,1],[58,138,2],[58,230,1],[59,71,2],[59,82,1],[59,83,1],[59,98,2],[59,141,1],[59,144,1],[60,78,5],[60,140,1],[61,63,8],[61,65,4],[61,71,1],[61,99,1],[61,115,2],[61,140,2],[61,292,1],[62,66,1],[62,77,1],[62,93,2],[62,116,8],[63,64,1],[63,126,2],[63,137,17],[63,181,3],[64,66,1],[64,98,4],[64,117,1],[64,125,1],[64,136,16],[64,276,1],[65,76,2],[65,92,1],[65,123,1],[66,82,1],[66,83,1],[66,98,1],[66,143,1],[66,144,1],[67,116,1],[67,125,3],[67,203,1],[68,83,1],[68,115,2],[68,117,1],[69,177,3],[70,97,1],[70,130,3],[70,178,5],[71,72,1],[71,73,2],[71,80,8],[71,81,3],[71,98,3],[71,123,1],[71,125,1],[71,136,2],[71,143,2],[71,146,1],[71,287,1],[72,81,10],[72,94,1],[72,105,3],[72,115,1],[72,123,2],[72,124,6],[72,125,1],[72,151,1],[73,74,17],[73,123,6],[73,124,2],[73,153,14],[73,162,1],[73,168,4],[73,169,3],[73,192,9],[73,198,3],[73,203,1],[73,206,3],[73,208,4],[73,215,3],[73,222,1],[73,223,3],[73,224,4],[73,234,4],[73,241,4],[73,245,4],[73,251,4],[73,257,5],[73,258,13],[73,259,1],[73,262,1],[73,276,11],[73,298,5],[74,80,2],[74,120,3],[74,123,3],[74,124,3],[74,153,6],[74,168,3],[74,184,15],[74,190,7],[74,192,2],[74,198,5],[74,206,3],[74,208,5],[74,215,4],[74,219,2],[74,222,1],[74,223,4],[74,224,3],[74,234,4],[74,241,4],[74,245,4],[74,251,4],[74,257,6],[74,258,3],[74,262,3],[74,265,1],[74,276,3],[74,298,2],[74,299,7],[75,76,1],[75,114,1],[75,130,1],[75,170,2],[76,113,1],[76,129,3],[76,131,1],[76,171,4],[77,78,5],[77,86,1],[77,135,1],[77,140,3],[77,141,10],[77,142,7],[77,177,2],[77,185,2],[77,265,1],[78,82,2],[78,99,1],[78,112,1],[78,141,9],[78,142,11],[78,161,1],[78,174,1],[78,185,1],[78,187,1],[79,99,1],[79,102,1],[79,124,3],[79,126,3],[79,142,1],[79,165,1],[79,252,1],[79,276,1],[80,123,5],[80,143,2],[80,203,2],[81,82,1],[81,124,2],[81,125,4],[82,98,3],[83,94,1],[83,99,1],[83,177,1],[83,211,2],[84,85,6],[84,120,1],[84,121,2],[84,165,5],[84,166,9],[84,174,1],[84,176,3],[84,213,8],[84,256,1],[84,266,1],[84,294,2],[84,298,1],[85,94,1],[85,109,2],[85,119,6],[85,166,2],[85,175,2],[85,212,2],[85,287,2],[85,289,1],[85,294,3],[85,298,1],[85,299,1],[86,87,1],[86,92,3],[86,102,2],[86,133,6],[86,154,2],[87,91,3],[87,93,5],[87,112,4],[87,133,2],[87,134,1],[88,89,9],[88,102,1],[88,111,18],[88,121,8],[88,127,2],[88,229,1],[88,280,8],[89,103,3],[89,110,1],[89,112,2],[89,122,10],[89,128,1],[89,178,1],[89,230,3],[89,281,25],[90,92,1],[90,129,1],[90,133,1],[91,114,2],[91,127,1],[91,128,1],[91,133,2],[92,111,1],[92,145,1],[92,175,5],[93,95,1],[93,101,1],[93,108,3],[93,114,1],[93,128,4],[93,137,1],[93,176,4],[94,123,2],[94,125,2],[94,141,1],[95,145,1],[95,165,1],[96,101,4],[96,111,5],[96,161,4],[97,103,1],[97,106,1],[97,112,4],[98,103,2],[98,105,1],[98,123,3],[98,124,4],[98,140,2],[98,293,1],[99,102,1],[99,124,2],[99,126,1],[99,140,5],[99,186,5],[99,292,2],[100,101,3],[100,113,1],[100,127,1],[100,129,4],[100,177,1],[101,130,3],[101,134,1],[101,178,1],[102,127,5],[102,140,1],[102,142,1],[102,146,4],[102,165,1],[102,172,3],[102,203,1],[102,277,2],[103,116,3],[103,140,3],[103,141,2],[103,143,1],[103,145,3],[103,182,3],[103,266,1],[103,269,2],[103,277,9],[105,177,6],[105,178,1],[106,178,4],[107,108,2],[107,109,1],[107,145,3],[108,128,3],[108,146,3],[109,110,6],[109,177,3],[110,114,1],[111,112,7],[111,145,2],[111,177,3],[112,121,2],[112,128,1],[112,146,6],[112,176,3],[112,178,3],[113,115,2],[113,133,3],[113,145,3],[113,151,1],[114,128,3],[114,132,4],[114,134,3],[114,146,1],[115,116,28],[115,138,1],[115,203,5],[116,203,3],[117,141,3],[117,172,1],[117,182,1],[119,120,10],[119,122,3],[119,140,15],[119,167,1],[119,273,2],[119,284,5],[119,285,1],[119,286,3],[119,287,19],[119,288,3],[119,289,5],[119,294,5],[119,298,2],[119,299,5],[120,121,6],[120,122,2],[120,171,1],[120,179,1],[120,262,2],[120,266,1],[120,285,1],[120,286,3],[120,287,1],[120,289,1],[120,290,1],[120,294,2],[120,297,1],[120,298,5],[121,122,15],[121,163,4],[121,164,11],[121,258,3],[121,259,1],[121,263,3],[121,264,8],[121,265,6],[121,269,2],[121,275,1],[121,282,1],[121,284,1],[121,290,1],[121,291,10],[121,297,2],[121,298,1],[121,299,1],[122,135,2],[122,143,1],[122,163,5],[122,164,7],[122,179,4],[122,262,1],[122,263,17],[122,264,13],[122,265,3],[122,266,2],[122,268,1],[122,269,4],[122,270,5],[122,277,4],[122,280,3],[122,281,2],[122,283,2],[122,290,2],[122,291,2],[122,298,1],[122,299,1],[123,124,15],[123,143,1],[123,182,3],[124,126,2],[124,144,2],[124,172,2],[125,147,2],[125,161,1],[126,137,2],[126,147,2],[126,161,9],[126,211,1],[126,292,3],[127,128,7],[127,131,1],[127,132,2],[127,138,1],[128,132,3],[129,130,2],[130,155,1],[132,155,1],[134,281,1],[135,147,3],[135,179,4],[135,242,2],[135,261,1],[135,264,2],[135,265,8],[135,266,6],[135,268,28],[135,269,1],[135,271,4],[135,272,5],[135,274,3],[135,275,14],[135,277,22],[135,289,3],[135,298,2],[136,147,6],[137,147,2],[137,152,1],[137,161,6],[137,178,3],[138,139,7],[138,280,1],[139,152,1],[139,281,5],[140,141,2],[140,142,2],[141,154,5],[142,155,3],[142,161,1],[144,203,1],[144,276,1],[145,146,18],[145,182,1],[147,154,1],[147,161,9],[147,169,7],[147,171,4],[147,172,1],[147,182,2],[147,238,2],[147,239,1],[147,247,1],[147,251,1],[147,259,1],[147,263,1],[147,265,6],[147,266,5],[147,269,3],[147,276,18],[148,160,1],[149,150,2],[149,160,1],[152,161,3],[153,162,2],[153,190,10],[153,198,1],[154,155,4],[159,183,1],[160,173,1],[161,169,2],[161,172,2],[161,238,1],[161,266,1],[161,269,22],[161,280,2],[162,164,1],[163,164,31],[163,179,1],[163,231,1],[163,262,1],[163,263,2],[163,264,3],[163,265,1],[163,269,2],[163,281,5],[163,286,1],[163,298,1],[164,177,1],[164,179,1],[164,269,3],[164,280,2],[164,281,2],[165,166,6],[165,183,1],[165,252,1],[166,171,4],[166,185,1],[166,187,5],[166,193,6],[166,204,16],[167,178,1],[167,179,3],[167,183,2],[168,184,5],[168,192,14],[168,198,1],[169,172,3],[169,265,61],[169,269,41],[170,172,1],[171,281,2],[171,293,2],[172,182,81],[172,186,2],[174,229,1],[175,176,3],[175,280,4],[176,281,2],[177,211,3],[178,265,3],[178,293,1],[179,243,1],[179,263,1],[179,265,2],[179,266,4],[179,268,1],[179,269,3],[179,277,12],[179,280,1],[179,282,3],[179,283,2],[179,297,1],[180,193,9],[181,189,12],[181,197,2],[182,186,3],[182,269,2],[183,188,3],[183,194,4],[183,199,1],[183,200,6],[184,190,5],[184,276,3],[185,188,23],[185,197,3],[185,221,3],[186,188,4],[186,207,1],[186,277,2],[187,193,1],[188,189,1],[188,194,7],[189,204,1],[189,221,1],[189,278,2],[190,198,1],[190,205,1],[191,193,2],[191,197,2],[191,205,9],[192,208,1],[192,215,1],[192,217,1],[192,247,2],[193,209,1],[193,221,3],[193,232,1],[194,197,1],[194,200,1],[194,202,6],[195,211,23],[195,299,1],[196,212,23],[196,230,1],[196,295,3],[197,216,1],[198,206,1],[198,276,1],[199,207,12],[199,218,7],[199,265,1],[200,202,2],[200,210,1],[200,217,2],[202,210,1],[203,212,2],[203,252,2],[203,276,1],[204,209,4],[204,216,1],[204,221,1],[204,232,1],[205,233,1],[206,215,5],[207,218,3],[208,217,1],[208,223,5],[210,220,10],[211,213,7],[211,295,3],[212,213,16],[212,295,3],[213,295,4],[215,224,5],[216,286,1],[217,236,3],[218,225,4],[218,266,1],[220,228,15],[220,238,2],[222,232,5],[223,245,5],[224,234,5],[225,231,4],[228,237,6],[229,230,1],[229,269,1],[230,265,1],[230,298,2],[231,242,4],[234,241,5],[236,254,3],[237,248,6],[238,239,25],[238,247,11],[238,251,1],[238,257,4],[238,276,3],[238,287,2],[238,295,8],[238,300,2],[238,301,4],[239,241,7],[239,244,1],[239,247,8],[239,248,5],[239,251,4],[239,276,6],[239,286,1],[239,295,9],[239,300,3],[239,301,2],[241,251,5],[242,264,1],[242,265,1],[242,266,2],[242,277,1],[242,298,1],[243,244,3],[243,256,1],[243,287,1],[244,248,1],[244,277,1],[244,287,2],[245,258,5],[245,276,2],[247,248,1],[247,276,1],[247,295,1],[248,255,6],[251,257,4],[251,261,1],[251,262,3],[251,264,1],[251,286,2],[251,287,1],[252,276,1],[254,268,3],[254,275,1],[255,261,6],[256,258,1],[256,270,2],[256,271,1],[257,263,1],[257,267,7],[257,271,1],[257,286,4],[257,287,2],[258,259,1],[258,273,2],[258,276,3],[258,286,8],[258,287,2],[258,295,4],[259,260,1],[259,267,3],[259,271,1],[260,261,2],[260,270,1],[260,281,1],[260,286,1],[260,287,3],[261,264,6],[261,266,3],[261,268,3],[261,269,1],[261,275,2],[261,277,1],[262,263,1],[262,267,1],[262,269,6],[262,271,3],[262,276,1],[262,287,3],[263,269,6],[263,270,1],[263,273,4],[263,275,4],[263,276,1],[264,265,35],[264,266,4],[264,267,8],[264,268,14],[264,272,6],[264,287,1],[264,288,6],[264,299,1],[265,266,17],[265,268,9],[265,269,2],[265,275,4],[265,277,34],[265,282,7],[265,288,1],[265,294,10],[265,298,2],[265,299,6],[266,268,3],[266,269,14],[266,272,17],[266,275,3],[266,276,8],[266,277,11],[266,281,1],[266,285,4],[266,287,4],[266,289,2],[266,291,1],[266,298,3],[266,299,2],[267,268,7],[267,269,1],[267,270,6],[267,271,1],[267,272,6],[267,286,18],[267,287,8],[267,296,1],[268,269,2],[268,270,2],[268,272,2],[268,274,1],[268,275,3],[268,277,1],[268,299,1],[269,272,11],[269,273,1],[269,275,4],[269,276,1],[269,277,20],[269,280,8],[269,283,15],[269,291,1],[269,294,16],[269,299,2],[270,271,15],[270,274,1],[270,275,5],[270,286,17],[270,287,1],[270,288,1],[270,296,2],[271,272,2],[271,274,9],[271,276,3],[271,287,3],[271,295,15],[271,297,7],[272,273,4],[272,275,5],[272,277,1],[272,286,1],[272,288,1],[272,289,2],[272,295,1],[272,298,1],[273,274,5],[273,295,13],[274,276,1],[274,287,1],[275,277,15],[276,277,1],[276,286,3],[276,287,1],[276,295,15],[277,281,7],[277,298,1],[278,282,1],[278,288,1],[278,290,1],[278,296,2],[278,300,1],[279,283,6],[279,291,12],[279,301,1],[280,281,46],[280,282,1],[280,284,1],[280,290,3],[281,286,1],[281,289,1],[281,291,4],[282,283,7],[282,296,1],[283,287,2],[283,291,1],[283,295,2],[284,295,6],[284,299,3],[284,300,8],[285,288,3],[285,289,3],[285,295,9],[285,297,1],[285,298,2],[285,301,9],[286,287,67],[286,288,4],[286,290,3],[286,294,2],[286,299,2],[286,300,4],[287,288,10],[287,289,10],[287,295,19],[287,297,5],[287,301,8],[288,289,2],[288,294,2],[289,291,1],[289,295,2],[289,298,6],[290,291,17],[290,294,1],[291,295,1],[291,297,1],[293,295,16],[294,298,2],[294,299,3],[295,298,5],[295,301,3],[296,297,2],[296,300,11],[298,299,2]],"musc":[[19,20],[20,35],[23,31],[24,32],[25,68],[26,51],[28,2],[31,1],[35,42],[36,40],[37,33],[38,40],[43,3],[44,5],[47,78],[48,2],[49,7],[50,38],[51,70],[52,29],[53,3],[56,83],[57,89],[59,26],[60,6],[61,199],[62,202],[63,13],[64,12],[66,2],[67,12],[68,12],[71,111],[72,110],[74,1],[79,90],[80,33],[81,34],[82,48],[83,53],[94,90],[98,92],[99,87],[105,11],[106,19],[115,27],[116,35],[122,1],[125,136],[126,148],[135,15],[136,70],[137,79],[141,8],[142,20],[143,43],[144,43],[145,1],[147,5],[153,43],[158,165],[159,165],[161,3],[162,8],[163,3],[164,5],[168,27],[171,1],[174,2],[177,10],[178,5],[179,5],[180,18],[181,330],[183,52],[184,20],[185,30],[186,14],[187,37],[188,42],[189,31],[190,42],[191,22],[192,27],[193,28],[194,32],[195,3],[196,1],[197,34],[198,18],[199,6],[200,32],[201,21],[202,22],[203,1],[204,55],[205,22],[206,33],[207,19],[208,25],[209,21],[210,25],[214,23],[215,29],[216,35],[217,42],[218,14],[219,12],[220,27],[221,22],[222,19],[223,24],[224,24],[225,4],[228,30],[229,6],[230,8],[231,5],[232,35],[233,31],[234,24],[235,10],[236,43],[237,24],[240,23],[241,24],[242,2],[245,24],[246,10],[247,2],[248,24],[249,39],[250,22],[251,24],[253,10],[254,38],[255,24],[256,22],[257,24],[258,24],[259,10],[260,38],[261,24],[262,22],[263,10],[264,24],[265,2],[267,22],[268,38],[269,2],[270,38],[271,38],[272,24],[273,10],[274,38],[277,2],[280,1],[295,1],[299,5]]}</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = n => n.toLocaleString('en-US');
+
+/* ---------- grain + heading decode ---------- */
+(() => {
+  const c = document.createElement('canvas'); c.width = c.height = 140;
+  const x = c.getContext('2d'), d = x.createImageData(140, 140);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  root.style.setProperty('--grain', `url(${c.toDataURL()})`);
+})();
+const GLYPHS = '01·/\\_<>=+*#';
+function scramble(el, dur = 650) {
+  if (reduced) return;
+  const final = el.dataset.final || (el.dataset.final = el.textContent);
+  const t0 = performance.now();
+  cancelAnimationFrame(el._scr);
+  const step = now => {
+    const p = clamp((now - t0) / dur, 0, 1);
+    let out = '';
+    for (let i = 0; i < final.length; i++) out += (final[i] === ' ' || i / final.length < p * 1.3 - 0.3) ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    el.textContent = p >= 1 ? final : out;
+    if (p < 1) el._scr = requestAnimationFrame(step);
+  };
+  el._scr = requestAnimationFrame(step);
+}
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), { threshold: 0.6 });
+  $$('.scr').forEach(el => io.observe(el));
+}
+
+/* =====================================================================
+   DATA: [name, u along body 0..1, left-right, dorsal-ventral (body radii), class, type, details]
+   ===================================================================== */
+const D = JSON.parse($('#wormData').textContent);
+const N = D.neurons.length;
+const CLASS = ['sensory neuron', 'interneuron', 'motor neuron', 'pharynx neuron', 'other neuron'];
+const CCOL = ['#39c9b6', '#6f9bff', '#df8a4b', '#d9c56b', '#8b8d94'];
+const byName = Object.fromEntries(D.neurons.map((n, i) => [n[0], i]));
+const outW = new Float32Array(N), inW = new Float32Array(N), gapW = new Float32Array(N), muscW = new Float32Array(N);
+const partners = Array.from({ length: N }, () => new Map());
+D.chem.forEach(([a, b, w]) => { outW[a] += w; inW[b] += w; partners[a].set(b, (partners[a].get(b) || 0) + w); partners[b].set(a, (partners[b].get(a) || 0) + w); });
+D.gap.forEach(([a, b, w]) => { gapW[a] += w; gapW[b] += w; partners[a].set(b, (partners[a].get(b) || 0) + w); partners[b].set(a, (partners[b].get(a) || 0) + w); });
+D.musc.forEach(([i, w]) => { muscW[i] = w; });
+
+// stats section, counted from the data itself
+$('#sN').textContent = fmt(N);
+$('#sC').textContent = fmt(D.chem.length);
+$('#sG').textContent = fmt(D.gap.length);
+$('#sM').textContent = fmt(D.musc.length);
+
+/* scale ladder (log10 of neuron count; the axis spans 10^0 to 10^11) */
+(() => {
+  const RUNGS = [
+    { name: 'c. elegans', meta: 'whole map · 1986, again 2019', n: 302, label: '302', full: true },
+    { name: 'fruit fly larva', meta: 'whole brain · 2023', n: 3016, label: '~3,000', full: true },
+    { name: 'fruit fly', meta: 'whole brain · 2024', n: 139255, label: '~139,000', full: true },
+    { name: 'mouse', meta: 'one cubic millimetre so far', n: 7e7, label: '~70 million', full: false },
+    { name: 'human', meta: 'one cubic millimetre so far', n: 8.6e10, label: '~86 billion', full: false }
+  ];
+  const X = n => Math.log10(n) / 11 * 100;
+  $('#ladder').innerHTML = RUNGS.map(r => `<div class="rung" role="listitem"><div><b>${r.name}</b><span class="meta">${r.meta}</span></div><div class="track"><i class="${r.full ? '' : 'part'}" style="width:${X(r.n).toFixed(2)}%"></i><output style="left:${X(r.n).toFixed(2)}%">${r.label}</output></div></div>`).join('');
+  const sup = p => String(p).split('').map(d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[+d]).join('');
+  $('#ticks').innerHTML = [2, 4, 6, 8, 10].map(p => `<span style="left:${(p / 11 * 100).toFixed(2)}%">10${sup(p)}</span>`).join('');
+})();
+
+/* =====================================================================
+   THE MODEL: leaky rate units on the real wiring.
+   chemical synapses excite, except from the gaba neurons, which inhibit;
+   gap junctions pull neighbours toward each other.
+   ===================================================================== */
+const GABA = /^(DD\d|VD\d+|RME[LRDV]?|AVL|DVB|RIS)$/;
+const sign = D.neurons.map(n => GABA.test(n[0]) ? -1 : 1);
+const inList = Array.from({ length: N }, () => []);
+const inSum = new Float32Array(N);
+D.chem.forEach(([a, b, w]) => { inList[b].push(a, w); inSum[b] += w; });
+const gapList = Array.from({ length: N }, () => []);
+D.gap.forEach(([a, b, w]) => { gapList[a].push(b, w); gapList[b].push(a, w); });
+const v = new Float32Array(N), act = new Float32Array(N), stim = new Float32Array(N), nxt = new Float32Array(N), tire = new Float32Array(N);
+const K = { chem: 2.0, gap: 0.05, leak: 1, tau: 0.11, global: 1.4, noise: 0.08, tire: 1.4, tireT: 1.2, read: 12, hold: 0.55, stimDecay: 0.3 };
+const FWD = ['AVBL', 'AVBR', 'PVCL', 'PVCR'].map(n => byName[n]);
+const BCK = ['AVAL', 'AVAR', 'AVDL', 'AVDR', 'AVEL', 'AVER'].map(n => byName[n]);
+const isB = D.neurons.map(n => /^(VB|DB)\d+$/.test(n[0]));
+const isA = D.neurons.map(n => /^(VA|DA)\d+$/.test(n[0]));
+const loco = { speed: 0.35, phase: 0, back: 0, fwd: 0 };
+const WAVES = 1.4;
+function stepModel(dt) {
+  let mean = 0;
+  for (let i = 0; i < N; i++) mean += act[i];
+  mean /= N;
+  for (let i = 0; i < N; i++) {
+    let s = 0;
+    const L = inList[i];
+    for (let k = 0; k < L.length; k += 2) s += sign[L[k]] * L[k + 1] * act[L[k]];
+    let input = stim[i] + K.chem * s / (inSum[i] + 6);
+    const G = gapList[i];
+    for (let k = 0; k < G.length; k += 2) input += K.gap * G[k + 1] * (act[G[k]] - act[i]);
+    // the motor neurons along the cord carry the crawling wave
+    const u = D.neurons[i][1], wave = Math.max(0, Math.sin(2 * Math.PI * WAVES * u - loco.phase));
+    if (isB[i]) input += Math.max(0, loco.speed) * 0.55 * wave;
+    if (isA[i]) input += Math.max(0, -loco.speed) * 0.55 * wave;
+    if (Math.random() < dt * 0.4) input += K.noise * 4 * Math.random();
+    input -= K.global * mean + K.tire * tire[i];
+    nxt[i] = v[i] + dt / K.tau * (input - K.leak * v[i]);
+  }
+  // each neuron tires as it fires, so activity passes through instead of locking in
+  for (let i = 0; i < N; i++) { v[i] = nxt[i]; act[i] = v[i] > 0 ? 1 - Math.exp(-2.2 * v[i]) : 0; stim[i] *= Math.pow(K.stimDecay, dt); tire[i] += dt / K.tireT * (act[i] - tire[i]); }
+  const f = FWD.reduce((s, i) => s + act[i], 0) / FWD.length, b = BCK.reduce((s, i) => s + act[i], 0) / BCK.length;
+  // a burst in the command interneurons sets the heading, and it fades over a second or two
+  loco.fwd = Math.max(f, loco.fwd * Math.pow(K.hold, dt)); loco.back = Math.max(b, loco.back * Math.pow(K.hold, dt));
+  const target = clamp(0.35 + K.read * (loco.fwd - loco.back), -1.6, 1.6);
+  loco.speed = lerp(loco.speed, target, 1 - Math.pow(0.25, dt));
+  loco.phase += loco.speed * dt * Math.PI * 1.6;
+}
+function fire(list, amt = 4) { list.forEach(n => { const i = typeof n === 'number' ? n : byName[n]; if (i !== undefined) stim[i] = Math.max(stim[i], amt); }); }
+
+const POKES = [
+  { label: 'touch the nose', note: 'nose touch reaches ash, flp and the other mechanosensors at the tip. real worms back away, and so does this one: the signal runs through ava and avd, the backward command cells.', cells: ['ASHL', 'ASHR', 'FLPL', 'FLPR', 'OLQDL', 'OLQDR', 'OLQVL', 'OLQVR', 'IL1DL', 'IL1DR', 'IL1L', 'IL1R', 'IL1VL', 'IL1VR'] },
+  { label: 'touch the tail', note: 'a gentle tail touch reaches the two plm touch cells. real worms speed forward, and here the signal runs through pvc and avb, the forward command cells.', cells: ['PLML', 'PLMR'] },
+  { label: 'stroke the body', note: 'a touch near the front reaches alm and avm. real worms back away. in this model the signal reaches the forward and backward cells about equally, so the worm mostly hesitates: the map alone does not say which side should win.', cells: ['ALML', 'ALMR', 'AVM'] },
+  { label: 'let it settle', note: 'all activity cleared. left alone, the worm crawls slowly forward, the way it forages.', cells: [], calm: true }
+];
+const pokesEl = $('#pokes');
+POKES.forEach(p => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'poke'; b.textContent = p.label; b.title = p.note;
+  b.addEventListener('click', () => {
+    if (p.calm) { v.fill(0); act.fill(0); stim.fill(0); tire.fill(0); } else fire(p.cells);
+    b.classList.add('on'); setTimeout(() => b.classList.remove('on'), 900);
+    showNote(p);
+  });
+  pokesEl.appendChild(b);
+});
+
+/* card */
+const card = { kind: $('#cKind'), idx: $('#cIdx'), name: $('#cName'), what: $('#cWhat'), more: $('#cMore'), stats: $('#cStats') };
+const INTRO = { kind: card.kind.textContent, idx: card.idx.textContent, name: card.name.textContent, what: card.what.textContent, more: card.more.textContent };
+let shown = -2;
+function showNeuron(i) {
+  if (i === shown) return; shown = i;
+  if (i < 0) {
+    card.kind.textContent = INTRO.kind; card.idx.textContent = INTRO.idx; card.name.textContent = INTRO.name;
+    card.name.style.color = ''; card.what.textContent = INTRO.what; card.more.textContent = INTRO.more; card.stats.hidden = true;
+    return;
+  }
+  const n = D.neurons[i];
+  card.kind.textContent = CLASS[n[4]]; card.idx.textContent = `${(n[1] * 100).toFixed(0)}% from the nose`;
+  card.name.textContent = n[0]; card.name.style.color = CCOL[n[4]];
+  card.what.textContent = n[6] || D.types[n[5]];
+  card.more.textContent = D.types[n[5]] ? `type: ${D.types[n[5]].toLowerCase()}` : '';
+  const top = [...partners[i].entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([j]) => D.neurons[j][0]);
+  card.stats.innerHTML = `<dt>synapses out</dt><dd>${fmt(outW[i])}</dd><dt>synapses in</dt><dd>${fmt(inW[i])}</dd><dt>gap junctions</dt><dd>${fmt(gapW[i])}</dd><dt>onto muscle</dt><dd>${fmt(muscW[i])}</dd><dt>talks most to</dt><dd>${top.join(' · ') || '—'}</dd>`;
+  card.stats.hidden = false;
+}
+function showNote(p) {
+  shown = -3;
+  card.kind.textContent = 'stimulus'; card.idx.textContent = p.calm ? 'reset' : `${p.cells.length} neurons`;
+  card.name.textContent = p.label; card.name.style.color = '';
+  card.what.textContent = p.note; card.more.textContent = p.calm ? '' : 'watch the heading above, and the dots light up as the signal spreads.';
+  card.stats.hidden = true;
+}
+
+/* =====================================================================
+   RENDERING (three.js)
+   the body is straightened; a travelling wave bends everything the same way.
+   ===================================================================== */
+const canvas = $('#worm');
+if (!window.THREE) { root.classList.add('no-gl'); return; }
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' }); }
+catch (e) { root.classList.add('no-gl'); return; }
+renderer.setClearColor(0x000000, 1);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+const LEN = 9, RAD = 30 / 800 * LEN * 1.25;      // body length and radius in scene units
+const U = { uPhase: { value: 0 }, uAmp: { value: 0.5 }, uTime: { value: 0 }, uPx: { value: 1 } };
+const WAVE_GLSL = `
+uniform float uPhase, uAmp;
+vec3 bend(vec3 p, float u){
+  float env = 0.35 + 0.65 * smoothstep(0.0, 0.35, u);
+  p.z += uAmp * env * sin(6.2831853 * ${WAVES.toFixed(2)} * u - uPhase);
+  return p;
+}`;
+function radiusAt(u) {
+  let r = Math.sqrt(Math.min(1, u / 0.035)) * (0.82 + 0.18 * Math.min(1, u / 0.25));
+  if (u > 0.72) r *= Math.pow(Math.max(0, (1 - u) / 0.28), 0.85);
+  return Math.max(r, 0.02);
+}
+const toScene = (u, a, b) => [(u - 0.5) * LEN, a * RAD, b * RAD];
+
+/* body: a glass tube */
+{
+  const S = 220, R = 28, pos = [], uu = [], nrm = [], idx = [];
+  for (let i = 0; i <= S; i++) {
+    const u = i / S, r = radiusAt(u) * RAD;
+    for (let j = 0; j <= R; j++) {
+      const a = j / R * Math.PI * 2, cy = Math.cos(a), cz = Math.sin(a);
+      pos.push((u - 0.5) * LEN, cy * r, cz * r); nrm.push(0, cy, cz); uu.push(u);
+    }
+  }
+  for (let i = 0; i < S; i++) for (let j = 0; j < R; j++) { const a = i * (R + 1) + j, b = a + R + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
+  g.setAttribute('aU', new THREE.Float32BufferAttribute(uu, 1));
+  g.setIndex(idx);
+  const m = new THREE.ShaderMaterial({
+    uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    vertexShader: `attribute float aU; varying vec3 vN; varying vec3 vV; varying float vU; ${WAVE_GLSL}
+      void main(){ vec3 p = bend(position, aU); float e = 0.001;
+        vec3 q = bend(position + vec3(e,0.,0.), aU + e / ${LEN.toFixed(1)});
+        float slope = (q.z - p.z) / e; vec3 n = normal; n.x -= slope * n.z; n = normalize(n);
+        vec4 w = modelMatrix * vec4(p, 1.0); vN = normalize(mat3(modelMatrix) * n); vV = normalize(cameraPosition - w.xyz); vU = aU;
+        gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `uniform float uTime; varying vec3 vN; varying vec3 vV; varying float vU;
+      vec3 lab(float x){ x = fract(x); vec3 a = vec3(.1,.25,.85), b = vec3(.08,.68,.62), c = vec3(.85,.72,.3), d = vec3(.82,.42,.2);
+        return x < .333 ? mix(a,b,x*3.) : x < .666 ? mix(b,c,(x-.333)*3.) : mix(c,a*.6+d*.4,(x-.666)*3.); }
+      void main(){ float f = pow(1.0 - abs(dot(normalize(vN), vV)), 2.6);
+        vec3 col = mix(vec3(.75,.78,.85), lab(vU * 1.3 + uTime * 0.02 + f * 0.4), 0.55) * f * 0.42 + vec3(.012,.014,.02);
+        gl_FragColor = vec4(col, 1.0); }`
+  });
+  scene.add(new THREE.Mesh(g, m));
+}
+
+/* body wall muscles: four rows of 24, lit by the crawling wave */
+{
+  const box = new THREE.BoxGeometry(LEN / 26, 1, 1);
+  const N2 = 96, mesh = new THREE.InstancedMesh(box, new THREE.ShaderMaterial({
+    uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `attribute float aU; attribute float aSide; varying float vA; uniform float uTime; ${WAVE_GLSL}
+      void main(){ vec4 p = instanceMatrix * vec4(position, 1.0); p.xyz = bend(p.xyz, aU);
+        float s = sin(6.2831853 * ${WAVES.toFixed(2)} * aU - uPhase + 1.5708);
+        vA = 0.05 + 0.95 * max(0.0, s * aSide) * clamp(uAmp * 2.0, 0.0, 1.0);
+        gl_Position = projectionMatrix * viewMatrix * modelMatrix * p; }`,
+    fragmentShader: `varying float vA; void main(){ gl_FragColor = vec4(vec3(.95,.42,.32) * vA * 0.22, 1.0); }`
+  }), N2);
+  const o = new THREE.Object3D(), au = new Float32Array(N2), side = new Float32Array(N2);
+  let k = 0;
+  for (const dv of [1, -1]) for (const lr of [1, -1]) for (let m = 0; m < 24; m++) {
+    const u = 0.1 + m / 23 * 0.76, r = radiusAt(u) * RAD * 0.97;
+    o.position.set((u - 0.5) * LEN, lr * r * 0.62, dv * r * 0.76);
+    o.scale.set(1, r * 0.12, r * 0.12); o.updateMatrix(); mesh.setMatrixAt(k, o.matrix);
+    au[k] = u; side[k] = dv; k++;
+  }
+  box.setAttribute('aU', new THREE.InstancedBufferAttribute(au, 1));
+  box.setAttribute('aSide', new THREE.InstancedBufferAttribute(side, 1));
+  mesh.frustumCulled = false; scene.add(mesh);
+}
+
+/* connections */
+const nPos = D.neurons.map(n => toScene(n[1], n[2], n[3]));
+function edgeLines(list, colA, colB, gap) {
+  const n = list.length, pos = new Float32Array(n * 6), uu = new Float32Array(n * 2), glow = new Float32Array(n * 2), col = new Float32Array(n * 6);
+  const cA = new THREE.Color(colA), cB = new THREE.Color(colB);
+  list.forEach(([a, b], k) => {
+    pos.set(nPos[a], k * 6); pos.set(nPos[b], k * 6 + 3);
+    uu[k * 2] = D.neurons[a][1]; uu[k * 2 + 1] = D.neurons[b][1];
+    col.set([cA.r, cA.g, cA.b], k * 6); col.set([cB.r, cB.g, cB.b], k * 6 + 3);
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aU', new THREE.BufferAttribute(uu, 1));
+  g.setAttribute('aGlow', new THREE.BufferAttribute(glow, 1));
+  g.setAttribute('aCol', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.ShaderMaterial({
+    uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `attribute float aU; attribute float aGlow; attribute vec3 aCol; varying float vG; varying vec3 vC; ${WAVE_GLSL}
+      void main(){ vG = aGlow; vC = aCol; gl_Position = projectionMatrix * modelViewMatrix * vec4(bend(position, aU), 1.0); }`,
+    fragmentShader: `varying float vG; varying vec3 vC; void main(){ gl_FragColor = vec4(vC * vG, 1.0); }`
+  });
+  const lines = new THREE.LineSegments(g, m); lines.frustumCulled = false; scene.add(lines);
+  return { lines, glow, attr: g.attributes.aGlow, list, gap };
+}
+const chemE = edgeLines(D.chem, '#9fb4ff', '#e9e7e2', false);
+const gapE = edgeLines(D.gap, '#d9c56b', '#d9c56b', true);
+
+/* neurons */
+const pts = (() => {
+  const pos = new Float32Array(N * 3), uu = new Float32Array(N), col = new Float32Array(N * 3), a = new Float32Array(N), hi = new Float32Array(N);
+  D.neurons.forEach((n, i) => { pos.set(nPos[i], i * 3); uu[i] = n[1]; const c = new THREE.Color(CCOL[n[4]]); col.set([c.r, c.g, c.b], i * 3); });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('aU', new THREE.BufferAttribute(uu, 1));
+  g.setAttribute('aCol', new THREE.BufferAttribute(col, 3));
+  g.setAttribute('aAct', new THREE.BufferAttribute(a, 1));
+  g.setAttribute('aHi', new THREE.BufferAttribute(hi, 1));
+  const m = new THREE.ShaderMaterial({
+    uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `attribute float aU; attribute vec3 aCol; attribute float aAct; attribute float aHi; uniform float uPx; varying vec3 vC; varying float vA; varying float vH; ${WAVE_GLSL}
+      void main(){ vC = aCol; vA = aAct; vH = aHi; vec4 mv = modelViewMatrix * vec4(bend(position, aU), 1.0);
+        gl_PointSize = uPx * (0.085 + 0.06 * aAct + 0.07 * aHi) / -mv.z; gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `varying vec3 vC; varying float vA; varying float vH;
+      void main(){ float d = length(gl_PointCoord - 0.5); float core = smoothstep(0.22, 0.12, d), halo = smoothstep(0.5, 0.0, d);
+        vec3 c = mix(vC, vec3(1.0), vA * 0.7);
+        float k = core * (0.8 + 0.5 * vA + vH) + halo * (0.16 + 0.6 * vA + 0.4 * vH);
+        gl_FragColor = vec4(c * k, 1.0); }`
+  });
+  const p = new THREE.Points(g, m); p.frustumCulled = false; scene.add(p);
+  return { a, hi, aAttr: g.attributes.aAct, hAttr: g.attributes.aHi };
+})();
+
+/* a faint dish under the worm */
+{
+  const g = new THREE.CircleGeometry(6.5, 96).rotateX(-Math.PI / 2);
+  const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: 'varying vec2 vP; void main(){ vP = position.xz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'varying vec2 vP; void main(){ float r = length(vP) / 6.5; float ring = exp(-pow((r - 0.985) * 120.0, 2.0)) * 0.22 + exp(-pow((r - 0.94) * 260.0, 2.0)) * 0.06; float fill = (1.0 - smoothstep(0.2, 1.0, r)) * 0.035; gl_FragColor = vec4(vec3(.62,.7,.85) * (ring + fill), 1.0); }' });
+  const dish = new THREE.Mesh(g, m); dish.position.y = -RAD * 2.2; scene.add(dish);
+}
+
+/* camera */
+const view = { th: 0, ph: 0.6, tTh: 0, tPh: 0.6, spin: false };
+let W = 1, H = 1, narrow = false, dpr = 1;
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height); narrow = innerWidth <= 900;
+  dpr = Math.min(devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(dpr); renderer.setSize(W, H, false);
+  U.uPx.value = H * dpr / 2 / Math.tan(camera.fov * Math.PI / 360);
+  if (narrow) { camera.aspect = W / H; camera.clearViewOffset(); }
+  else { const shift = Math.min(380, W * 0.3), fh = H * 1.3; camera.aspect = (W + shift) / fh; camera.setViewOffset(W + shift, fh, shift, H * 0.3, W, H); U.uPx.value = fh * dpr / 2 / Math.tan(camera.fov * Math.PI / 360); }
+  camera.updateProjectionMatrix();
+}
+resize();
+addEventListener('resize', resize);
+if ('ResizeObserver' in window) new ResizeObserver(resize).observe(canvas);
+
+/* bent positions on the cpu, for hover picking and the label */
+const tmp = new THREE.Vector3();
+function bentPos(i, out) {
+  const n = D.neurons[i], u = n[1], p = nPos[i];
+  const env = 0.35 + 0.65 * Math.min(1, Math.max(0, u / 0.35)) ** 2 * (3 - 2 * Math.min(1, Math.max(0, u / 0.35)));
+  return out.set(p[0], p[1], p[2] + U.uAmp.value * env * Math.sin(2 * Math.PI * WAVES * u - U.uPhase.value));
+}
+let hover = -1, pinned = -1;
+const tag = $('#tag');
+function pickAt(cx, cy) {
+  const r = canvas.getBoundingClientRect();
+  if (cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) return -1;
+  let best = -1, bd = narrow ? 22 * 22 : 16 * 16;
+  for (let i = 0; i < N; i++) {
+    bentPos(i, tmp).project(camera);
+    const sx = (tmp.x * 0.5 + 0.5) * r.width + r.left, sy = (-tmp.y * 0.5 + 0.5) * r.height + r.top;
+    const d = (sx - cx) ** 2 + (sy - cy) ** 2;
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
+function setHover(i) {
+  hover = i;
+  canvas.classList.toggle('over', i >= 0);
+  const show = i >= 0 ? i : pinned;
+  showNeuron(show);
+  pts.hi.fill(0);
+  if (show >= 0) { pts.hi[show] = 1.2; partners[show].forEach((w, j) => { pts.hi[j] = Math.max(pts.hi[j], 0.45); }); }
+  pts.hAttr.needsUpdate = true;
+}
+let drag = null, moved = false;
+canvas.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, th: view.tTh, ph: view.tPh, id: e.pointerId }; moved = false; canvas.classList.add('dragging'); });
+addEventListener('pointermove', e => {
+  if (drag && e.pointerId === drag.id) {
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.hypot(dx, dy) > 5) moved = true;
+    if (moved && (e.pointerType !== 'touch' || Math.abs(dx) > Math.abs(dy))) {
+      view.tTh = drag.th - dx * 0.006;
+      if (e.pointerType !== 'touch') view.tPh = clamp(drag.ph - dy * 0.004, 0.12, 1.35);
+    }
+    return;
+  }
+  if (e.pointerType === 'mouse') { const i = pickAt(e.clientX, e.clientY); if (i !== hover) setHover(i); }
+}, { passive: true });
+addEventListener('pointerup', e => {
+  if (drag && e.pointerId === drag.id && !moved) {
+    const i = pickAt(e.clientX, e.clientY);
+    if (i >= 0) { pinned = i; fire([i], 3); setHover(e.pointerType === 'mouse' ? i : -1); }
+    else if (e.target === canvas) { pinned = -1; setHover(-1); }
+  }
+  drag = null; canvas.classList.remove('dragging');
+});
+addEventListener('pointercancel', () => { drag = null; canvas.classList.remove('dragging'); });
+canvas.addEventListener('pointerleave', () => { if (hover >= 0) setHover(-1); });
+
+const tChem = $('#tChem'), tGap = $('#tGap'), tSpin = $('#tSpin');
+tChem.addEventListener('click', () => { chemE.lines.visible = !chemE.lines.visible; tChem.setAttribute('aria-pressed', String(chemE.lines.visible)); });
+tGap.addEventListener('click', () => { gapE.lines.visible = !gapE.lines.visible; tGap.setAttribute('aria-pressed', String(gapE.lines.visible)); });
+tSpin.addEventListener('click', () => { view.spin = !view.spin; tSpin.setAttribute('aria-pressed', String(view.spin)); });
+$('#tReset').addEventListener('click', () => { view.tTh = 0; view.tPh = 0.6; });
+
+/* readouts */
+const rHead = $('#rHead'), rSpeed = $('#rSpeed'), rFire = $('#rFire');
+let uiT = 0, lastHead = '';
+function readouts(dt) {
+  if ((uiT -= dt) > 0) return; uiT = 0.15;
+  const s = loco.speed, head = s > 0.12 ? 'forward' : s < -0.12 ? 'backward' : 'pausing';
+  if (head !== lastHead) { rHead.textContent = head; lastHead = head; }
+  rSpeed.textContent = Math.abs(s).toFixed(2);
+  let n = 0; for (let i = 0; i < N; i++) if (act[i] > 0.3) n++;
+  rFire.textContent = n;
+}
+
+function updateGlow(E) {
+  const show = hover >= 0 ? hover : pinned, g = E.glow;
+  for (let k = 0; k < E.list.length; k++) {
+    const [a, b, w] = E.list[k];
+    const ww = Math.min(1, 0.35 + w * 0.08);
+    let x = E.gap ? (0.012 + (act[a] + act[b]) * 0.16) * ww : (0.008 + act[a] * 0.22) * ww;
+    if (show >= 0) x = (a === show || b === show) ? 0.5 + 0.5 * ww + act[a] * 0.3 : x * 0.18;
+    g[k * 2] = x * (E.gap ? 1 : 0.7); g[k * 2 + 1] = x;
+  }
+  E.attr.needsUpdate = true;
+}
+
+/* main loop */
+let last = performance.now(), visible = true;
+if ('IntersectionObserver' in window) new IntersectionObserver(es => { visible = es[0].isIntersecting; }, { threshold: 0.01 }).observe(canvas);
+function draw(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!visible) return;
+  U.uTime.value += dt;
+  stepModel(dt / 2); stepModel(dt / 2);
+  U.uPhase.value = loco.phase;
+  U.uAmp.value = lerp(U.uAmp.value, reduced ? 0.12 : 0.18 + 0.32 * Math.min(1, Math.abs(loco.speed) / 0.5), 1 - Math.pow(0.2, dt));
+  for (let i = 0; i < N; i++) pts.a[i] = act[i];
+  pts.aAttr.needsUpdate = true;
+  if (chemE.lines.visible) updateGlow(chemE);
+  if (gapE.lines.visible) updateGlow(gapE);
+  readouts(dt);
+  if (view.spin && !drag) view.tTh += dt * 0.12;
+  const k = 1 - Math.pow(0.002, dt);
+  view.th = lerp(view.th, view.tTh, k); view.ph = lerp(view.ph, view.tPh, k);
+  const rad = narrow ? 12.5 / Math.min(1, (W / H) * 0.62) : 22;
+  camera.position.set(Math.sin(view.th) * Math.sin(view.ph) * rad, Math.cos(view.ph) * rad, Math.cos(view.th) * Math.sin(view.ph) * rad);
+  camera.lookAt(0, 0, 0);
+  const show = hover >= 0 ? hover : pinned;
+  if (show >= 0) {
+    bentPos(show, tmp).project(camera);
+    const x = (tmp.x * 0.5 + 0.5) * W, y = (-tmp.y * 0.5 + 0.5) * H;
+    tag.textContent = `${D.neurons[show][0]} · ${CLASS[D.neurons[show][4]]}`;
+    tag.style.transform = `translate(${(x + canvas.offsetLeft + 14).toFixed(1)}px, ${(y + canvas.offsetTop - 12).toFixed(1)}px)`;
+    tag.style.opacity = '1';
+  } else tag.style.opacity = '0';
+  renderer.render(scene, camera);
+}
+function frame(now) { requestAnimationFrame(frame); draw(now); }
+// let the model settle before the first frame
+for (let i = 0; i < 120; i++) stepModel(1 / 60);
+requestAnimationFrame(frame);
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); root.classList.add('no-gl'); });
+})();
+</script>
+</body>
+</html>

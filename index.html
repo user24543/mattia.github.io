@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>mattia</title>
+<meta name="description" content="mattia — developer and digital artist.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --fg:#e9e7e2;
+  --mute:#8b8d94;
+  --dim:#55575e;
+  --line:rgba(233,231,226,.13);
+  --lab:linear-gradient(100deg,#e9e7e2 0%,#6f9bff 18%,#39c9b6 34%,#d9c56b 50%,#df8a4b 62%,#6f9bff 80%,#e9e7e2 100%);
+  --f-display:"Syne","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Fragment Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px);
+  --gut-l:max(var(--gut),env(safe-area-inset-left,0px));
+  --gut-r:max(var(--gut),env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:400 13px/1.6 var(--f-mono);text-transform:lowercase;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+::selection{background:var(--fg);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--fg);outline-offset:5px}
+.wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+#liquid{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;pointer-events:none}
+.no-gl #liquid{display:none}
+.no-gl body::before{content:"";position:fixed;inset:0;z-index:0;background:radial-gradient(circle at 68% 38%,rgba(111,155,255,.16),rgba(57,201,182,.06) 22%,transparent 46%)}
+main,header,footer{position:relative;z-index:1}
+
+/* header */
+.top{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) var(--gut-r) 20px var(--gut-l);mix-blend-mode:difference;color:#fff}
+.top a{position:relative}
+.mark{font:500 15px/1 var(--f-display);letter-spacing:-.02em}
+.nav{display:flex;gap:clamp(14px,2.4vw,32px);color:#fff}
+.nav a,.ln{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s cubic-bezier(.2,.8,.2,1)}
+.nav a:hover,.nav a:focus-visible,.ln:hover,.ln:focus-visible{background-size:100% 1px}
+.snd{color:inherit;line-height:inherit;white-space:nowrap}
+.snd[aria-pressed="false"]{opacity:.55}
+
+/* hero */
+.hero{min-height:100vh;min-height:100svh;display:grid;align-content:end;padding-block:120px calc(28px + env(safe-area-inset-bottom,0px))}
+.name{margin:0 0 0 -.04em;font:500 clamp(88px,21vw,340px)/.78 var(--f-display);letter-spacing:-.065em;background:var(--lab);background-size:320% 100%;background-position:0 0;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .8s}
+.name:hover{color:transparent;animation:sheen 7s linear infinite}
+@keyframes sheen{to{background-position:-320% 0}}
+.hero-row{margin-top:clamp(18px,2.4vw,30px);display:flex;justify-content:space-between;align-items:baseline;gap:12px 24px;flex-wrap:wrap}
+.role{margin:0;font:400 clamp(17px,1.7vw,24px)/1.2 var(--f-display);letter-spacing:-.01em}
+.meta{color:var(--mute);display:flex;gap:24px;flex-wrap:wrap}
+
+/* sections */
+.sec{padding-block:clamp(100px,14vw,200px) 0}
+.label{display:flex;justify-content:space-between;gap:16px;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--line)}
+
+/* work */
+.wi{display:grid;grid-template-columns:4ch minmax(0,1fr) auto;column-gap:clamp(12px,3vw,40px);row-gap:10px;align-items:baseline;padding-block:clamp(28px,4vw,48px);border-bottom:1px solid var(--line)}
+.wi-n{color:var(--dim)}
+.wi-title{font:500 clamp(40px,7.4vw,118px)/.9 var(--f-display);letter-spacing:-.05em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .5s}
+.wi:hover .wi-title,.wi:focus-visible .wi-title{color:transparent;animation:sheen 5s linear infinite}
+.wi-go{color:var(--mute);white-space:nowrap;transition:color .3s,transform .5s cubic-bezier(.2,.8,.2,1)}
+.wi:hover .wi-go,.wi:focus-visible .wi-go{color:var(--fg);transform:translate(4px,-4px)}
+.wi-desc{grid-column:2;margin:0;max-width:52ch;color:var(--mute)}
+.wi-tags{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:6px 20px;color:var(--dim)}
+.wi-tags span:first-child{color:var(--mute)}
+
+/* about */
+.about-text{margin:clamp(36px,5vw,64px) 0 0;max-width:26ch;font:400 clamp(26px,3.4vw,50px)/1.12 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.about-grid{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+.about-grid h3{margin:0 0 10px;font:inherit;color:var(--dim)}
+.about-grid ul{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.about-grid p{margin:0;color:var(--mute);max-width:34ch}
+
+/* contact */
+.mail{margin-top:clamp(36px,5vw,64px);display:flex;align-items:baseline;gap:16px 28px;flex-wrap:wrap}
+.mail output{font:500 clamp(30px,5.6vw,88px)/1 var(--f-display);letter-spacing:-.05em;word-break:break-all;user-select:all;-webkit-user-select:all}
+.copy{color:var(--mute);border-bottom:1px solid var(--line);padding-bottom:2px}
+.copy:hover{color:var(--fg)}
+#copyState{display:block;margin-top:10px;color:var(--dim);min-height:1.6em}
+.links{margin:clamp(28px,4vw,48px) 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:12px 32px}
+
+/* footer */
+.foot{margin-top:clamp(110px,14vw,200px);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;color:var(--dim);border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+
+@media (max-width:700px){
+  .wi{grid-template-columns:3ch minmax(0,1fr)}
+  .wi-go{grid-column:2}
+  .about-grid{grid-template-columns:minmax(0,1fr)}
+  .nav{gap:14px}
+}
+</style>
+</head>
+<body>
+<canvas id="liquid" aria-hidden="true"></canvas>
+
+<header class="top">
+  <a class="mark" href="#top" aria-label="mattia, back to top">mattia</a>
+  <nav class="nav" aria-label="sections">
+    <a href="#work">work</a>
+    <a href="#about">about</a>
+    <a href="#contact">contact</a>
+    <button class="ln snd" id="snd" type="button" aria-pressed="true">sound on</button>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="name">
+    <h1 class="name" id="name">mattia</h1>
+    <div class="hero-row">
+      <p class="role">developer &amp; digital artist</p>
+      <div class="meta"><span>i write about things i find interesting
+      </span><a class="ln" href="#work">scroll ↓</a></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="work" aria-labelledby="work-h">
+    <div class="label"><h2 id="work-h" style="font:inherit;margin:0">( selected work )</h2><span>08</span></div>
+    <a class="wi" id="work-1" href="glitch.html" aria-describedby="w1d">
+      <span class="wi-n">01</span>
+      <span class="wi-title">lorem ipsum</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w1d">lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.</p>
+      <span class="wi-tags"><span>2026</span><span>webgl</span><span>glsl</span><span>web audio</span><span>gsap</span></span>
+    </a>
+    <a class="wi" id="work-2" href="gradient.html" aria-describedby="w2d">
+      <span class="wi-n">02</span>
+      <span class="wi-title">gradient</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w2d">an interactive field guide to how machines learn: a chrome loss landscape, and a neural network that trains live in your browser.</p>
+      <span class="wi-tags"><span>2026</span><span>machine learning</span><span>three.js</span><span>neural network</span><span>canvas</span></span>
+    </a>
+    <a class="wi" id="work-3" href="wetware.html" aria-describedby="w3d">
+      <span class="wi-n">03</span>
+      <span class="wi-title">wetware</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w3d">the brain, read as a learning machine: an interactive 3d brain atlas, a spiking neuron model, and a network you can teach by touch.</p>
+      <span class="wi-tags"><span>2026</span><span>neuroscience</span><span>three.js</span><span>simulation</span><span>machine learning</span></span>
+    </a>
+    <a class="wi" id="work-4" href="umwelt.html" aria-describedby="w4d">
+      <span class="wi-n">04</span>
+      <span class="wi-title">umwelt</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w4d">one garden at dusk, through six different minds: ultraviolet bee vision, bat sonar, a snake's heat sense, a dog's nose and a tick's three signals.</p>
+      <span class="wi-tags"><span>2026</span><span>perception</span><span>three.js</span><span>glsl</span><span>web audio</span></span>
+    </a>
+    <a class="wi" id="work-5" href="302.html" aria-describedby="w5d">
+      <span class="wi-n">05</span>
+      <span class="wi-title">302</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w5d">the whole nervous system of a worm: all 302 neurons on their real wiring map, running a live model you can touch and watch respond.</p>
+      <span class="wi-tags"><span>2026</span><span>connectome</span><span>three.js</span><span>simulation</span><span>open data</span></span>
+    </a>
+    <a class="wi" id="work-6" href="insular.html" aria-describedby="w6d">
+      <span class="wi-n">06</span>
+      <span class="wi-title">insular</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w6d">foster's rule, island giants and island dwarfs: set an island in a chrome sea and watch a herd of mice grow while a herd of elephants shrinks.</p>
+      <span class="wi-tags"><span>2026</span><span>evolution</span><span>three.js</span><span>simulation</span><span>glsl</span></span>
+    </a>
+    <a class="wi" id="work-7" href="circa.html" aria-describedby="w7d">
+      <span class="wi-n">07</span>
+      <span class="wi-title">circa</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w7d">the circadian rhythm: a live body clock you can jet-lag, put on night shifts or send into a cave, and the gene loop that keeps time in every cell.</p>
+      <span class="wi-tags"><span>2026</span><span>chronobiology</span><span>webgl</span><span>simulation</span><span>canvas</span></span>
+    </a>
+    <a class="wi" id="work-8" href="hypnos.html" aria-describedby="w8d">
+      <span class="wi-n">08</span>
+      <span class="wi-title">hypnos</span>
+      <span class="wi-go">open ↗</span>
+      <p class="wi-desc" id="w8d">the sleeping brain: a live sleep recording through a whole night, five kinds of brainwave, narcolepsy, binaural beats and the edge of sleep in meditation.</p>
+      <span class="wi-tags"><span>2026</span><span>sleep</span><span>eeg</span><span>simulation</span><span>web audio</span></span>
+    </a>
+  </section>
+
+  <section class="sec wrap" id="about" aria-labelledby="about-h">
+    <div class="label"><h2 id="about-h" style="font:inherit;margin:0">( about )</h2><span>02</span></div>
+    <p class="about-text">i am a 16 year old student from Italy, currently in the 2nd year of high school, computer science is one of my many interests.</p>
+    <div class="about-grid">
+      <div><h3>practice</h3><ul><li>development</li><li>digital art</li><li>computer science</li></ul></div>
+      <div><h3>theory</h3><ul><li>three.js</li><li>webgl</li><li>machine learning
+        (and more)</li></ul></div>
+      <div><h3>the process</h3><p>i find something i am interested in, i study and research it from peer reviewed sources, i build something around it.</p></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="contact" aria-labelledby="contact-h">
+    <div class="label"><h2 id="contact-h" style="font:inherit;margin:0">( contact )</h2><span>03</span></div>
+    <div class="mail">
+      <output id="mail">mattia@mattia.com</output>
+      <button class="copy" id="copy" type="button">copy</button>
+    </div>
+    <span id="copyState" role="status" aria-live="polite"></span>
+    <ul class="links">
+      <li><a class="ln" href="https://www.instagram.com/" target="_blank" rel="noopener">instagram ↗</a></li>
+      <li><a class="ln" href="https://github.com/" target="_blank" rel="noopener">github ↗</a></li>
+      <li><a class="ln" href="https://www.linkedin.com/" target="_blank" rel="noopener">linkedin ↗</a></li>
+    </ul>
+  </section>
+
+  <footer class="foot wrap">
+    <span>© 2026 mattia</span>
+    <span>no copyright, free for use, all purposes.</span>
+    <span id="clock">--:--</span>
+  </footer>
+</main>
+
+<script>
+(() => {
+'use strict';
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ---------- copy + clock ---------- */
+const mail = document.getElementById('mail'), state = document.getElementById('copyState');
+document.getElementById('copy').addEventListener('click', () => {
+  const fallback = () => {
+    const r = document.createRange(); r.selectNodeContents(mail);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    state.textContent = 'selected — press ctrl+c or ⌘c';
+  };
+  try { navigator.clipboard.writeText(mail.textContent.trim()).then(() => { state.textContent = 'copied'; }, fallback); }
+  catch (e) { fallback(); }
+});
+const clock = document.getElementById('clock');
+const tick = () => { clock.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' local'; };
+tick(); setInterval(tick, 15000);
+
+/* ---------- sound: all synthesised, kept quiet. browsers only allow it after the first click or key press ---------- */
+const sfx = (() => {
+  let ctx = null, out = null, noise = null, on = true;
+  try { on = localStorage.getItem('mattia-sound') !== 'off'; } catch (e) {}
+  function start() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = null; return; }
+    out = ctx.createGain(); out.gain.value = on ? 0.55 : 0;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4;
+    out.connect(comp).connect(ctx.destination);
+    noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const ready = () => ctx && ctx.state === 'running' && on;
+  function tone(freq, to, len, vol, type = 'sine', delay = 0) {
+    const t = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t); if (to) o.frequency.exponentialRampToValueAtTime(to, t + len);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(g).connect(out); o.start(t); o.stop(t + len + 0.02);
+  }
+  function hiss(len, vol, hp) {
+    const t = ctx.currentTime, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = noise; f.type = 'highpass'; f.frequency.value = hp;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    s.connect(f).connect(g).connect(out); s.start(t, Math.random()); s.stop(t + len + 0.02);
+  }
+  return {
+    start,
+    click() { if (!ready()) return; tone(1500, 700, 0.045, 0.14); hiss(0.025, 0.05, 4000); },
+    hover() { if (!ready()) return; tone(2600, 2300, 0.03, 0.025); },
+    chime() { if (!ready()) return; tone(880, 0, 0.5, 0.06, 'sine'); tone(1320, 0, 0.6, 0.05, 'sine', 0.09); },
+    get on() { return on; },
+    set on(v) {
+      on = v;
+      try { localStorage.setItem('mattia-sound', v ? 'on' : 'off'); } catch (e) {}
+      if (out) out.gain.setTargetAtTime(v ? 0.55 : 0, ctx.currentTime, 0.05);
+    }
+  };
+})();
+const sndBtn = document.getElementById('snd');
+const showSnd = () => { sndBtn.textContent = sfx.on ? 'sound on' : 'sound off'; sndBtn.setAttribute('aria-pressed', String(sfx.on)); };
+showSnd();
+sndBtn.addEventListener('click', () => { sfx.on = !sfx.on; showSnd(); sfx.start(); sfx.click(); });
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => sfx.start(), { capture: true, passive: true }));
+document.querySelectorAll('a, button').forEach(el => {
+  if (el !== sndBtn) el.addEventListener('click', () => { sfx.start(); el.id === 'copy' ? sfx.chime() : sfx.click(); });
+  el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') sfx.hover(); });
+});
+
+/* ---------- liquid chrome (raymarched metaballs, labradorite flash) ---------- */
+const cv = document.getElementById('liquid');
+const gl = cv.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'high-performance' });
+if (!gl) { root.classList.add('no-gl'); return; }
+
+const VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }';
+const FS = `
+precision highp float;
+uniform vec2 uRes; uniform float uTime, uFlash, uBright; uniform vec2 uMouse; uniform vec3 uCam;
+float smin(float a, float b, float k){ float h = clamp(0.5 + 0.5*(b - a)/k, 0.0, 1.0); return mix(b, a, h) - k*h*(1.0 - h); }
+float map(vec3 p){
+  float t = uTime*0.22;
+  vec3 c1 = vec3(sin(t*1.1)*0.5, cos(t*0.9)*0.32, sin(t*0.7)*0.3);
+  vec3 c2 = vec3(cos(t*0.8 + 1.0)*0.58, sin(t*1.3 + 2.0)*0.38, cos(t*0.6)*0.3);
+  vec3 c3 = vec3(sin(t*0.6 + 4.0)*0.42, sin(t*0.9 + 1.0)*0.48, cos(t*1.2 + 3.0)*0.25);
+  vec3 c4 = vec3(uMouse.x*0.75, uMouse.y*0.55, 0.45);
+  float d = length(p - c1) - 0.56;
+  d = smin(d, length(p - c2) - 0.42, 0.5);
+  d = smin(d, length(p - c3) - 0.34, 0.5);
+  d = smin(d, length(p - c4) - 0.2, 0.55);
+  d += sin(p.x*4.0 + t*3.0)*sin(p.y*3.5 - t*2.0)*sin(p.z*4.0 + t*1.7)*0.035;
+  return d;
+}
+vec3 nrm(vec3 p){
+  vec2 e = vec2(0.0015, 0.0);
+  return normalize(vec3(map(p + e.xyy) - map(p - e.xyy), map(p + e.yxy) - map(p - e.yxy), map(p + e.yyx) - map(p - e.yyx)));
+}
+// dark studio: soft overhead light, two vertical strips, faint horizon
+vec3 env(vec3 r){
+  float top = smoothstep(0.55, 0.95, r.y);
+  float s1 = smoothstep(0.07, 0.0, abs(r.x - 0.5))*smoothstep(-0.3, 0.5, r.y);
+  float s2 = smoothstep(0.04, 0.0, abs(r.x + 0.75))*0.55;
+  float hz = smoothstep(0.12, 0.0, abs(r.y + 0.02))*0.22;
+  return vec3(top*0.9 + s1*1.5 + s2 + hz);
+}
+// labradorescence: deep blue -> teal -> brass -> copper
+vec3 lab(float x){
+  x = fract(x);
+  vec3 a = vec3(0.10, 0.25, 0.85), b = vec3(0.08, 0.68, 0.62), c = vec3(0.85, 0.72, 0.30), d = vec3(0.82, 0.42, 0.20);
+  return x < 0.333 ? mix(a, b, x*3.0) : (x < 0.666 ? mix(b, c, (x - 0.333)*3.0) : mix(c, a*0.6 + d*0.4, (x - 0.666)*3.0));
+}
+void main(){
+  vec2 uv = (gl_FragCoord.xy - 0.5*uRes)/uRes.y - uCam.xy;
+  vec3 ro = vec3(0.0, 0.0, uCam.z), rd = normalize(vec3(uv, -1.9));
+  vec3 col = vec3(0.0);
+  float b = dot(ro, rd), c = dot(ro, ro) - 3.4, h = b*b - c;
+  if (h > 0.0) {
+    float t = max(0.0, -b - sqrt(h)), tmax = -b + sqrt(h);
+    bool hit = false;
+    // track the ray's closest pass so the silhouette can be faded over about a pixel instead of cut hard
+    float md = 1e9, mt = t, pw = 1.5/(uRes.y*1.9);
+    for (int i = 0; i < 80; i++) {
+      float d = map(ro + rd*t);
+      if (d < md) { md = d; mt = t; }
+      if (d < 0.0012) { hit = true; break; }
+      t += d*0.9;
+      if (t > tmax) break;
+    }
+    float cov = hit ? 1.0 : 1.0 - smoothstep(0.0, pw*mt, md);
+    if (cov > 0.0) {
+      vec3 p = ro + rd*(hit ? t : mt), n = nrm(p), r = reflect(rd, n);
+      float fr = pow(1.0 - max(dot(-rd, n), 0.0), 3.0);
+      vec3 e = env(r);
+      vec3 chrome = e*vec3(0.80, 0.82, 0.86) + vec3(0.012, 0.013, 0.016);
+      vec3 fd = normalize(vec3(sin(uTime*0.11)*0.8 + uMouse.x*0.6, 0.55 + uMouse.y*0.4, 0.75));
+      float fl = pow(max(dot(n, fd), 0.0), 3.5);
+      vec3 ir = lab(dot(n, vec3(0.35, 0.55, 0.25))*1.3 + fr*0.5 + uTime*0.015);
+      chrome = mix(chrome, chrome*0.35 + ir*(0.18 + e.r*0.8), fl*uFlash);
+      chrome += fr*0.10*ir*uFlash;
+      col = (1.0 - exp(-chrome*1.5))*uBright*cov;
+    }
+  }
+  col += (fract(sin(dot(gl_FragCoord.xy + fract(uTime)*91.0, vec2(12.9898, 78.233)))*43758.5453) - 0.5)*0.018;
+  gl_FragColor = vec4(max(col, 0.0), 1.0);
+}`;
+function sh(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+let prog;
+try {
+  prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+} catch (e) { root.classList.add('no-gl'); return; }
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const loc = gl.getAttribLocation(prog, 'p');
+gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(prog, n);
+const uRes = U('uRes'), uTime = U('uTime'), uFlash = U('uFlash'), uBright = U('uBright'), uMouse = U('uMouse'), uCam = U('uCam');
+
+let scale = 0.85, W = 1, H = 1;
+function resize() {
+  W = innerWidth; H = innerHeight;
+  const pr = Math.min(devicePixelRatio || 1, 1.5) * scale;
+  cv.width = Math.max(1, Math.round(W * pr)); cv.height = Math.max(1, Math.round(H * pr));
+  gl.viewport(0, 0, cv.width, cv.height);
+}
+resize();
+addEventListener('resize', resize);
+
+const mouse = { x: 0, y: 0, tx: 0, ty: 0 };
+addEventListener('pointermove', e => { mouse.tx = (e.clientX / W) * 2 - 1; mouse.ty = -((e.clientY / H) * 2 - 1); }, { passive: true });
+let workHover = 0;
+document.querySelectorAll('.wi').forEach(work => {
+  ['pointerenter', 'focus'].forEach(ev => work.addEventListener(ev, () => { workHover = 1; }));
+  ['pointerleave', 'blur'].forEach(ev => work.addEventListener(ev, () => { workHover = 0; }));
+});
+
+const cam = { x: 0, y: 0, z: 4.3, flash: 0.75, bright: 1 };
+let t = 0, last = performance.now(), frames = 0, fpsT = last, lowCount = 0, first = true;
+gl.lost = false;
+cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl.lost = true; root.classList.add('no-gl'); });
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  t += dt * (reduced ? 0.25 : 1);
+  const aspect = W / H, narrow = aspect < 0.9;
+  const p = clamp(scrollY / H, 0, 1), s = p * p * (3 - 2 * p);
+  // hero: form sits upper-right; once scrolled it shrinks to the right edge and dims
+  const hx = narrow ? 0 : Math.min(0.4, aspect * 0.19), hy = narrow ? 0.16 : 0.06;
+  // on portrait screens the form is sized to the width, not the height
+  const zHero = narrow ? Math.max(5, 4.4 / aspect) : 4.3;
+  const k = first ? 1 : 1 - Math.pow(0.03, dt);
+  first = false;
+  cam.x = lerp(cam.x, lerp(hx, narrow ? 0.1 : aspect * 0.36, s), k);
+  cam.y = lerp(cam.y, lerp(hy, narrow ? 0.12 : 0.02, s), k);
+  cam.z = lerp(cam.z, lerp(zHero, narrow ? zHero * 1.4 : 6.0, s), k);
+  cam.bright = lerp(cam.bright, lerp(1, 0.55, s) + workHover * 0.35, k);
+  cam.flash = lerp(cam.flash, 0.75 + workHover * 0.5, 1 - Math.pow(0.08, dt));
+  if (!reduced) { mouse.x = lerp(mouse.x, mouse.tx, k * 0.6); mouse.y = lerp(mouse.y, mouse.ty, k * 0.6); }
+  if (!gl.lost) {
+    gl.uniform2f(uRes, cv.width, cv.height);
+    gl.uniform1f(uTime, t);
+    gl.uniform1f(uFlash, cam.flash);
+    gl.uniform1f(uBright, cam.bright);
+    gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.uniform3f(uCam, cam.x, cam.y, cam.z);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  // adaptive resolution: drop render scale if the device struggles
+  frames++;
+  if (now - fpsT > 2000) {
+    const fps = frames * 1000 / (now - fpsT); frames = 0; fpsT = now;
+    if (fps < 40 && scale > 0.45 && !document.hidden) { if (++lowCount >= 2) { scale = Math.max(0.45, scale - 0.1); resize(); lowCount = 0; } } else lowCount = 0;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

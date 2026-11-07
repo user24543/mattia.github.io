@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>circa</title>
+<meta name="description" content="circa — the circadian rhythm, the body's 24-hour clock. an interactive study by mattia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fragment+Mono:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --panel:#08080a;
+  --fg:#e9e7e2;
+  --mute:#8b8d94;
+  --dim:#55575e;
+  --line:rgba(233,231,226,.13);
+  --sun:#d9c56b;
+  --body:#39c9b6;
+  --mel:#6f9bff;
+  --temp:#df8a4b;
+  --lab:linear-gradient(100deg,#e9e7e2 0%,#6f9bff 18%,#39c9b6 34%,#d9c56b 50%,#df8a4b 62%,#6f9bff 80%,#e9e7e2 100%);
+  --f-display:"Syne","Helvetica Neue",Arial,sans-serif;
+  --f-mono:"Fragment Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --gut:clamp(16px,4vw,56px);
+  --gut-l:max(var(--gut),env(safe-area-inset-left,0px));
+  --gut-r:max(var(--gut),env(safe-area-inset-right,0px));
+  color-scheme:dark;
+}
+html{background:var(--bg);scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--fg);font:400 13px/1.65 var(--f-mono);text-transform:lowercase;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-x:clip}
+::selection{background:var(--fg);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--fg);outline-offset:4px}
+.wrap{padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.ln{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s cubic-bezier(.2,.8,.2,1)}
+.ln:hover,.ln:focus-visible{background-size:100% 1px}
+.grain{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.06;mix-blend-mode:overlay;background-image:var(--grain)}
+@keyframes sheen{to{background-position:-320% 0}}
+.top{position:fixed;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:calc(20px + env(safe-area-inset-top,0px)) var(--gut-r) 20px var(--gut-l);mix-blend-mode:difference;color:#fff}
+.mark{font:500 15px/1 var(--f-display);letter-spacing:-.02em}
+.nav{display:flex;gap:clamp(12px,2.2vw,28px)}
+@media (max-width:700px){.nav .opt{display:none}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;height:100vh;height:100svh;min-height:720px;overflow:hidden}
+.stage{position:absolute;inset:0}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.no-gl #world{display:none}
+.hero-copy{position:absolute;left:0;bottom:0;padding-bottom:calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;pointer-events:none;max-width:58%}
+.title{margin:0 0 0 -.04em;font:500 clamp(76px,11vw,200px)/.8 var(--f-display);letter-spacing:-.065em;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:var(--fg);transition:color .8s;pointer-events:auto}
+.title:hover{color:transparent;animation:sheen 7s linear infinite}
+.sub{margin:0;font:400 clamp(17px,1.6vw,23px)/1.25 var(--f-display);letter-spacing:-.01em}
+.hint{margin:0;color:var(--mute)}
+
+.panel{position:absolute;z-index:3;right:var(--gut-r);top:calc(72px + env(safe-area-inset-top,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:min(380px,35vw);display:flex;flex-direction:column;gap:14px;overflow:auto;scrollbar-width:thin}
+.group-h{color:var(--dim);margin:0 0 6px}
+.scen{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.sc{min-height:40px;padding:6px 10px;border:1px solid var(--line);background:rgba(0,0,0,.5);color:var(--mute);text-align:left;transition:color .2s,border-color .2s}
+.sc:hover{color:var(--fg)}
+.sc[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+.ctl{display:grid;gap:2px}
+.ctl-head{display:flex;justify-content:space-between;gap:10px;color:var(--mute)}
+.ctl-head output{color:var(--fg);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--mute)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--fg);border:0}
+input[type=range]::-moz-range-track{height:1px;background:var(--mute)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--fg);border:0}
+.read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.read div{padding:10px 0;display:grid;gap:1px;min-width:0}
+.read div+div{padding-left:12px;border-left:1px solid var(--line)}
+.read span{color:var(--dim);font-size:11px}
+.read b{font:500 clamp(18px,1.6vw,23px)/1.15 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.read .w b{color:var(--sun)}
+.read .b b{color:var(--body)}
+.acto{display:grid;gap:6px}
+.acto-head{display:flex;justify-content:space-between;gap:10px;color:var(--dim);font-size:11px}
+#acto{display:block;box-sizing:border-box;width:100%;aspect-ratio:16/10;max-width:100%;border:1px solid var(--line);background:rgba(0,0,0,.6)}
+.key{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--mute);font-size:11px}
+.key i{display:inline-block;width:12px;height:7px;margin-right:6px;vertical-align:0}
+.card{border:1px solid var(--line);background:rgba(0,0,0,.62);padding:16px;display:grid;gap:9px}
+.card h2{margin:0;font:500 clamp(22px,2vw,30px)/1.05 var(--f-display);letter-spacing:-.03em}
+.card p{margin:0;color:var(--mute)}
+.card p b{font-weight:400;color:var(--fg)}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tool{min-height:32px;padding:0 11px;border:1px solid var(--line);color:var(--mute);background:rgba(0,0,0,.45);transition:color .2s,border-color .2s}
+.tool:hover{color:var(--fg)}
+.tool[aria-pressed="true"]{color:var(--fg);border-color:var(--fg)}
+
+@media (max-width:900px){
+  .hero{height:auto;min-height:0;overflow:visible;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  .stage{position:relative;height:58vh;height:58svh;min-height:340px;margin-left:calc(-1 * var(--gut-l));margin-right:calc(-1 * var(--gut-r))}
+  .hero-copy{position:relative;max-width:none;padding-top:8px}
+  .panel{position:relative;right:auto;top:auto;bottom:auto;width:auto;overflow:visible;margin-top:28px}
+}
+
+/* ---------- sections ---------- */
+.sec{position:relative;padding-block:clamp(100px,13vw,190px) 0}
+.label{display:flex;justify-content:space-between;gap:16px;color:var(--mute);padding-bottom:14px;border-bottom:1px solid var(--line)}
+.label h2{font:inherit;margin:0}
+.lede{margin:clamp(36px,5vw,64px) 0 0;max-width:24ch;font:400 clamp(28px,3.6vw,54px)/1.1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+.lede em{font-style:normal;background:var(--lab);background-size:320% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sheen 14s linear infinite}
+@media (prefers-reduced-motion:reduce){.lede em,.title:hover{animation:none}}
+.prose{max-width:62ch;font-size:14px}
+.prose p{margin:0 0 1em}
+.term{margin-top:clamp(36px,5vw,56px);display:grid;grid-template-columns:minmax(0,14ch) minmax(0,1fr);gap:clamp(14px,3vw,40px);padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);align-items:baseline}
+.term b{font:500 clamp(19px,1.7vw,24px)/1.15 var(--f-display);letter-spacing:-.02em}
+.term p{margin:0;color:var(--mute);max-width:70ch}
+.term p i{font-style:normal;color:var(--fg)}
+@media (max-width:640px){.term{grid-template-columns:minmax(0,1fr)}}
+.path{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.step{padding:clamp(18px,2.2vw,28px);border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:grid;gap:8px;align-content:start;min-width:0}
+.step .n{color:var(--dim)}
+.step h3{margin:0;font:500 clamp(20px,1.9vw,27px)/1.05 var(--f-display);letter-spacing:-.025em}
+.step p{margin:0;color:var(--mute)}
+@media (max-width:900px){.path{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.path{grid-template-columns:minmax(0,1fr)}}
+.two{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:start}
+.plot{display:grid;gap:10px;min-width:0}
+.plot-head{display:flex;justify-content:space-between;gap:12px;color:var(--mute)}
+.plot-head b{font-weight:400;color:var(--fg);font-variant-numeric:tabular-nums}
+.plot canvas{display:block;box-sizing:border-box;width:100%;max-width:100%;border:1px solid var(--line);background:var(--panel)}
+#dayc{aspect-ratio:16/9}
+#cell{aspect-ratio:1/1}
+#loop{aspect-ratio:16/10}
+.legend{display:flex;gap:6px 18px;flex-wrap:wrap;color:var(--mute)}
+.legend i{display:inline-block;width:14px;height:2px;margin-right:7px;vertical-align:3px}
+.stats{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats div{padding:20px 0;display:grid;gap:4px;align-content:start;min-width:0}
+.stats div+div{padding-left:clamp(14px,2vw,28px);border-left:1px solid var(--line)}
+.stats b{font:500 clamp(28px,3.4vw,52px)/1 var(--f-display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.stats span{color:var(--mute)}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stats div:nth-child(3){padding-left:0;border-left:0}.stats div:nth-child(n+3){border-top:1px solid var(--line)}}
+.btn{min-height:38px;padding:0 16px;border:1px solid var(--line);color:var(--mute)}
+.btn:hover{color:var(--fg);border-color:var(--fg)}
+.ideas{margin-top:clamp(40px,6vw,80px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}
+.idea{padding:clamp(24px,3vw,40px) 0;border-bottom:1px solid var(--line);display:grid;gap:12px;align-content:start}
+.idea:nth-child(odd){padding-right:clamp(20px,3vw,48px);border-right:1px solid var(--line)}
+.idea:nth-child(even){padding-left:clamp(20px,3vw,48px)}
+.idea h3{margin:0;font:500 clamp(26px,2.6vw,38px)/1 var(--f-display);letter-spacing:-.03em}
+.idea p{margin:0;color:var(--mute);max-width:52ch}
+.idea .k{color:var(--dim)}
+.foot{margin-top:clamp(110px,14vw,200px);padding-block:20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;color:var(--dim);border-top:1px solid var(--line)}
+.foot span:last-child{max-width:64ch}
+@media (max-width:860px){
+  .two,.ideas{grid-template-columns:minmax(0,1fr)}
+  .idea:nth-child(odd){padding-right:0;border-right:0}
+  .idea:nth-child(even){padding-left:0}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="mark" href="#top">circa</a>
+  <nav class="nav" aria-label="sections">
+    <a class="ln opt" href="#clock">clock</a>
+    <a class="ln opt" href="#loop-sec">loop</a>
+    <a class="ln opt" href="#cave">cave</a>
+    <a class="ln opt" href="#against">against it</a>
+    <a class="ln" href="index.html">← mattia</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="t">
+    <div class="stage">
+      <canvas id="world" aria-hidden="true"></canvas>
+      <canvas id="dial" role="img" aria-label="a chrome globe lit by a moving sun, inside a 24-hour dial. a gold marker shows the time of day in the world, a teal marker shows the time your body thinks it is, and a blue arc shows your body's night."></canvas>
+    </div>
+    <div class="hero-copy">
+      <h1 class="title" id="t">circa</h1>
+      <p class="sub">the circadian rhythm: a clock inside you that runs about a day</p>
+      <p class="hint">pick how you live, then watch your body keep up, or fall behind</p>
+    </div>
+    <aside class="panel" aria-label="your days">
+      <div>
+        <p class="group-h">how you live</p>
+        <div class="scen" id="scen" role="group" aria-label="how you live"></div>
+      </div>
+      <div class="read">
+        <div class="w"><span>the world</span><b id="rWorld">07:00</b></div>
+        <div class="b"><span>your body</span><b id="rBody">07:00</b></div>
+        <div><span>body day</span><b id="rPer">—</b></div>
+      </div>
+      <div class="acto">
+        <div class="acto-head"><span>your sleep, one row per day (two days per row)</span><span>day <b id="rDay">1</b></span></div>
+        <canvas id="acto" role="img" aria-label="an actogram: each row is one day, plotted twice side by side. bars show when you slept, shading shows daylight. straight columns mean your clock is in step; a slanted column means it is drifting."></canvas>
+        <div class="key"><span><i style="background:var(--fg)"></i>asleep</span><span><i style="background:rgba(217,197,107,.35)"></i>daylight</span><span><i style="background:rgba(233,231,226,.12)"></i>lamp or room light</span></div>
+      </div>
+      <article class="card" aria-live="polite">
+        <h2 id="cHead">ordinary days</h2>
+        <p id="cText"></p>
+      </article>
+      <div class="ctl">
+        <div class="ctl-head"><label for="tau">your clock's own period</label><output id="tauO" for="tau">24.2 h</output></div>
+        <input type="range" id="tau" min="23.6" max="25" step="0.05" value="24.2">
+      </div>
+      <div class="ctl">
+        <div class="ctl-head"><label for="speed">speed</label><output id="speedO" for="speed">6 hours a second</output></div>
+        <input type="range" id="speed" min="0" max="1.7" step="0.01" value="0.78">
+      </div>
+      <div class="tools">
+        <button class="tool" id="tPause" type="button" aria-pressed="false">pause</button>
+        <button class="tool" id="tReset" type="button">start over</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="sec wrap" id="clock" aria-labelledby="c-h">
+    <div class="label"><h2 id="c-h" class="scr">( 01 · how the clock works )</h2><span>01 / 04</span></div>
+    <p class="lede">light sets a <em>master clock</em> in your brain, and it keeps the rest of you in time.</p>
+    <div class="term">
+      <b>chronobiology</b>
+      <p>the study of timing in living things: daily rhythms, tides, seasons and the yearly cycles of plants and animals. the circadian rhythm, from the latin <i>circa diem</i>, "about a day", is its best-known subject.</p>
+    </div>
+    <div class="path">
+      <article class="step"><span class="n">1 · light</span><h3>the eye</h3><p>a small set of cells in the retina contain melanopsin, a pigment most sensitive to blue light. they don't help you see; they measure how bright the day is.</p></article>
+      <article class="step"><span class="n">2 · the master clock</span><h3>the scn</h3><p>the suprachiasmatic nucleus, about 20,000 neurons above the crossing of the optic nerves. on its own it ticks with a period a little over 24 hours; the light signal nudges it into step with the sun.</p></article>
+      <article class="step"><span class="n">3 · the signal</span><h3>melatonin</h3><p>the scn tells the pineal gland when to release melatonin. it rises about two hours before your usual bedtime and is shut off by bright light.</p></article>
+      <article class="step"><span class="n">4 · the body</span><h3>everything else</h3><p>body temperature, hormones, digestion and alertness follow along. your temperature bottoms out about two hours before you usually wake.</p></article>
+    </div>
+    <div class="two">
+      <div class="plot">
+        <div class="plot-head"><span>a day inside you, by body time</span><span>body <b id="dBody">07:00</b></span></div>
+        <canvas id="dayc" role="img" aria-label="schematic curves over 24 hours of body time: melatonin high at night, core temperature lowest before dawn, alertness dipping in the early morning and after lunch. a cursor follows the body clock from the simulation above."></canvas>
+        <div class="legend"><span><i style="background:var(--mel)"></i>melatonin</span><span><i style="background:var(--temp)"></i>core temperature</span><span><i style="background:var(--fg)"></i>alertness</span></div>
+      </div>
+      <div class="prose">
+        <p>the curves are schematic: the shape, not anyone's measurements. the cursor follows the body clock running in the panel above, so if you fly east or move into the cave, it shows what your body is doing while the world says something else.</p>
+        <p>an actogram, like the one in the panel, is how chronobiologists draw this. each row is one day, plotted twice side by side so a night that crosses midnight stays in one piece. when the clock is in step, sleep stacks into a straight column. when it drifts, the column leans.</p>
+        <p>the model behind it is deliberately small: one clock with its own period, and a rule for how light moves it. light in the evening and early night pushes the clock later; light in the early morning pulls it earlier. that rule, the phase response curve, is the core idea of how light sets the clock.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="loop-sec" aria-labelledby="l-h">
+    <div class="label"><h2 id="l-h" class="scr">( 02 · the loop inside each cell )</h2><span>02 / 04</span></div>
+    <p class="lede">the clock is a set of genes that switch <em>themselves</em> off.</p>
+    <div class="two">
+      <div class="plot">
+        <div class="plot-head"><span>one cell</span><span>gene <b id="gState">on</b></span></div>
+        <canvas id="cell" role="img" aria-label="an animated cell. in the nucleus the per and cry genes glow when switched on and release messenger rna, which leaves the nucleus and is made into per and cry proteins. as proteins build up they move back into the nucleus and switch the genes off, then break down, and the cycle starts again."></canvas>
+      </div>
+      <div class="plot">
+        <div class="plot-head"><span>the last two days of the loop</span><span>hour <b id="gHour">0</b></span></div>
+        <canvas id="loop" role="img" aria-label="three curves rising and falling over 48 hours, each a few hours behind the last: messenger rna, protein in the cell, and protein back in the nucleus"></canvas>
+        <div class="legend"><span><i style="background:var(--body)"></i>per · cry rna</span><span><i style="background:var(--temp)"></i>protein in the cell</span><span><i style="background:var(--sun)"></i>protein back in the nucleus</span></div>
+        <div class="prose" style="margin-top:14px">
+          <p>two proteins, clock and bmal1, pair up and switch on the period and cryptochrome genes. their messages leave the nucleus and are made into per and cry proteins. those build up for hours, pair up, move back into the nucleus and block clock and bmal1, switching off their own genes. once they break down, the genes switch on again. one turn takes about a day.</p>
+          <p>the delays in each step are what make it slow. jeffrey hall, michael rosbash and michael young worked out this loop in fruit flies and shared the 2017 nobel prize for it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="cave" aria-labelledby="v-h">
+    <div class="label"><h2 id="v-h" class="scr">( 03 · without the sun )</h2><span>03 / 04</span></div>
+    <p class="lede">deep underground, with no daylight, the human day <em>stretches</em> past 24 hours.</p>
+    <div class="stats">
+      <div><b>24.2 h</b><span>the average human clock, measured in a lab without time cues in 1999</span></div>
+      <div><b>~2 months</b><span>michel siffre alone in an alpine cave in 1962, losing track of weeks</span></div>
+      <div><b>~48 h</b><span>how long some of his "days" lasted during six months in a texas cave in 1972</span></div>
+      <div><b>40 days</b><span>the deep time experiment in a french cave in 2021; the team guessed about 30</span></div>
+    </div>
+    <div class="two">
+      <div class="prose">
+        <p>in 1962 the french speleologist michel siffre lived alone in a cave in the alps for about two months, with no clock and no daylight, phoning the surface each time he woke, ate and slept. when he was brought out he was sure far less time had passed than really had. his days had quietly grown longer than 24 hours.</p>
+        <p>in 1972 he spent about six months in midnight cave in texas. his sleep and waking drifted later every day, and at times a single cycle stretched to around 48 hours.</p>
+      </div>
+      <div class="prose">
+        <p>in bunkers in germany in the 1960s, jürgen aschoff and rütger wever found the same thing: without time cues, people free-run on days of roughly 25 hours, and the sleep cycle can even split away from the body-temperature cycle. later, more careful lab work put the clock itself at about 24.2 hours on average; the lamp people switch on while awake pushes it later still.</p>
+        <p><button class="btn" id="goCave" type="button">try the cave above</button></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="against" aria-labelledby="a-h">
+    <div class="label"><h2 id="a-h" class="scr">( 04 · living against the clock )</h2><span>04 / 04</span></div>
+    <div class="ideas">
+      <article class="idea"><span class="k">i.</span><h3>east is harder</h3><p>flying east means your clock has to move earlier. most human clocks run a little long, so they find delaying easier than advancing. try both: "fly 8 hours east" above takes several days to settle.</p></article>
+      <article class="idea"><span class="k">ii.</span><h3>owls and larks</h3><p>people differ in when their clock runs, called their chronotype. teenagers drift later through puberty and swing back earlier in their twenties, which is part of why early school starts are hard on them.</p></article>
+      <article class="idea"><span class="k">iii.</span><h3>a clock in every cell</h3><p>the liver, heart, lungs and fat all carry their own copies of the loop. the scn keeps them in step, but meal times can pull the liver's clock on its own.</p></article>
+      <article class="idea"><span class="k">iv.</span><h3>light at night</h3><p>the cells that set the clock respond most to blue light. bright screens and lamps late in the evening suppress melatonin and push the clock later, the same way a lamp does in the cave.</p></article>
+    </div>
+  </section>
+
+  <footer class="foot wrap">
+    <a class="ln" href="index.html">← back to mattia</a>
+    <span>circa — a study by mattia, 2026</span>
+    <span>both models are simplified teaching versions: one body clock with a light response curve, and a three-step gene loop scaled to a 24-hour cycle. the daily curves are schematic.</span>
+  </footer>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const root = document.documentElement;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const mod24 = x => ((x % 24) + 24) % 24;
+const wrap12 = x => { x = mod24(x); return x > 12 ? x - 24 : x; };
+const hhmm = h => { h = mod24(h); const m = Math.floor(h * 60 + 1e-6); return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+const css = n => getComputedStyle(root).getPropertyValue(n).trim();
+function sizeCanvas(cv) {
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return null;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { x, w, h };
+}
+
+/* ---------- grain + heading decode ---------- */
+(() => {
+  const c = document.createElement('canvas'); c.width = c.height = 140;
+  const x = c.getContext('2d'), d = x.createImageData(140, 140);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+  root.style.setProperty('--grain', `url(${c.toDataURL()})`);
+})();
+const GLYPHS = '01·/\\_<>=+*#';
+function scramble(el, dur = 650) {
+  if (reduced) return;
+  const final = el.dataset.final || (el.dataset.final = el.textContent);
+  const t0 = performance.now();
+  cancelAnimationFrame(el._scr);
+  const step = now => {
+    const p = clamp((now - t0) / dur, 0, 1);
+    let out = '';
+    for (let i = 0; i < final.length; i++) out += (final[i] === ' ' || i / final.length < p * 1.3 - 0.3) ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+    el.textContent = p >= 1 ? final : out;
+    if (p < 1) el._scr = requestAnimationFrame(step);
+  };
+  el._scr = requestAnimationFrame(step);
+}
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { scramble(e.target); io.unobserve(e.target); } }), { threshold: 0.6 });
+  $$('.scr').forEach(el => io.observe(el));
+}
+
+/* =====================================================================
+   THE BODY CLOCK MODEL
+   phi is the body's internal time in hours. it advances at 24/tau per hour,
+   plus a push from light given by a phase response curve: light a few hours
+   before the body's 05:00 temperature low delays the clock, light a few hours
+   after it advances the clock. light is scaled so bright light saturates.
+   ===================================================================== */
+const SCEN = [
+  { key: 'normal', label: 'ordinary days' },
+  { key: 'jet', label: 'fly 8 hours east' },
+  { key: 'shift', label: 'work night shifts' },
+  { key: 'cave', label: 'live in a cave' }
+];
+const M = { tau: 24.2, K: 0.6, dC: -2, sig: 3, lamp: 150 };
+const sim = { t: 7, tz: 0, phi: 7, scen: 'normal', jetAt: null, jetDone: null, crossings: [], lastPhiWrap: 7, paused: false };
+const days = new Map();      // local day -> { sleep: Uint8Array(96), light: Uint8Array(96) }
+function dayRow(d) { let r = days.get(d); if (!r) { r = { sleep: new Uint8Array(96), light: new Uint8Array(96) }; days.set(d, r); if (days.size > 80) days.delete(Math.min(...days.keys())); } return r; }
+const prc = p => -Math.exp(-(wrap12(p - 1 - M.dC) ** 2) / (2 * M.sig * M.sig)) + Math.exp(-(wrap12(p - 9 - M.dC) ** 2) / (2 * M.sig * M.sig));
+function localHour() { return mod24(sim.t + sim.tz); }
+function state(h, ph) {
+  // returns [asleep, lux, kind]  kind: 0 none, 1 artificial, 2 sun
+  let asleep;
+  if (sim.scen === 'cave') asleep = ph >= 23.5 || ph < 7.5;
+  else if (sim.scen === 'shift') asleep = h >= 8 && h < 16;
+  else asleep = h >= 23 || h < 7;
+  const sunUp = sim.scen !== 'cave' && h >= 6.5 && h < 19.5;
+  let lux = 0, kind = sunUp ? 2 : 0;
+  if (!asleep) {
+    if (sim.scen === 'cave') { lux = M.lamp; kind = 1; }
+    else if (sim.scen === 'shift' && (h >= 22 || h < 6)) { lux = 400; kind = 1; }
+    else if (sunUp) lux = 1500;
+    else { lux = 150; kind = 1; }
+  }
+  return [asleep, lux, kind];
+}
+let lastState = [false, 0, 0];
+function stepSim(hours) {
+  const dt = 1 / 60;
+  let n = Math.round(hours / dt);
+  while (n-- > 0) {
+    const h = localHour(), ph = mod24(sim.phi);
+    const [asleep, lux, kind] = state(h, ph);
+    lastState = [asleep, lux, kind];
+    sim.phi += (24 / M.tau + M.K * (lux / (lux + 300)) * prc(ph)) * dt;
+    const d = Math.floor((sim.t + sim.tz) / 24), bin = Math.floor(h * 4) % 96, row = dayRow(d);
+    if (asleep) row.sleep[bin] = 1;
+    row.light[bin] = Math.max(row.light[bin], kind);
+    sim.t += dt;
+    const w = Math.floor(sim.phi / 24);
+    if (w !== sim.lastPhiWrap) { sim.lastPhiWrap = w; sim.crossings.push(sim.t); if (sim.crossings.length > 6) sim.crossings.shift(); }
+    if (sim.scen === 'jet' && sim.jetDone === null && sim.jetAt !== null && sim.t - sim.jetAt > 24 && Math.abs(wrap12(sim.phi - (sim.t + sim.tz))) < 0.5) sim.jetDone = sim.t;
+  }
+}
+function bodyPeriod() {
+  const c = sim.crossings; if (c.length < 3) return null;
+  return (c[c.length - 1] - c[0]) / (c.length - 1);
+}
+function setScen(key, fresh) {
+  if (key === 'jet' && sim.scen !== 'normal' && sim.scen !== 'jet') fresh = true;
+  if (fresh) {
+    // start from two settled ordinary days, so the record shows the change
+    sim.t = 7; sim.tz = 0; sim.phi = 6.8; sim.crossings = []; sim.lastPhiWrap = 0; sim.jetAt = null; sim.jetDone = null; days.clear();
+    sim.scen = 'normal'; stepSim(48);
+  }
+  sim.scen = key;
+  if (key === 'jet') { sim.tz += 8; sim.jetAt = sim.t; sim.jetDone = null; }
+  $$('.sc').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === key)));
+  $('#cHead').textContent = SCEN.find(s => s.key === key).label;
+  writeCard(true);
+}
+const scenEl = $('#scen');
+SCEN.forEach(s => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'sc'; b.dataset.k = s.key; b.textContent = s.label;
+  b.setAttribute('aria-pressed', String(s.key === 'normal'));
+  // flying is an event on top of your current life; the others restart the record
+  b.addEventListener('click', () => setScen(s.key, s.key !== 'jet' ? sim.scen !== s.key : false));
+  scenEl.appendChild(b);
+});
+let cardT = 0;
+function writeCard(now) {
+  if (!now && (cardT -= 1) > 0) return; cardT = 6;
+  const off = wrap12(sim.phi - (sim.t + sim.tz)), per = bodyPeriod();
+  const offTxt = Math.abs(off) < 1.2 ? 'in step with local time, give or take an hour across the day' : `${Math.abs(off).toFixed(1)} h ${off < 0 ? 'behind' : 'ahead of'} local time`;
+  let txt = '';
+  if (sim.scen === 'normal') txt = `<b>morning light resets the clock every day.</b> left alone it would run about ${M.tau.toFixed(1)} hours, so each morning daylight nudges it a little ${M.tau >= 24 ? 'earlier' : 'later'}, and it stays locked to the sun. right now your body is ${offTxt}.`;
+  else if (sim.scen === 'jet') {
+    const daysSince = sim.jetAt === null ? 0 : (sim.t - sim.jetAt) / 24;
+    txt = sim.jetDone !== null
+      ? `<b>caught up after about ${((sim.jetDone - sim.jetAt) / 24).toFixed(1)} days.</b> daylight at the new times pulled your clock forward until it matched local time again.`
+      : `<b>you landed 8 hours east.</b> local clocks jumped forward, but your body is ${offTxt}. daylight at the new times pulls it forward a bit each day; ${daysSince.toFixed(1)} days so far.`;
+  } else if (sim.scen === 'shift') txt = `<b>working nights.</b> bright light at work and dark days asleep drag the clock later. your body is ${offTxt}. in this model it adapts; in real life daylight on the way home and normal days off usually stop it.`;
+  else txt = `<b>no daylight, only a lamp when you're awake.</b> nothing resets the clock, so it free-runs${per ? `: each body day is lasting about ${per.toFixed(1)} hours` : ''}. you go to sleep a little later every day, and the column in the actogram leans to the right.`;
+  $('#cText').innerHTML = txt;
+}
+
+/* controls */
+const tauEl = $('#tau'), speedEl = $('#speed');
+let speed = 6;
+function readControls() {
+  M.tau = +tauEl.value; $('#tauO').textContent = `${M.tau.toFixed(2)} h`;
+  speed = Math.pow(10, +speedEl.value); $('#speedO').textContent = `${speed < 10 ? speed.toFixed(1) : Math.round(speed)} hours a second`;
+  writeCard(true);
+}
+[tauEl, speedEl].forEach(el => el.addEventListener('input', readControls));
+const tPause = $('#tPause');
+tPause.addEventListener('click', () => { sim.paused = !sim.paused; tPause.setAttribute('aria-pressed', String(sim.paused)); tPause.textContent = sim.paused ? 'resume' : 'pause'; });
+$('#tReset').addEventListener('click', () => setScen(sim.scen === 'jet' ? 'normal' : sim.scen, true));
+$('#goCave').addEventListener('click', () => { setScen('cave', sim.scen !== 'cave'); $('#top').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); });
+readControls();
+setScen('normal', true);
+
+/* ---------- actogram ---------- */
+const actoCv = $('#acto');
+function drawActo() {
+  const c = sizeCanvas(actoCv); if (!c) return;
+  const { x, w, h } = c, pad = { l: 26, r: 6, t: 6, b: 16 }, ROWS = 14;
+  x.clearRect(0, 0, w, h);
+  const cw = (w - pad.l - pad.r) / 192, rh = (h - pad.t - pad.b) / ROWS;
+  const today = Math.floor((sim.t + sim.tz) / 24);
+  const first = today - ROWS + 1;
+  x.font = '10px "Fragment Mono", monospace';
+  for (let r = 0; r < ROWS; r++) {
+    const d = first + r, y = pad.t + r * rh;
+    for (let half = 0; half < 2; half++) {
+      const row = days.get(d + half); if (!row) continue;
+      for (let b = 0; b < 96; b++) {
+        const X = pad.l + (half * 96 + b) * cw;
+        if (row.light[b] === 2) { x.fillStyle = 'rgba(217,197,107,.16)'; x.fillRect(X, y, cw + 0.5, rh); }
+        else if (row.light[b] === 1) { x.fillStyle = 'rgba(233,231,226,.08)'; x.fillRect(X, y, cw + 0.5, rh); }
+        if (row.sleep[b]) { x.fillStyle = css('--fg'); x.fillRect(X, y + rh * 0.22, cw + 0.5, rh * 0.56); }
+      }
+    }
+    if (d >= 1 && (d % 2 === 0 || ROWS < 10)) { x.fillStyle = css('--dim'); x.textAlign = 'right'; x.textBaseline = 'middle'; x.fillText(String(d), pad.l - 5, y + rh / 2); }
+  }
+  // now marker
+  const nowX = pad.l + (localHour() / 24 * 96) * cw;
+  x.strokeStyle = css('--body'); x.beginPath(); x.moveTo(nowX, pad.t + (ROWS - 1) * rh); x.lineTo(nowX, pad.t + ROWS * rh); x.stroke();
+  x.fillStyle = css('--dim'); x.textBaseline = 'alphabetic';
+  [[0, '0'], [12, '12'], [24, '24'], [36, '12'], [48, '24 h']].forEach(([hr, l], i) => { x.textAlign = i === 0 ? 'left' : i === 4 ? 'right' : 'center'; x.fillText(l, pad.l + hr * 4 * cw, h - 3); });
+  x.strokeStyle = 'rgba(233,231,226,.18)'; x.beginPath(); x.moveTo(pad.l + 96 * cw, pad.t); x.lineTo(pad.l + 96 * cw, pad.t + ROWS * rh); x.stroke();
+}
+
+/* ---------- a day inside you (schematic) ---------- */
+const g = (x, c, s) => Math.exp(-(wrap12(x - c) ** 2) / (2 * s * s));
+const CURVES = [
+  { col: '--mel', f: b => g(b, 3, 3.2) },
+  { col: '--temp', f: b => 0.5 - 0.42 * Math.cos(2 * Math.PI * (b - 5) / 24) - 0.06 * Math.cos(4 * Math.PI * (b - 5) / 24) },
+  { col: '--fg', f: b => clamp(0.48 - 0.36 * Math.cos(2 * Math.PI * (b - 4) / 24) - 0.13 * g(b, 14.5, 1.5) + 0.1 * g(b, 10, 2.2) + 0.08 * g(b, 20, 1.8), 0.04, 1) }
+];
+const dayCv = $('#dayc');
+function drawDay() {
+  const c = sizeCanvas(dayCv); if (!c) return;
+  const { x, w, h } = c, pad = { l: 12, r: 12, t: 14, b: 26 };
+  x.clearRect(0, 0, w, h);
+  const X = b => pad.l + b / 24 * (w - pad.l - pad.r), Y = v => pad.t + (1 - v) * (h - pad.t - pad.b);
+  x.fillStyle = 'rgba(111,155,255,.06)'; x.fillRect(X(0), pad.t, X(7) - X(0), h - pad.t - pad.b); x.fillRect(X(23), pad.t, X(24) - X(23), h - pad.t - pad.b);
+  x.font = '11px "Fragment Mono", monospace'; x.fillStyle = css('--dim'); x.textAlign = 'center';
+  [0, 6, 12, 18, 24].forEach(b => { x.strokeStyle = 'rgba(233,231,226,.07)'; x.beginPath(); x.moveTo(X(b), pad.t); x.lineTo(X(b), h - pad.b); x.stroke(); x.textAlign = b === 0 ? 'left' : b === 24 ? 'right' : 'center'; x.fillText(hhmm(b === 24 ? 0 : b), X(b), h - 8); });
+  x.textAlign = 'left'; x.fillText('usual sleep', X(0.2), pad.t + 10);
+  CURVES.forEach(cv => { x.strokeStyle = css(cv.col); x.lineWidth = 1.6; x.beginPath(); for (let i = 0; i <= 240; i++) { const b = i / 10; i ? x.lineTo(X(b), Y(cv.f(b))) : x.moveTo(X(b), Y(cv.f(b))); } x.stroke(); });
+  x.lineWidth = 1;
+  const b = mod24(sim.phi);
+  x.strokeStyle = css('--body'); x.beginPath(); x.moveTo(X(b), pad.t); x.lineTo(X(b), h - pad.b); x.stroke();
+  CURVES.forEach(cv => { x.fillStyle = css(cv.col); x.beginPath(); x.arc(X(b), Y(cv.f(b)), 3.5, 0, Math.PI * 2); x.fill(); });
+  $('#dBody').textContent = hhmm(b);
+}
+
+/* =====================================================================
+   THE GENE LOOP: a goodwin-type oscillator (rna -> protein -> nuclear
+   repressor -| rna), with its time scaled so one turn is 24 hours.
+   ===================================================================== */
+const GW = { v1: 0.7, K1: 1, n: 4, v2: 0.35, K2: 1, k3: 0.7, v4: 0.35, K4: 1, k5: 0.7, v6: 0.35, K6: 1, scale: 23.66 / 24 };
+const gw = { X: 0.1, Y: 0.1, Z: 0.1, hour: 0, hist: [], max: [1, 1, 1] };
+function stepGW(hours) {
+  const dt = 0.02; let n = Math.round(hours / dt);
+  while (n-- > 0) {
+    const { X, Y, Z } = gw, p = GW, s = dt * p.scale;
+    const f = Math.pow(p.K1, p.n) / (Math.pow(p.K1, p.n) + Math.pow(Z, p.n));
+    gw.X += (p.v1 * f - p.v2 * X / (p.K2 + X)) * s;
+    gw.Y += (p.k3 * X - p.v4 * Y / (p.K4 + Y)) * s;
+    gw.Z += (p.k5 * Y - p.v6 * Z / (p.K6 + Z)) * s;
+    gw.hour += dt;
+    if (gw.hist.length === 0 || gw.hour - gw.hist[gw.hist.length - 1][0] >= 0.2) { gw.hist.push([gw.hour, gw.X, gw.Y, gw.Z, f]); if (gw.hist.length > 260) gw.hist.shift(); }
+  }
+}
+stepGW(24 * 12);
+gw.max = [1, 2, 3].map(i => Math.max(...gw.hist.map(r => r[i])));
+// how switched-on the genes are, rescaled to the loop's own range (0 = fully off, 1 = fully on)
+const fLo = Math.min(...gw.hist.map(r => r[4])), fHi = Math.max(...gw.hist.map(r => r[4]));
+const geneOn = f => clamp((f - fLo) / (fHi - fLo), 0, 1);
+const loopCv = $('#loop');
+function drawLoop() {
+  const c = sizeCanvas(loopCv); if (!c) return;
+  const { x, w, h } = c, pad = { l: 12, r: 12, t: 12, b: 24 };
+  x.clearRect(0, 0, w, h);
+  const t1 = gw.hour, t0 = t1 - 48;
+  const X = t => pad.l + (t - t0) / 48 * (w - pad.l - pad.r), Y = v => pad.t + (1 - v) * (h - pad.t - pad.b);
+  // shade where the gene is on
+  x.fillStyle = 'rgba(57,201,182,.1)';
+  for (let i = 0; i < gw.hist.length - 1; i++) {
+    const r = gw.hist[i], n = gw.hist[i + 1];
+    if (n[0] < t0 || geneOn(r[4]) <= 0.5) continue;
+    const a = X(Math.max(r[0], t0)); x.fillRect(a, pad.t, X(n[0]) - a + 0.5, h - pad.t - pad.b);
+  }
+  x.font = '11px "Fragment Mono", monospace'; x.fillStyle = css('--dim'); x.textAlign = 'center';
+  for (let k = Math.ceil(t0 / 12) * 12; k <= t1; k += 12) { x.strokeStyle = 'rgba(233,231,226,.07)'; x.beginPath(); x.moveTo(X(k), pad.t); x.lineTo(X(k), h - pad.b); x.stroke(); x.fillText(`${Math.round(k - t1)} h`, X(k), h - 7); }
+  ['--body', '--temp', '--sun'].forEach((col, i) => {
+    x.strokeStyle = css(col); x.lineWidth = 1.6; x.beginPath(); let started = false;
+    gw.hist.forEach(r => { if (r[0] < t0) return; const y = Y(r[i + 1] / gw.max[i] * 0.92); started ? x.lineTo(X(r[0]), y) : (x.moveTo(X(r[0]), y), started = true); });
+    x.stroke();
+  });
+  x.lineWidth = 1;
+  x.textAlign = 'left'; x.fillStyle = 'rgba(57,201,182,.7)'; x.fillText('shaded: gene switched on', pad.l + 4, pad.t + 10);
+  $('#gHour').textContent = Math.floor(mod24(gw.hour * 1)).toString().padStart(2, '0');
+}
+
+/* the cell: particles whose numbers follow the loop */
+const cellCv = $('#cell');
+const parts = { rna: [], prot: [], nuc: [] };
+function drawCell(dt) {
+  const c = sizeCanvas(cellCv); if (!c) return;
+  const { x, w, h } = c, cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.44, Rn = R * 0.42;
+  const last = gw.hist[gw.hist.length - 1], f = last ? geneOn(last[4]) : 1;
+  const target = { rna: Math.round(gw.X / gw.max[0] * 26), prot: Math.round(gw.Y / gw.max[1] * 34), nuc: Math.round(gw.Z / gw.max[2] * 22) };
+  const gene = { x: cx - Rn * 0.1, y: cy };
+  const rnd = () => Math.random();
+  // add or retire particles toward the target counts
+  const spawn = {
+    rna: () => ({ x: gene.x + (rnd() - .5) * 20, y: gene.y + (rnd() - .5) * 8, vx: (rnd() - .5) * 30, vy: (rnd() - .5) * 30, a: 0, out: false }),
+    prot: () => { const a = rnd() * 6.283, r = Rn + 10 + rnd() * (R - Rn - 22); return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r, vx: 0, vy: 0, a: 0 }; },
+    nuc: () => { const a = rnd() * 6.283; return { x: cx + Math.cos(a) * (Rn + 4), y: cy + Math.sin(a) * (Rn + 4), vx: 0, vy: 0, a: 0, home: { x: gene.x + (rnd() - .5) * 46, y: gene.y + (rnd() - .5) * 26 } }; }
+  };
+  for (const k of ['rna', 'prot', 'nuc']) {
+    const live = parts[k].filter(p => !p.dying);
+    for (let s = 0; s < 2 && live.length + s < target[k]; s++) parts[k].push(spawn[k]());
+    if (live.length > target[k] && rnd() < 0.5) live[Math.floor(rnd() * live.length)].dying = true;
+    parts[k].forEach(p => { p.a = p.dying ? p.a - dt * 2 : Math.min(1, p.a + dt * 2); });
+    parts[k] = parts[k].filter(p => p.a > 0 || !p.dying);
+  }
+  const t = performance.now() / 1000;
+  x.clearRect(0, 0, w, h);
+  // cell and nucleus
+  x.strokeStyle = 'rgba(233,231,226,.22)'; x.lineWidth = 1.2;
+  x.beginPath(); for (let i = 0; i <= 120; i++) { const a = i / 120 * 6.283, r = R * (1 + 0.02 * Math.sin(a * 5 + t * 0.6)); i ? x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r) : x.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); } x.stroke();
+  x.setLineDash([3, 4]); x.beginPath(); x.arc(cx, cy, Rn, 0, 6.283); x.stroke(); x.setLineDash([]);
+  // gene, glowing when on
+  const glow = x.createRadialGradient(gene.x, gene.y, 2, gene.x, gene.y, 50);
+  glow.addColorStop(0, `rgba(57,201,182,${0.55 * f})`); glow.addColorStop(1, 'rgba(57,201,182,0)');
+  x.fillStyle = glow; x.beginPath(); x.arc(gene.x, gene.y, 50, 0, 6.283); x.fill();
+  x.strokeStyle = `rgba(233,231,226,${0.35 + 0.6 * f})`; x.lineWidth = 3; x.beginPath(); x.moveTo(gene.x - 26, gene.y); x.lineTo(gene.x + 26, gene.y); x.stroke(); x.lineWidth = 1;
+  x.font = '11px "Fragment Mono", monospace'; x.textAlign = 'center'; x.fillStyle = css('--mute');
+  x.fillText('per · cry genes', gene.x, gene.y + 18);
+  x.fillStyle = css('--dim'); x.fillText('nucleus', cx, cy - Rn + 16); x.fillText('cell', cx, cy - R + 18);
+  // particles
+  const inside = (p, r) => Math.hypot(p.x - cx, p.y - cy) < r;
+  parts.rna.forEach(p => {
+    p.vx += (rnd() - .5) * 60 * dt; p.vy += (rnd() - .5) * 60 * dt;
+    const d = Math.hypot(p.x - cx, p.y - cy);
+    if (d < Rn + 14) { p.vx += (p.x - cx) / d * 26 * dt; p.vy += (p.y - cy) / d * 26 * dt; }
+    if (d > R - 12) { p.vx -= (p.x - cx) / d * 60 * dt; p.vy -= (p.y - cy) / d * 60 * dt; }
+    p.vx *= 0.97; p.vy *= 0.97; p.x += p.vx * dt; p.y += p.vy * dt;
+    x.strokeStyle = `rgba(57,201,182,${0.85 * p.a})`; x.lineWidth = 1.4; x.beginPath();
+    for (let k = 0; k < 4; k++) { const px = p.x + k * 3 - 4.5, py = p.y + Math.sin(k * 2 + t * 4) * 2; k ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke();
+  });
+  parts.prot.forEach(p => {
+    p.vx += (rnd() - .5) * 30 * dt; p.vy += (rnd() - .5) * 30 * dt; p.vx *= 0.95; p.vy *= 0.95;
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    const d = Math.hypot(p.x - cx, p.y - cy);
+    if (d < Rn + 8 || d > R - 10) { p.x -= p.vx * dt * 2; p.y -= p.vy * dt * 2; p.vx *= -1; p.vy *= -1; }
+    x.fillStyle = `rgba(223,138,75,${0.9 * p.a})`; x.beginPath(); x.arc(p.x, p.y, 3.2, 0, 6.283); x.fill();
+  });
+  parts.nuc.forEach(p => {
+    p.x = lerp(p.x, p.home.x + Math.sin(t * 1.3 + p.home.x) * 3, 1 - Math.pow(0.3, dt));
+    p.y = lerp(p.y, p.home.y + Math.cos(t * 1.1 + p.home.y) * 3, 1 - Math.pow(0.3, dt));
+    x.fillStyle = `rgba(217,197,107,${0.95 * p.a})`; x.beginPath(); x.arc(p.x - 2.2, p.y, 2.8, 0, 6.283); x.arc(p.x + 2.2, p.y, 2.8, 0, 6.283); x.fill();
+  });
+  x.textAlign = 'left'; x.fillStyle = css('--dim');
+  x.fillText('rna', 12, h - 44); x.fillStyle = 'rgba(57,201,182,.9)'; x.fillRect(48, h - 48, 10, 2);
+  x.fillStyle = css('--dim'); x.fillText('per · cry protein', 12, h - 28); x.fillStyle = 'rgba(223,138,75,.9)'; x.beginPath(); x.arc(134, h - 31, 3, 0, 6.283); x.fill();
+  x.fillStyle = css('--dim'); x.fillText('pairs blocking the genes', 12, h - 12); x.fillStyle = 'rgba(217,197,107,.95)'; x.beginPath(); x.arc(188, h - 15, 2.6, 0, 6.283); x.arc(193, h - 15, 2.6, 0, 6.283); x.fill();
+  $('#gState').textContent = f > 0.6 ? 'on' : f < 0.25 ? 'off' : 'switching';
+}
+
+/* =====================================================================
+   THE WORLD: a chrome globe lit by a sun at the local time (raw webgl),
+   with a 24-hour dial drawn over it
+   ===================================================================== */
+const worldCv = $('#world'), dialCv = $('#dial');
+let gl = null;
+try { gl = worldCv.getContext('webgl', { antialias: false, alpha: false, premultipliedAlpha: false }); } catch (e) { gl = null; }
+let prog = null, U = {};
+if (gl) {
+  const VS = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }';
+  const FS = `
+precision highp float;
+uniform vec2 uRes; uniform vec3 uSph; uniform vec2 uSun; uniform float uDay, uTime, uFlash;
+vec3 env(vec3 r){
+  float top = smoothstep(0.55, 0.95, r.y);
+  float s1 = smoothstep(0.07, 0.0, abs(r.x - 0.5)) * smoothstep(-0.3, 0.5, r.y);
+  float s2 = smoothstep(0.04, 0.0, abs(r.x + 0.75)) * 0.55;
+  float hz = smoothstep(0.12, 0.0, abs(r.y + 0.02)) * 0.22;
+  return vec3(top * 0.9 + s1 * 1.5 + s2 + hz);
+}
+vec3 lab(float x){
+  x = fract(x);
+  vec3 a = vec3(0.10, 0.25, 0.85), b = vec3(0.08, 0.68, 0.62), c = vec3(0.85, 0.72, 0.30), d = vec3(0.82, 0.42, 0.20);
+  return x < 0.333 ? mix(a, b, x * 3.0) : (x < 0.666 ? mix(b, c, (x - 0.333) * 3.0) : mix(c, a * 0.6 + d * 0.4, (x - 0.666) * 3.0));
+}
+void main(){
+  vec2 d = (gl_FragCoord.xy - uSph.xy) / uSph.z;
+  float dist = length(d);
+  vec3 sun = normalize(vec3(uSun, 0.45));
+  vec3 col = vec3(0.0);
+  // a faint halo on the sunlit side
+  float halo = exp(-max(dist - 1.0, 0.0) * 9.0) * smoothstep(1.0, 1.01, dist) * max(dot(normalize(d), uSun), 0.0) * 0.18 * uDay;
+  col += vec3(0.85, 0.78, 0.55) * halo;
+  if (dist < 1.0 + 2.0 / uSph.z) {
+    float z = sqrt(max(0.0, 1.0 - dist * dist));
+    vec3 n = normalize(vec3(d, z));
+    float t = uTime * 0.4;
+    n.xy += 0.03 * vec2(sin(n.y * 9.0 + t) + sin(n.x * 13.0 - t * 1.2) * 0.5, cos(n.x * 8.0 - t * 1.3) + cos(n.y * 11.0 + t) * 0.5);
+    n = normalize(n);
+    vec3 v = vec3(0.0, 0.0, 1.0), r = reflect(-v, n);
+    float fr = pow(1.0 - max(dot(v, n), 0.0), 3.0);
+    vec3 e = env(r);
+    float day = smoothstep(-0.12, 0.38, dot(n, sun)) * uDay;
+    vec3 chrome = e * vec3(0.8, 0.82, 0.86) + 0.015;
+    vec3 ir = lab(dot(n, vec3(0.35, 0.55, 0.25)) * 1.3 + fr * 0.5 + uTime * 0.015);
+    vec3 c = chrome * (0.07 + 0.93 * day);
+    c += vec3(1.0, 0.92, 0.7) * pow(max(dot(r, sun), 0.0), 60.0) * day * 1.4;
+    c += ir * (1.0 - day) * (0.05 + 0.25 * pow(max(dot(n, normalize(vec3(-uSun, 0.6))), 0.0), 3.0)) * uFlash;
+    c += fr * 0.08 * ir * uFlash;
+    float cov = clamp((1.0 - dist) * uSph.z + 0.5, 0.0, 1.0);
+    col = mix(col, 1.0 - exp(-c * 1.5), cov);
+  }
+  col += (fract(sin(dot(gl_FragCoord.xy + fract(uTime) * 91.0, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.016;
+  gl_FragColor = vec4(max(col, 0.0), 1.0);
+}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  try {
+    prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+    gl.useProgram(prog);
+    const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ['uRes', 'uSph', 'uSun', 'uDay', 'uTime', 'uFlash'].forEach(n => { U[n] = gl.getUniformLocation(prog, n); });
+  } catch (e) { gl = null; }
+}
+if (!gl) root.classList.add('no-gl');
+
+let SW = 1, SH = 1, sDpr = 1, geo = { cx: 0, cy: 0, R: 1 };
+function layout() {
+  const r = worldCv.getBoundingClientRect();
+  SW = Math.max(1, r.width); SH = Math.max(1, r.height); sDpr = Math.min(devicePixelRatio || 1, 2);
+  if (gl) { worldCv.width = Math.round(SW * sDpr); worldCv.height = Math.round(SH * sDpr); gl.viewport(0, 0, worldCv.width, worldCv.height); }
+  const narrow = innerWidth <= 900;
+  if (narrow) geo = { cx: SW / 2, cy: SH * 0.47, R: Math.min(SW * 0.25, SH * 0.22) };
+  else {
+    const panel = $('.panel').getBoundingClientRect(), avail = panel.left - r.left - 20;
+    geo = { cx: avail * 0.5 + 10, cy: SH * 0.35, R: Math.min(SH * 0.17, avail * 0.22) };
+  }
+}
+layout();
+addEventListener('resize', () => { layout(); drawAll(true); });
+
+const angle = hr => hr / 24 * Math.PI * 2;
+const onRing = (hr, R) => [geo.cx - Math.sin(angle(hr)) * R, geo.cy + Math.cos(angle(hr)) * R];
+function arc(x, from, to, R, width, color) {
+  // from/to in hours, drawn the way the clock runs (clockwise on screen)
+  let span = mod24(to - from); if (span === 0) span = 24;
+  x.strokeStyle = color; x.lineWidth = width; x.beginPath();
+  const steps = Math.max(8, Math.round(span * 6));
+  for (let i = 0; i <= steps; i++) { const [px, py] = onRing(from + span * i / steps, R); i ? x.lineTo(px, py) : x.moveTo(px, py); }
+  x.stroke(); x.lineWidth = 1;
+}
+function drawDial() {
+  const c = sizeCanvas(dialCv); if (!c) return;
+  const { x, w, h } = c; x.clearRect(0, 0, w, h);
+  const R = geo.R * 1.36, h0 = localHour(), b0 = mod24(sim.phi), off = b0 - h0;
+  // ticks
+  for (let k = 0; k < 96; k++) {
+    const hr = k / 4, major = k % 4 === 0, [ax, ay] = onRing(hr, R), [bx, by] = onRing(hr, R + (major ? 9 : 4));
+    x.strokeStyle = major ? 'rgba(233,231,226,.4)' : 'rgba(233,231,226,.14)'; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke();
+  }
+  x.font = '11px "Fragment Mono", monospace'; x.fillStyle = css('--mute'); x.textAlign = 'center'; x.textBaseline = 'middle';
+  [0, 6, 12, 18].forEach(hr => { const [lx, ly] = onRing(hr, R + 22); if (Math.abs(wrap12(hr - h0)) > 1.3) x.fillText(String(hr).padStart(2, '0'), lx, ly); });
+  // daylight in the world (outer)
+  if (sim.scen !== 'cave') arc(x, 6.5, 19.5, R + 14, 3, 'rgba(217,197,107,.55)');
+  // the body's night, placed on world time
+  arc(x, mod24(21 - off), mod24(7 - off), R - 12, 5, 'rgba(111,155,255,.5)');
+  // when you're asleep
+  const row = []; for (let k = 0; k < 96; k++) { const hr = k / 4; const [a] = state(hr, mod24(hr + off)); row.push(a); }
+  for (let k = 0; k < 96; k++) if (row[k]) arc(x, k / 4, k / 4 + 0.25, R - 22, 2, 'rgba(233,231,226,.55)');
+  // markers
+  const [sx, sy] = onRing(h0, R), [bx, by] = onRing(b0, R - 12);
+  x.strokeStyle = 'rgba(217,197,107,.35)'; x.beginPath(); x.moveTo(geo.cx, geo.cy); x.lineTo(sx, sy); x.stroke();
+  x.fillStyle = css('--sun'); x.beginPath(); x.arc(sx, sy, 6, 0, 6.283); x.fill();
+  x.strokeStyle = css('--body'); x.lineWidth = 2; x.beginPath(); x.arc(bx, by, 7, 0, 6.283); x.stroke(); x.lineWidth = 1;
+  x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  // world label outside the ring, body label inside it, so they never collide
+  const lab = (px, py, txt, col, out) => {
+    const dx = px - geo.cx, dy = py - geo.cy, l = Math.hypot(dx, dy) || 1, k = out ? 40 : -34;
+    x.fillStyle = col; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, px + dx / l * k, py + dy / l * k);
+  };
+  lab(sx, sy, `world ${hhmm(h0)}`, css('--sun'), true);
+  lab(bx, by, `body ${hhmm(b0)}`, css('--body'), false);
+  x.textBaseline = 'alphabetic';
+  // legend under the dial
+  x.textAlign = 'center'; x.fillStyle = css('--dim');
+  const leg = sim.scen === 'cave' ? ['no daylight reaches the cave'] : SW < 520 ? ['gold: daylight · blue: your body\'s night', 'white: asleep'] : ['gold: daylight · blue: your body\'s night · white: asleep'];
+  leg.forEach((l, i) => x.fillText(l, geo.cx, geo.cy + R + 44 + i * 15));
+}
+function drawWorld(t) {
+  if (!gl) return;
+  const h0 = localHour(), a = angle(h0);
+  gl.uniform2f(U.uRes, worldCv.width, worldCv.height);
+  gl.uniform3f(U.uSph, geo.cx * sDpr, (SH - geo.cy) * sDpr, geo.R * sDpr);
+  gl.uniform2f(U.uSun, -Math.sin(a), -Math.cos(a));
+  dayLevel = lerp(dayLevel, sim.scen === 'cave' ? 0.12 : 1, 0.05);
+  gl.uniform1f(U.uDay, dayLevel);
+  gl.uniform1f(U.uTime, t);
+  gl.uniform1f(U.uFlash, 0.8);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+let dayLevel = 1;
+
+/* readouts */
+let uiT = 0;
+function readouts() {
+  $('#rWorld').textContent = hhmm(localHour());
+  $('#rBody').textContent = hhmm(sim.phi);
+  const per = bodyPeriod();
+  $('#rPer').textContent = per ? `${per.toFixed(2)} h` : '—';
+  $('#rDay').textContent = String(Math.floor((sim.t + sim.tz) / 24) + 1);
+  writeCard(false);
+}
+
+/* main loop */
+const vis = { hero: true, day: false, loop: false };
+if ('IntersectionObserver' in window) {
+  const watch = (el, k) => new IntersectionObserver(es => { vis[k] = es[0].isIntersecting; }, { threshold: 0.01 }).observe(el);
+  watch($('.hero'), 'hero'); watch($('#dayc'), 'day'); watch($('#cell'), 'loop');
+}
+function drawAll(force) {
+  if (vis.hero || force) { drawDial(); drawActo(); }
+  if (vis.day || force) drawDay();
+  if (vis.loop || force) drawLoop();
+}
+let last = performance.now(), T = 0;
+function draw(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+  if (!sim.paused) stepSim(speed * dt);
+  stepGW(dt * 3);
+  if (vis.hero) { drawWorld(T); drawDial(); }
+  if ((uiT -= dt) <= 0) {
+    uiT = 0.12; readouts();
+    if (vis.hero) drawActo();
+    if (vis.day) drawDay();
+    if (vis.loop) drawLoop();
+  }
+  if (vis.loop) drawCell(dt);
+}
+function frame(now) { requestAnimationFrame(frame); draw(now); }
+requestAnimationFrame(frame);
+if (gl) worldCv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; root.classList.add('no-gl'); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); drawAll(true); });
+})();
+</script>
+</body>
+</html>
